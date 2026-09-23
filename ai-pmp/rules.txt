@@ -1,0 +1,145 @@
+# AI Development Rules
+
+## Stack obligatorio
+
+Todos los proyectos deben usar el siguiente stack:
+
+* React 18
+* Vite
+* TypeScript con `strict: true`
+* Tailwind CSS (Si se usa v4+, DEBE configurarse mediante @tailwindcss/vite. Para evitar conflictos con shadcn/ui antiguos, usar v3.4+ con postcss.config.js)
+* shadcn/ui
+* Supabase como backend
+* TanStack React Query para data fetching
+* React Hook Form + Zod para formularios
+* Zustand solo si se necesita estado global complejo
+
+## Arquitectura general
+
+Separar siempre el código en:
+
+* Frontend (UI, componentes, páginas)
+* Backend (Supabase schema, RLS policies)
+* Data layer (queries, hooks, servicios)
+
+Nunca mezclar lógica de UI con lógica de datos.
+
+## Estructura del proyecto
+
+```
+src/
+  features/         ← módulos de negocio (organizar por dominio)
+  shared/           ← componentes, hooks y utilidades reutilizables
+  lib/              ← configuraciones base (queryClient, zod, etc.)
+  integrations/     ← clientes externos (Supabase, etc.)
+  app/              ← rutas, providers, layout raíz
+```
+
+Organizar siempre por **features (dominio)** y no por tipo de archivo.
+
+Cada feature debe contener:
+
+```
+features/[dominio]/
+  components/   ← Smart Components del dominio
+  hooks/        ← hooks con React Query
+  pages/        ← páginas/vistas
+  types.ts      ← tipos TypeScript del dominio
+  schema.ts     ← esquemas Zod del dominio
+```
+
+## Reglas de código
+
+* Máximo 300 líneas por archivo. Si se supera, dividir en subcomponentes o hooks.
+* Código modular y reutilizable
+* Evitar duplicación (DRY)
+* Crear hooks personalizados para lógica reutilizable
+* Tipar todo con TypeScript — prohibido usar `any`
+* **CRÍTICO - Vite 6 + TypeScript**: Todas las importaciones de tipos o interfaces (ej. dependencias como Supabase) DEBEN llevar la palabra reservada `type` (ej. `import { type User } from '@supabase/supabase-js'`). Importar interfaces como variables convencionales resulta en pantalla en blanco en dev y errores de MODULE_EXPORT en build.
+* Antes de hacer cualquier cambio, verificar que no rompe imports existentes ni genera errores de consola.
+
+## UI
+
+Todos los componentes UI deben usar **shadcn/ui**.
+
+Reglas:
+
+* No usar colores hardcoded (ej. `bg-[#DD624A]` está prohibido)
+* Usar tokens semánticos de Tailwind (`bg-primary`, `text-destructive`, `bg-muted`, etc.)
+* Mantener consistencia visual en todo el proyecto
+* Los componentes dumb van en `shared/components/ui/`
+* Los componentes con lógica de negocio van en `features/[dominio]/components/`
+
+## Data fetching
+
+Usar siempre **React Query**.
+
+Configuración base del QueryClient:
+
+```ts
+{
+  staleTime: 5 * 60 * 1000,   // 5 minutos
+  gcTime: 10 * 60 * 1000,     // 10 minutos
+  retry: 1,
+}
+```
+
+Query Keys — formato obligatorio: `["dominio", "entidad", id?]`
+Ejemplo: `["ventas", "productos", productoId]`
+
+## Supabase
+
+Supabase es el backend principal.
+
+Reglas:
+
+* Todas las tablas deben tener RLS habilitado
+* Las queries deben estar tipadas con los tipos generados de Supabase
+* Nunca exponer service keys en el frontend
+* El cliente Supabase debe estar en `/integrations/supabase/client.ts`
+* Las queries encapsuladas en hooks dentro de `features/[dominio]/hooks/`
+
+## Desarrollo de features
+
+Cada feature nueva debe incluir en este orden:
+
+1. Tabla en Supabase con campos estándar (id, created_at, updated_at)
+2. Políticas RLS
+3. Tipos TypeScript generados o definidos manualmente
+4. Esquema Zod para validación
+5. Hooks React Query (useQuery / useMutation)
+6. Componentes UI
+7. Página funcional conectada
+
+## Seguridad
+
+* Siempre usar RLS en Supabase
+* Validar formularios con Zod antes de cualquier llamada a la red — pero la validación REAL de datos son los constraints SQL (`CHECK`, `NOT NULL`): Zod es UX, el navegador puede saltearse
+* Usar React Hook Form para formularios
+* Nunca confiar en el frontend para limitar acceso — la muralla real es el RLS
+* Rutas sensibles protegidas con `<ProtectedRoute requiredRole={[...]}>`
+* Nunca leer, imprimir ni commitear el contenido de `.env` ni archivos con credenciales
+* La tabla `user_roles` debe quedar protegida según supabase-rules.txt — nadie puede modificar su propio rol desde el cliente
+
+## Dinero y cálculos
+
+* En la base: campos monetarios siempre `numeric(12,2)` — nunca float
+* En el cliente: centralizar redondeo y formato de moneda en utilidades de `shared/utils/` (ej. `formatCurrency.ts`) — no repetir `toFixed(2)` suelto por el código
+* Números correlativos (ventas, facturas) los genera la base de datos, nunca el cliente
+
+## Verificación antes de entregar un cambio
+
+Antes de dar por finalizado cualquier cambio, la IA DEBE:
+
+1. Correr `npx tsc --noEmit` y verificar que pasa sin errores
+2. Verificar que no hay imports rotos
+3. Verificar que no se introdujo ningún `any`
+4. Confirmar que el archivo no supera 300 líneas
+5. Si el cambio toca lógica de Supabase, confirmar que el RLS cubre el caso (incluido `WITH CHECK`) y correr `get_advisors` del MCP
+6. Si el cambio es grande o toca configuración, verificar que `npm run build` pasa
+
+## Arquitectura Enterprise (SaaS Escalable)
+
+1. **Bounded Contexts**: Si una feature crece para abarcar lógicas totalmente distintas, fracturar en nuevos dominios raíz (`features/finanzas/`, `features/calidad/`) para evitar código espagueti y permitir lazy-loading.
+2. **Query Keys estandarizadas**: Formato obligatorio `["dominio_padre", "entidad", id]` para evitar conflictos o fugas de memoria.
+3. **Multi-tenancy**: Si aplica, todas las tablas deben estar vinculadas a `tenant_id` u `org_id`, y el RLS debe validar que el solicitante pertenece a esa organización.

@@ -1,0 +1,115 @@
+# Error Handling Rules
+
+El manejo de errores debe ser consistente en todo el proyecto. La IA no debe inventar su propio patrón — debe seguir estas reglas.
+
+## Principio general
+
+* Los errores se muestran al usuario de forma clara y no técnica
+* Los errores se registran en consola solo en desarrollo
+* Nunca mostrar mensajes internos de Supabase o stack traces al usuario final
+
+## Errores en mutations (crear, editar, eliminar)
+
+Usar `toast` de shadcn/ui para feedback de acciones.
+
+Patrón obligatorio con useMutation:
+
+```ts
+const mutation = useMutation({
+  mutationFn: async (data) => {
+    const { error } = await supabase.from("tabla").insert(data)
+    if (error) throw error
+  },
+  onSuccess: () => {
+    toast({ title: "Guardado correctamente" })
+    queryClient.invalidateQueries({ queryKey: ["dominio", "entidad"] })
+  },
+  onError: (error) => {
+    toast({
+      title: "Error al guardar",
+      description: "Intentá de nuevo o contactá al administrador.",
+      variant: "destructive",
+    })
+    if (import.meta.env.DEV) console.error(error)
+  },
+})
+```
+
+> Nota: el `if (import.meta.env.DEV)` es obligatorio — un `console.error` suelto corre también en producción y puede filtrar mensajes internos de Supabase en la consola del usuario.
+
+## Errores en queries (lectura de datos)
+
+Usar el estado `isError` de React Query para mostrar un estado de error en la UI.
+
+Patrón:
+
+```tsx
+if (isError) {
+  return (
+    <div className="text-destructive text-sm">
+      No se pudieron cargar los datos. Intentá recargar la página.
+    </div>
+  )
+}
+```
+
+No usar `throw` en el render — siempre manejar `isError` en el componente.
+
+## Errores de formulario
+
+Los errores de validación Zod se muestran inline debajo de cada campo usando el componente `FormMessage` de shadcn/ui.
+
+```tsx
+<FormField
+  name="email"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Email</FormLabel>
+      <FormControl>
+        <Input {...field} />
+      </FormControl>
+      <FormMessage /> {/* muestra el error de Zod automáticamente */}
+    </FormItem>
+  )}
+/>
+```
+
+Nunca mostrar errores de formulario con toast — los errores inline son más claros para el usuario.
+
+## Estados de carga
+
+Toda sección que cargue datos debe tener un estado de loading visible.
+
+Usar el componente `Skeleton` de shadcn/ui:
+
+```tsx
+if (isLoading) {
+  return <Skeleton className="h-48 w-full" />
+}
+```
+
+Para tablas usar `Skeleton` en cada fila esperada. Para cards usar bloques de altura aproximada.
+
+## Errores de autenticación
+
+* Si el usuario no está autenticado y accede a una ruta protegida → redirect a `/auth/login`
+* Si el token expiró → limpiar sesión y redirect a `/auth/login` con mensaje "Tu sesión expiró"
+* Si el usuario no tiene el rol requerido → mostrar página 403 o redirect a `/dashboard`
+
+## ErrorBoundary
+
+Usar un ErrorBoundary en el layout raíz para capturar errores inesperados de render:
+
+```tsx
+<ErrorBoundary fallback={<PaginaError />}>
+  <App />
+</ErrorBoundary>
+```
+
+La `PaginaError` debe mostrar un mensaje amigable y un botón para recargar la página.
+
+## Regla de oro
+
+> Si un error puede ocurrir, debe manejarse. Si no puede ocurrir, no agregar manejo preventivo innecesario.
+
+Solo validar en los bordes del sistema: formularios de usuario, respuestas de Supabase, respuestas de APIs externas.

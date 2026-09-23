@@ -1,0 +1,258 @@
+# Supabase Rules
+
+Supabase es el backend principal de todos los proyectos.
+
+## Flujo obligatorio para cada nueva feature con datos
+
+1. Crear la tabla en Supabase con campos estándar
+2. Habilitar RLS en la tabla
+3. Agregar políticas RLS según los roles del sistema
+4. Generar o definir tipos TypeScript
+5. Crear hooks React Query para interactuar con la tabla
+
+## Estructura estándar de tablas
+
+Toda tabla debe incluir:
+
+```sql
+id          uuid primary key default gen_random_uuid()
+created_at  timestamp with time zone default now() not null
+updated_at  timestamp with time zone default now()
+```
+
+Para tablas con soft delete agregar:
+```sql
+deleted_at  timestamp with time zone default null
+```
+
+**Regla de soft delete**: toda query de lectura sobre una tabla con soft delete DEBE filtrar `deleted_at IS NULL` (o usar `.is("deleted_at", null)` en el hook). Mejor aún: agregar el filtro en la política RLS de SELECT para roles no-admin, así es imposible olvidarlo en un hook.
+
+### Trigger obligatorio de updated_at
+
+`default now()` solo aplica al INSERT — sin trigger, `updated_at` nunca se actualiza. Toda tabla con `updated_at` debe llevar:
+
+```sql
+create extension if not exists moddatetime schema extensions;
+
+create trigger set_updated_at
+before update on tabla
+for each row execute procedure extensions.moddatetime(updated_at);
+```
+
+### Constraints SQL — la validación real
+
+Zod valida en el navegador y el navegador puede saltearse. RLS controla **quién** accede, pero no **qué** datos son válidos. Toda tabla debe definir su integridad en SQL:
+
+* `NOT NULL` en todo campo obligatorio
+* `CHECK` para rangos válidos (ej. `CHECK (precio >= 0)`, `CHECK (cantidad > 0)`)
+* Foreign keys siempre con comportamiento explícito (`ON DELETE RESTRICT` o `CASCADE` según el caso)
+* Campos únicos con `UNIQUE`
+
+### Dinero — tipo obligatorio
+
+* En Postgres: `numeric(12,2)` — **nunca** `float`, `real` ni `double precision`
+* En el cliente: cuidado con aritmética de floats en JS (`0.1 + 0.2 !== 0.3`); para totales con muchas líneas, redondear con una utilidad central en `shared/utils/`
+* Números correlativos (ej. número de venta/factura) los genera **la base** con `GENERATED ALWAYS AS IDENTITY` o una secuencia — nunca el cliente (dos ventas simultáneas = número duplicado)
+
+## Cliente Supabase
+
+El cliente debe estar en `/integrations/supabase/client.ts` y ser el único punto de acceso a Supabase en todo el proyecto.
+
+```ts
+import { createClient } from '@supabase/supabase-js'
+import { type Database } from './types'
+
+export const supabase = createClient<Database>(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+)
+```
+
+Nunca crear instancias adicionales del cliente en otros archivos.
+
+## Roles de usuario
+
+El sistema usa una tabla `user_roles` vinculada a `auth.users`.
+
+```sql
+CREATE TABLE user_roles (
+  id    uuid references auth.users(id) primary key,
+  nombre text not null,
+  rol   text not null check (rol in ('admin', 'gerente', 'empleado'))
+)
+```
+
+**Regla estricta**: Toda consulta sensible debe cruzar el identificador del solicitante contra `user_roles` usando `auth.uid()`. Nunca confiar en que el frontend restrinja los datos — la muralla real es el RLS.
+
+### RLS de la propia tabla user_roles — CRÍTICO
+
+Si `user_roles` no se protege, cualquier usuario puede hacer `UPDATE user_roles SET rol = 'admin'` desde la consola del navegador con la anon key y escalar privilegios. Reglas obligatorias:
+
+* `SELECT`: cada usuario solo puede leer su propia fila (`auth.uid() = id`)
+* `INSERT` / `UPDATE` / `DELETE`: **prohibido desde el cliente**. No crear ninguna política de escritura — los roles se asignan solo vía service key, Edge Function o el dashboard de Supabase.
+
+```sql
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "usuario lee solo su propio rol"
+ON user_roles FOR SELECT
+USING (auth.uid() = id);
+-- Sin políticas de INSERT/UPDATE/DELETE = nadie escribe desde el cliente. Es intencional.
+```
+
+### Función tiene_rol() — patrón obligatorio para chequear roles
+
+Una política de `user_roles` que consulta `user_roles` causa recursión infinita en Postgres. Además, repetir el `EXISTS` en cada política es lento y propenso a errores. Crear UNA VEZ esta función y usarla en todas las políticas:
+
+```sql
+CREATE FUNCTION public.tiene_rol(rol_requerido text)
+RETURNS boolean
+LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM user_roles
+    WHERE id = auth.uid() AND rol = rol_requerido
+  )
+$$;
+```
+
+### Alta de usuarios — trigger handle_new_user
+
+Sin esto, un usuario nuevo se autentica pero no tiene fila en `user_roles` y no pasa ningún chequeo de rol. Crear junto con el módulo Auth:
+
+```sql
+CREATE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  INSERT INTO public.user_roles (id, nombre, rol)
+  VALUES (new.id, coalesce(new.raw_user_meta_data->>'nombre', new.email), 'empleado');
+  RETURN new;
+END;
+$$;
+
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+```
+
+El rol por defecto debe ser el de MENOR privilegio del sistema. El admin sube el rol después.
+
+## Políticas RLS — Patrones base
+
+**Regla general**: `USING` controla qué filas se pueden leer/afectar; `WITH CHECK` controla qué filas se pueden escribir. Toda política de `INSERT` o `UPDATE` debe llevar `WITH CHECK` explícito.
+
+### Lectura solo para el dueño de la fila:
+```sql
+CREATE POLICY "usuarios pueden ver sus datos"
+ON tabla FOR SELECT
+USING (auth.uid() = user_id);
+```
+
+### Solo admin puede insertar/modificar:
+```sql
+CREATE POLICY "solo admin puede modificar"
+ON tabla FOR ALL
+USING (public.tiene_rol('admin'))
+WITH CHECK (public.tiene_rol('admin'));
+```
+
+## Multi-Tenancy (Seguridad por Empresa)
+
+Si el sistema es multi-empresa o SaaS B2B:
+
+* Todas las tablas maestras deben tener columna `org_id` (uuid, references organizaciones)
+* El RLS debe prohibir el acceso a filas donde `org_id` no coincida con la organización del solicitante
+* **El `WITH CHECK` es obligatorio**: sin él, un usuario puede INSERTAR filas en otra organización aunque no pueda leerlas
+* Patrón obligatorio:
+
+```sql
+USING (
+  org_id = (
+    SELECT org_id FROM user_roles WHERE id = auth.uid()
+  )
+)
+WITH CHECK (
+  org_id = (
+    SELECT org_id FROM user_roles WHERE id = auth.uid()
+  )
+)
+```
+
+## Queries — Reglas
+
+* Siempre tipadas con los tipos de la base de datos
+* Siempre encapsuladas en hooks dentro de `features/[dominio]/hooks/`
+* Usar React Query para todas las queries (no llamar Supabase directamente desde componentes)
+* Manejar errores de Supabase en el hook, no en el componente
+
+Patrón base de hook:
+
+```ts
+export function useProductos() {
+  return useQuery({
+    queryKey: ["inventario", "productos"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("productos")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      return data
+    },
+  })
+}
+```
+
+## Variables de entorno
+
+El frontend solo puede acceder a:
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+```
+
+Nunca exponer `SUPABASE_SERVICE_ROLE_KEY` en el frontend. La service key solo se usa en Edge Functions o scripts de servidor.
+
+El archivo `.env.example` debe existir en el repo con las variables sin valores:
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+```
+
+## Edge Functions
+
+Usar Edge Functions solo para:
+* Operaciones que requieren service key
+* Webhooks externos
+* Lógica que no debe exponerse al cliente
+
+Las Edge Functions van en `supabase/functions/[nombre]/index.ts`.
+
+## Supabase Storage
+
+Si el proyecto guarda archivos (imágenes, PDFs, etc.):
+
+* Buckets **privados por defecto**. Solo hacer público un bucket si el contenido es realmente público (ej. imágenes de catálogo).
+* Las políticas de acceso van sobre `storage.objects`, con los mismos patrones de roles/org que las tablas
+* Validar tipo MIME y tamaño máximo en el bucket (`allowed_mime_types`, `file_size_limit`) — no confiar en la validación del frontend
+* Nombrar archivos con uuid o `{user_id}/{uuid}.{ext}` — nunca con el nombre original del archivo del usuario
+
+## MCP de Supabase — Reglas de uso
+
+* El MCP debe estar **scoped al proyecto** (project-ref específico), nunca con un token personal con acceso a toda la cuenta
+* **Después de cualquier cambio de schema o políticas**, correr `get_advisors` y corregir todas las alertas de seguridad antes de dar la tarea por terminada (detecta tablas sin RLS, funciones sin `search_path`, políticas problemáticas)
+* Revisar siempre el SQL de una migración antes de aplicarla a un proyecto con datos reales
+
+## Checklist al crear cualquier tabla nueva
+
+1. Campos estándar (`id`, `created_at`, `updated_at`) + trigger de `updated_at`
+2. Constraints: `NOT NULL`, `CHECK`, FKs con comportamiento explícito
+3. RLS habilitado + políticas con `WITH CHECK` en escritura (usando `tiene_rol()` si chequean rol)
+4. Si es multi-tenant: columna `org_id` + patrón multi-tenancy completo
+5. Si tiene soft delete: filtro `deleted_at IS NULL` en políticas o hooks
+6. `get_advisors` sin alertas de seguridad

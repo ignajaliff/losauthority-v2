@@ -1,0 +1,122 @@
+# Security Rules
+
+Reglas de seguridad para Supabase + SPA. Complementan `supabase-rules.txt` — este archivo existe porque una auditoría real (proyecto Filari, 2026-07) encontró brechas que las otras reglas no cubrían. La lección central:
+
+> **"Autenticado" NO significa "autorizado".** Si el signup está abierto (o alguien lo abre por error), cualquier desconocido puede convertirse en usuario autenticado con la anon key del bundle. Toda política que solo chequea `auth.uid() IS NOT NULL` le da acceso a ese desconocido.
+
+## 1. Alta de usuarios — decidir y bloquear el signup
+
+Al iniciar el módulo Auth, decidir explícitamente cómo entran usuarios al sistema:
+
+* **Solo el admin invita** (caso típico de sistemas de gestión): DESHABILITAR el signup público en el dashboard → Authentication → Sign In / Providers → "Allow new users to sign up" = OFF. Sin esto, cualquiera puede hacer `POST /auth/v1/signup` con la anon key aunque la app no tenga página de registro.
+* **Signup abierto** (SaaS self-service): entonces NINGUNA política puede usar `auth.uid() IS NOT NULL` como única condición — todo debe cruzar rol o membresía.
+
+Verificación no invasiva (el endpoint es público por diseño):
+
+```
+GET https://[ref].supabase.co/auth/v1/settings  (header: apikey = anon key)
+→ "disable_signup" debe ser true si el alta es solo por admin
+```
+
+## 2. Políticas RLS — trampas que pasan desapercibidas
+
+### FOR ALL nunca se usa para "ver"
+
+Una política llamada "Users can view X" creada con `FOR ALL` otorga SELECT **y también UPDATE y DELETE** (sin `WITH CHECK`, la escritura hereda el `USING`). Así los roles de solo lectura terminan pudiendo escribir vía API aunque el frontend esconda los botones.
+
+* Lectura → `FOR SELECT`, siempre
+* Escritura → políticas separadas por comando (`FOR INSERT/UPDATE/DELETE`) con `WITH CHECK`
+* `FOR ALL` solo para roles que legítimamente pueden todo (admin)
+
+### TO authenticated explícito
+
+Sin `TO`, la política aplica a `public` (incluye `anon`). Aunque `auth.uid()` sea null para anon, es defensa en profundidad y hace el intent legible:
+
+```sql
+CREATE POLICY "..." ON tabla FOR SELECT TO authenticated USING (...);
+```
+
+### Prohibido WITH CHECK (true) y USING (true)
+
+Una política always-true en una tabla con RLS equivale a no tener RLS para ese comando. Caso real: `INSERT ... WITH CHECK (true)` en una tabla de logs permitía a usuarios anónimos insertar filas falsas. Si "cualquiera puede insertar" es intencional, que al menos sea `TO authenticated` y valide que `user_id = auth.uid()`.
+
+### auth.uid() IS NOT NULL no es autorización
+
+Solo prueba que la persona tiene cuenta. La condición correcta siempre cruza rol o membresía:
+
+```sql
+USING (public.tiene_rol('admin') OR public.es_miembro_del_proyecto(auth.uid(), project_id))
+```
+
+## 3. Storage — el bucket público anula las políticas
+
+* Un bucket marcado `public: true` sirve archivos por URL directa (`/storage/v1/object/public/...`) **sin autenticación y sin evaluar RLS**. Las políticas de `storage.objects` solo aplican a la API autenticada — no protegen un bucket público.
+* Documentos de clientes, planos, certificados, fotos de obra → bucket **privado** + `createSignedUrl()` con expiración corta (ej. 3600s) para mostrarlos en la app.
+* Público solo para assets realmente públicos (logos, imágenes de landing).
+* Las políticas de `storage.objects` deben filtrar por proyecto/dueño usando la carpeta del path (`(storage.foldername(name))[1]`), no solo `auth.uid() IS NOT NULL` — si no, cualquier registrado ve/borra archivos de todos los proyectos.
+* Migrar un bucket de público a privado requiere después actualizar el código: las URLs públicas guardadas en la base dejan de funcionar.
+
+## 4. Funciones SECURITY DEFINER — cerrar el EXECUTE
+
+Por defecto cualquier rol (incluido `anon`) puede ejecutar funciones de `public`. Una función `SECURITY DEFINER` corre con permisos de superusuario y puede saltarse RLS — expuesta a `anon`, es un canal de fuga (ej. `get_user_email()` que devuelve emails).
+
+Para toda función SECURITY DEFINER:
+
+```sql
+REVOKE EXECUTE ON FUNCTION public.mi_funcion(args) FROM anon;
+-- y si es de uso interno (triggers, otras funciones):
+REVOKE EXECUTE ON FUNCTION public.mi_funcion(args) FROM authenticated;
+```
+
+Además, siempre `SET search_path = public` (o `''`) en la definición, y borrar versiones viejas/duplicadas de funciones al refactorizar — las sobrecargas legacy quedan ejecutables y nadie las revisa.
+
+## 5. Hardening del dashboard de Supabase
+
+Configuración que no vive en el código y por eso se olvida. Al crear el proyecto y repasar cada ~3 meses:
+
+* **Auth → Passwords**: habilitar "Leaked password protection" (HaveIBeenPwned) y mínimo 8+ caracteres
+* **Auth → Email OTP expiry**: ≤ 1 hora (el default puede ser mayor)
+* **Infrastructure**: aplicar upgrades de Postgres cuando el advisor marque parches de seguridad pendientes
+* **API keys**: si una service key pudo filtrarse, rotarla desde Settings → API
+
+## 6. La anon key es pública, la service key nunca
+
+* La anon key viaja en el bundle JS — no es un secreto, pero igual va en `VITE_SUPABASE_ANON_KEY` (env), no hardcodeada, para poder rotarla y cambiar de entorno sin tocar código.
+* `SUPABASE_SERVICE_ROLE_KEY` jamás en el frontend, jamás en el repo, jamás en un `console.log`. Solo Edge Functions / servidor.
+* Asumir siempre que un atacante tiene la anon key y la URL del proyecto: **la única muralla real es RLS + configuración de Auth**.
+
+## 7. Auditoría periódica — no solo al crear tablas
+
+`get_advisors` después de cada cambio de schema ya es regla. Además, correr esta auditoría al terminar el módulo Auth y antes de cada entrega a producción:
+
+```sql
+-- 1. ¿Alguna tabla sin RLS?
+SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND NOT rowsecurity;
+
+-- 2. Leer TODAS las políticas y buscar: FOR ALL usadas para "ver",
+--    condiciones que son solo auth.uid() IS NOT NULL, y (true)
+SELECT tablename, policyname, cmd, roles, qual, with_check
+FROM pg_policies WHERE schemaname = 'public' ORDER BY tablename;
+
+-- 3. ¿Buckets públicos que no deberían serlo?
+SELECT id, public FROM storage.buckets;
+
+-- 4. Políticas de storage: ¿filtran por proyecto/dueño o solo por "autenticado"?
+SELECT policyname, cmd, qual, with_check FROM pg_policies
+WHERE schemaname = 'storage' AND tablename = 'objects';
+```
+
+Y verificar `disable_signup` con el endpoint de settings (sección 1).
+
+## Checklist de seguridad al entregar a producción
+
+1. Signup público deshabilitado (o justificado y las políticas no dependen de "autenticado = confiable")
+2. Ninguna política `FOR ALL` con nombre/intención de solo lectura
+3. Ninguna política con `USING (true)` / `WITH CHECK (true)` sin justificación escrita
+4. Políticas con `TO authenticated` explícito
+5. Buckets con datos de clientes → privados + signed URLs
+6. Políticas de storage filtran por proyecto/dueño, no solo `auth.uid() IS NOT NULL`
+7. Funciones SECURITY DEFINER: `search_path` fijo + `REVOKE FROM anon`
+8. Leaked password protection ON, OTP expiry ≤ 1h, Postgres actualizado
+9. `get_advisors` (security) sin alertas sin explicar
+10. Keys en env vars; service key ausente del repo y del bundle

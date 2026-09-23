@@ -1,0 +1,152 @@
+# Naming Rules
+
+Convenciones de nombres para todo el proyecto. La IA debe respetar estas reglas sin excepción.
+
+## Archivos y carpetas
+
+| Tipo | Convención | Ejemplo |
+|------|-----------|---------|
+| Componentes React | PascalCase | `ProductoCard.tsx` |
+| Hooks | camelCase con prefijo `use` | `useProductos.ts` |
+| Páginas | PascalCase con sufijo `Page` | `InventarioPage.tsx` |
+| Schemas Zod | camelCase con sufijo `Schema` | `productoSchema.ts` |
+| Tipos/interfaces | PascalCase | `types.ts` |
+| Utilidades | camelCase | `formatCurrency.ts` |
+| Carpetas de features | kebab-case | `features/punto-de-venta/` |
+| Archivos de config | kebab-case | `query-client.ts` |
+
+## Componentes React
+
+```tsx
+// Correcto — PascalCase
+export function ProductoCard({ producto }: ProductoCardProps) {}
+
+// Incorrecto
+export function productoCard() {}
+export function producto_card() {}
+```
+
+## Hooks
+
+```ts
+// Correcto — prefijo use + nombre descriptivo
+export function useProductos() {}
+export function useCrearVenta() {}
+export function useClienteById(id: string) {}
+
+// Incorrecto
+export function productos() {}
+export function fetchProductos() {}
+```
+
+## Variables y funciones
+
+* camelCase para variables y funciones
+* UPPER_SNAKE_CASE para constantes globales
+
+```ts
+// Variables y funciones
+const totalVenta = calcularTotal(items)
+function formatearPrecio(valor: number) {}
+
+// Constantes globales
+const MAX_ITEMS_POR_PAGINA = 50
+const ROLES_PERMITIDOS = ["admin", "gerente"] as const
+```
+
+## Tipos e interfaces TypeScript
+
+```ts
+// Tipos de dominio — PascalCase
+type Producto = {
+  id: string
+  nombre: string
+  precio: number
+}
+
+// Props de componentes — sufijo Props
+type ProductoCardProps = {
+  producto: Producto
+  onEditar?: (id: string) => void
+}
+
+// Respuestas de API — sufijo Response
+type ProductosResponse = Producto[]
+```
+
+## Query Keys de React Query
+
+Formato obligatorio: `["dominio", "entidad", id?]`
+
+```ts
+// Correcto
+["inventario", "productos"]
+["inventario", "producto", productoId]
+["ventas", "historial"]
+["clientes", "cliente", clienteId]
+
+// Incorrecto
+["getProductos"]
+["productos"]
+["INVENTARIO_PRODUCTOS"]
+```
+
+## Tablas en Supabase
+
+* Nombres en **snake_case plural**
+* Columnas en **snake_case**
+
+```sql
+-- Correcto
+CREATE TABLE productos (...)
+CREATE TABLE lineas_de_venta (...)
+CREATE TABLE user_roles (...)
+
+-- Columnas
+nombre_completo
+precio_unitario
+created_at
+org_id
+```
+
+## Variables de entorno
+
+* Prefijo `VITE_` para variables accesibles en el frontend
+* UPPER_SNAKE_CASE
+
+```
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+VITE_APP_NAME
+```
+
+## Eventos y handlers
+
+Prefijo `on` para props de eventos, `handle` para la implementación:
+
+```tsx
+// Props
+type Props = {
+  onGuardar: (data: Producto) => void
+  onCancelar: () => void
+}
+
+// Implementación
+function handleGuardar(data: Producto) {
+  mutation.mutate(data)
+}
+
+<ProductoForm onGuardar={handleGuardar} />
+```
+
+## Rutas
+
+* kebab-case
+* Sustantivos en plural para colecciones, singular para detalle
+
+```
+/productos           → lista
+/productos/nuevo     → crear
+/productos/:id       → detalle
+/productos/:id/editar → editar
+```

@@ -1,0 +1,108 @@
+# Frontend Rules
+
+Framework: React 18 con Vite.
+
+## Componentes
+
+Separar estrictamente:
+
+* **Dumb Components** (UI pura, sin lógica de negocio ni llamadas a BD) → `shared/components/ui/`
+* **Smart Components** (consumen hooks, React Query, o lógica de dominio) → `features/[dominio]/components/`
+* **Layout Components** (estructura de página, sidebars, navbars) → `shared/components/layout/`
+
+Regla: un componente que recibe todo por props y no sabe de dónde vienen los datos es Dumb. Uno que llama un hook de React Query es Smart.
+
+## Formularios
+
+Usar siempre: **React Hook Form + Zod**
+
+```ts
+const schema = z.object({
+  nombre: z.string().min(1, "Requerido"),
+  email: z.string().email("Email inválido"),
+})
+
+const form = useForm<z.infer<typeof schema>>({
+  resolver: zodResolver(schema),
+})
+```
+
+> **Regla estricta**: Todo formulario debe validarse con Zod antes de cruzar la red. Nunca enviar datos sin validación previa.
+
+Los esquemas Zod van en `features/[dominio]/schema.ts`.
+
+## Estado
+
+* **Datos del servidor**: React Query (useQuery, useMutation)
+* **Estado global de UI** (ej. sidebar abierto, tema): Zustand — solo si es necesario
+* **Estado local de componente**: useState — para UI efímera (modales, toggles)
+
+Nunca usar useState para datos que vienen del servidor.
+
+## UI library
+
+Usar siempre: **shadcn/ui**
+
+Evitar agregar librerías de UI adicionales salvo justificación explícita.
+
+Para instalar un componente nuevo de shadcn:
+```bash
+npx shadcn@latest add [componente]
+```
+
+## Diseño (Fase de Estructura / Wireframing)
+
+Principios Core:
+
+* UI funcional, limpia y técnica
+* Componentes densos y reutilizables
+* **Neutralidad estricta**: Usar exclusivamente la paleta por defecto de shadcn/ui (grises `slate`/`zinc`) o tokens semánticos heredados
+* **Prohibición de colores hardcoded**: Jamás usar `bg-[#DD624A]` directamente en un componente
+
+Tokens semánticos permitidos:
+`bg-primary`, `bg-secondary`, `bg-muted`, `bg-accent`, `bg-destructive`
+`text-primary`, `text-muted-foreground`, `text-destructive`
+`border`, `border-input`, `ring`
+
+> **Propósito**: Aislar el código lógico del estético. Una vez funcional, toda la estética se inyecta editando únicamente las variables CSS en `index.css` basándose en el `design-system.md` del cliente.
+
+## Rutas y navegación
+
+Usar **React Router v6** con rutas definidas en `app/routes.tsx` o equivalente.
+
+Estructura de rutas:
+```
+/                   → redirect a /dashboard o /login
+/auth/login         → página pública
+/dashboard          → página principal autenticada
+/[modulo]           → páginas por módulo
+/[modulo]/[id]      → detalle
+```
+
+## Seguridad Perimetral (RBAC Frontend)
+
+Toda ruta sensible debe estar protegida por rol:
+
+```tsx
+<ProtectedRoute requiredRole={["admin", "gerente"]}>
+  <PaginaSensible />
+</ProtectedRoute>
+```
+
+* Nadie sin el rol requerido debe poder cargar o ejecutar el JavaScript de esa ruta
+* El componente `ProtectedRoute` debe verificar el rol contra el perfil del usuario autenticado en Supabase
+* Recordar: el RBAC del frontend es UX, el RLS de Supabase es seguridad real
+
+## Performance
+
+* Usar `React.lazy()` + `Suspense` para páginas y módulos pesados
+* No importar librerías enteras — usar imports específicos
+* Imágenes: usar formatos modernos (webp) y lazy loading nativo (`loading="lazy"`)
+* Evitar re-renders innecesarios: usar `useMemo` y `useCallback` solo cuando hay un problema de performance medible, no de forma preventiva
+
+## Accesibilidad básica
+
+* Todos los inputs deben tener `label` asociado
+* Botones de icono deben tener `aria-label`
+* Usar elementos semánticos HTML (`button`, `nav`, `main`, `section`) en lugar de `div` para todo
+* Mensajes de error de formulario deben ser visibles y descriptivos

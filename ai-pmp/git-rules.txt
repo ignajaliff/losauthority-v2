@@ -1,0 +1,86 @@
+# Git Rules
+
+Convenciones de Git para mantener un historial limpio y entendible.
+
+## Ramas
+
+Estructura de ramas:
+
+```
+main          → producción (solo código estable y testeado)
+dev           → desarrollo activo, rama base para features
+feature/[nombre]  → nueva feature o módulo
+fix/[nombre]      → corrección de bug
+hotfix/[nombre]   → corrección urgente directo a main
+```
+
+Ejemplos:
+```
+feature/modulo-inventario
+feature/auth-google
+fix/calculo-total-venta
+hotfix/login-roto
+```
+
+Regla: nunca trabajar directo en `main`. Siempre desde `dev` o una rama `feature/`.
+
+## Commits
+
+Formato obligatorio: **Conventional Commits**
+
+```
+tipo(scope): descripción breve en español
+```
+
+Tipos permitidos:
+* `feat` — nueva funcionalidad
+* `fix` — corrección de bug
+* `chore` — tareas de mantenimiento (deps, config)
+* `refactor` — cambio de código sin cambiar comportamiento
+* `style` — cambios de formato, estilos CSS
+* `docs` — documentación
+* `db` — cambios en schema o policies de Supabase
+
+Ejemplos:
+```
+feat(inventario): agregar tabla de productos con filtros
+fix(auth): corregir redirect después del login
+db(ventas): agregar tabla lineas_de_venta con RLS
+chore: actualizar dependencias de shadcn
+style(dashboard): ajustar espaciado en tarjetas de resumen
+refactor(clientes): extraer lógica de búsqueda a hook separado
+```
+
+Reglas:
+* Descripción en minúscula y en español
+* Sin punto final
+* Máximo 72 caracteres en la primera línea
+* Si el commit necesita más contexto, agregar cuerpo separado por línea en blanco
+
+## Cuándo hacer commit
+
+* Al terminar una feature o módulo funcional
+* Al corregir un bug
+* Antes de hacer un cambio grande (como "checkpoint")
+* Nunca commitear código roto o con errores de TypeScript
+
+## .gitignore obligatorio
+
+```
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+```
+
+El archivo `.env.example` SÍ debe commitearse (sin valores reales).
+
+## Flujo de trabajo con IA
+
+Cuando la IA hace cambios:
+1. Revisar el diff antes de commitear
+2. Verificar que no se commitearon archivos sensibles (.env, keys)
+3. Verificar que el build pasa antes de pushear a main
