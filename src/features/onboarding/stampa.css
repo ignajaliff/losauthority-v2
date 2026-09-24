@@ -1,0 +1,25 @@
+/* Vista pulita per "Stampa / PDF" del dettaglio onboarding (window.print). */
+@media print {
+  aside,
+  header,
+  nav,
+  .no-stampa {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+  .solo-stampa {
+    display: block !important;
+  }
+  .scheda-stampa + .scheda-stampa {
+    page-break-before: always;
+  }
+  .riepilogo-domanda {
+    break-inside: avoid;
+  }
+  .riepilogo-sezione {
+    box-shadow: none !important;
+    border: 1px solid var(--border);
+  }
+}
