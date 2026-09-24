@@ -14,7 +14,7 @@ import { notifyTelegram } from "../_shared/telegram.ts";
 import { HAS_NOTION } from "../_shared/config.ts";
 import { clientiConHub, syncCliente } from "../_shared/hub-sync.ts";
 
-interface Body {
+type Body = {
   cliente_id?: unknown;
 }
 

@@ -69,20 +69,20 @@ Migraciones versionadas en `supabase/migrations/` (aplicadas con el MCP; el arch
 | Módulo | Estado | Tablas Supabase | Notas |
 |--------|--------|-----------------|-------|
 | Auth | Completo | user_roles, private.admin_emails | Login /auth/login, ProtectedRoute, roles admin/staff/staff_fatture/cliente |
-| Dashboard | En desarrollo | vista_clienti, clienti, error_log | Conteos, próximas call, últimos onboarding, errores |
-| Pipeline (lead) | En desarrollo | lead | Kanban por etapa |
-| Clienti | En desarrollo | clienti, tags, clienti_tags, note_clienti, analisi, hub_board, hub_compiti | Lista (vista_clienti) + ficha con tabs |
-| Chiamate | En desarrollo | chiamate, chiamate_azioni, fathom_webhook_log | Tab Call de la ficha |
-| Onboarding / Questionari | En desarrollo | questionario_invii, questionario_risposte, questionario_allegati | 3 fichas: onboarding, avatar_dolori, offerta |
-| Area cliente | En desarrollo | (las mismas + chiamate + fatture propias) | /area, /area/:slug |
-| Finance | En desarrollo | fatture, spese, f24, vista_finanza_mensile | Solo admin y staff_fatture |
-| Lezioni | En desarrollo | lezioni, sync_stati | Solo admin |
-| Staff | En desarrollo | user_roles | Solo admin, via Edge Function gestione-utenti |
-| Tag | En desarrollo | tags, clienti_tags | |
-| Errori | En desarrollo | error_log | Pantalla nueva (no existía) |
-| Edge Functions | En desarrollo | — | Ver docs/edge-functions.md |
+| Dashboard | UI lista | vista_clienti, clienti, error_log | Conteos, próximas call, últimos onboarding, errores |
+| Pipeline (lead) | UI lista | lead | Kanban por etapa |
+| Clienti | UI lista | clienti, tags, clienti_tags, note_clienti, analisi, hub_board, hub_compiti | Lista (vista_clienti) + ficha con tabs |
+| Chiamate | UI lista | chiamate, chiamate_azioni, fathom_webhook_log | Tab Call de la ficha |
+| Onboarding / Questionari | UI lista | questionario_invii, questionario_risposte, questionario_allegati | 3 fichas: onboarding, avatar_dolori, offerta |
+| Area cliente | UI lista | (las mismas + chiamate + fatture propias) | /area, /area/:slug |
+| Finance | UI lista | fatture, spese, f24, vista_finanza_mensile | Solo admin y staff_fatture |
+| Lezioni | UI lista | lezioni, sync_stati | Solo admin |
+| Staff | UI lista | user_roles | Solo admin, via Edge Function gestione-utenti |
+| Tag | UI lista | tags, clienti_tags | |
+| Errori | UI lista | error_log | Pantalla nueva (no existía) |
+| Edge Functions | Completo | — | 16 funciones desplegadas (ver docs/edge-functions.md); faltan los secrets en el dashboard |
 
-Estados posibles: `Pendiente` / `En desarrollo` / `UI lista` / `Completo`
+Estados posibles: `Pendiente` / `En desarrollo` / `UI lista` (escrito, typecheck ok, sin prueba en browser) / `Completo`
 
 ---
 
@@ -133,7 +133,7 @@ Funciones en `private`: `tiene_rol(text)`, `es_team()`, `es_finance()`, `handle_
 
 ## Checklist de seguridad
 
-- [x] Signup público deshabilitado en el dashboard (verificar `disable_signup` — ver security-rules.txt §1) → **pendiente de confirmar en dashboard**
+- [ ] Signup público deshabilitado en el dashboard (verificar `disable_signup` — ver security-rules.txt §1) → **pendiente: hacerlo en el dashboard del proyecto nuevo**
 - [x] Ninguna política `FOR ALL` para lecturas, ninguna con `(true)`, ninguna que dependa solo de `auth.uid() IS NOT NULL`
 - [x] Buckets de storage privados + signed URLs para datos de clientes
 - [x] Tabla `user_roles` con RLS propio: nadie puede modificar su rol desde el cliente
@@ -163,21 +163,28 @@ Funciones en `private`: `tiene_rol(text)`, `es_team()`, `es_finance()`, `handle_
 ## Estado actual del desarrollo
 
 **Última sesión**: 24/09/2026
-**Próximo paso**: completar módulos por dominio, desplegar Edge Functions, migración de datos y cutover.
+**Próximo paso**: prueba en browser de cada módulo con un usuario admin y uno cliente, configurar secrets de Edge Functions y deshabilitar signup en el dashboard, ensayar `npm run migrate:data -- --dry-run`, luego cutover según docs/cutover.md.
 
 **Lo que está funcionando**:
-* Schema v2 aplicado (4 migraciones), advisors limpios
+* Schema v2 aplicado (5 migraciones), advisors de seguridad limpios
 * Auth: login, roles, ProtectedRoute, shells del gestionale y del área cliente, rutas lazy
+* 13 módulos de frontend escritos (~16k líneas), `npm run typecheck` y `npm run build` en verde, sin `any`, sin archivos > 300 líneas
+* 16 Edge Functions desplegadas en el proyecto nuevo (auth propia verificada con smoke test 401)
+* `scripts/migrate-data.mjs` idempotente (dry-run por defecto), helper compartido `shared/utils/invocaEdge.ts`
 
 **Lo que está pendiente**:
-* Módulos de dominio (ver tabla)
-* Edge Functions y sus secrets en el dashboard
-* Script de migración de datos `scripts/migrate-data.mjs` (viejo → nuevo)
-* Cron jobs (migración pendiente) y re-registro de webhooks Fathom/Telegram/Apps Script al cutover
-* Deshabilitar signup en el dashboard del proyecto nuevo
+* Prueba manual en browser de todos los módulos (ningún agente ejecutó `npm run dev`): flujo bozza → invio con RLS real, uploads a buckets, Select de Base UI dentro de los formularios
+* Secrets de las Edge Functions en el dashboard (lista en docs/edge-functions.md) y `vault.create_secret` para el cron
+* Deshabilitar signup público en el dashboard del proyecto nuevo (security-rules §1)
+* Crear el primer usuario admin desde el dashboard (dev@gmail.com está en la allowlist)
+* Ensayo de migración de datos, cron jobs (`supabase/migrations/pending/`) y re-registro de webhooks al cutover (docs/cutover.md)
+* Repo remoto en GitHub (hoy solo local)
 
 **Problemas conocidos o deuda técnica**:
-* Ninguno registrado
+* Badge "compiti completi" usa la variante `default` porque el tema no tiene token `success`; agregar token en `index.css` si se quiere verde
+* Gráfico de Finance con paleta neutra shadcn (`--chart-*`): revisar cuando se inyecte el design system
+* `profilo` del cliente: el cálculo determinista solo produce `saturo` o null (el viejo sistema nunca implementó la fase 2 con IA)
+* `calendar-sync` no cierra automáticamente las call pasadas de origen manual (el viejo sí)
 
 ---
 

@@ -21,7 +21,7 @@ import { DOCS, paginaPerDoc, scriviDoc } from "./documenti.ts";
 /** Quanti clienti servire per esecuzione automatica. */
 const MAX_PER_GIRO = 2;
 
-interface Body {
+type Body = {
   cliente_id?: unknown;
 }
 interface Esito {

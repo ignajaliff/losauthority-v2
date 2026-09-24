@@ -2,9 +2,10 @@
  * calendar-sync — Google Calendar (Apps Script) → prossima call dei clienti.
  * Auth: `Authorization: Bearer <CALENDAR_SYNC_SECRET>` (verify_jwt: false).
  * Body: { eventi: [{ inizio: ISO, invitati: string[] }] } → { ok, aggiornati }.
- * Per ogni cliente invitato imposta la call futura più vicina (ora italiana
- * "a muro" salvata come UTC) con source 'calendar'; le call 'calendar' sparite
- * dal feed vengono azzerate. Le call manuali non si toccano.
+ * Per ogni cliente invitato imposta la call futura più vicina come ISTANTE
+ * REALE (ISO UTC: l'Apps Script manda ISO con offset, il frontend formatta nel
+ * fuso del browser) con source 'calendar'; le call 'calendar' sparite dal feed
+ * vengono azzerate. Le call manuali non si toccano.
  */
 import { errore, gestisciErrore, json, leggiBody, preflight } from "../_shared/http.ts";
 import { adminClient } from "../_shared/supabase.ts";
@@ -26,25 +27,6 @@ interface UtenteCliente {
 }
 
 const MAX_EVENTI = 1000;
-
-/**
- * Ora "da parete" italiana (Europe/Rome) scritta come se fosse UTC: l'app
- * mostra gli orari così come sono scritti, quindi le 10:00 italiane restano
- * 10:00 invece di diventare 08:00.
- */
-export function romeWallIso(instant: number): string {
-  const s = new Intl.DateTimeFormat("sv-SE", {
-    timeZone: "Europe/Rome",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).format(new Date(instant));
-  return s.replace(" ", "T") + "Z";
-}
 
 function autorizzato(req: Request): boolean {
   if (!CALENDAR_SYNC_SECRET) return false;
@@ -100,7 +82,7 @@ Deno.serve(async (req: Request) => {
     for (const [clienteId, ts] of prima) {
       const { error } = await admin
         .from("clienti")
-        .update({ prossima_call: romeWallIso(ts), prossima_call_source: "calendar" })
+        .update({ prossima_call: new Date(ts).toISOString(), prossima_call_source: "calendar" })
         .eq("id", clienteId);
       if (error) await logError("calendar-sync:update", error, { clienteId }, { silent: true });
       else aggiornati++;

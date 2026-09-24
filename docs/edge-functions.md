@@ -27,7 +27,7 @@ Risposta sempre `{ ok: true, ...dati }` oppure `{ ok: false, error: "<messaggio 
 | `telegram-webhook` | `x-telegram-bot-api-secret-token` = TELEGRAM_WEBHOOK_SECRET; chat in TELEGRAM_ALLOWED_CHAT_IDS | update Telegram | `{ ok }` | Aura risponde a domande sui numeri con uno snapshot (clienti, fatture, F24, spese, chiamate). Sola lettura |
 | `payment-reminders` | cron o team | `{}` | `{ ok, fatture, f24 }` | Telegram con fatture non pagate in scadenza domani e F24 in scadenza domani |
 | `skool-lezioni` | cron o admin | `{}` | `{ ok, lezioni, nuove }` | Apify → upsert `lezioni` per `key`; `sync_stati('skool')`; Telegram se nuove o cookie scaduto |
-| `calendar-sync` | `Authorization: Bearer <CALENDAR_SYNC_SECRET>` | `{ eventi: [{ inizio: ISO, invitati: string[] }] }` | `{ ok, aggiornati }` | Abbina invitati ↔ email cliente, imposta `prossima_call` (ora italiana salvata come UTC "a muro") con source `calendar`; azzera quelle sparite |
+| `calendar-sync` | `Authorization: Bearer <CALENDAR_SYNC_SECRET>` | `{ eventi: [{ inizio: ISO, invitati: string[] }] }` | `{ ok, aggiornati }` | Abbina invitati ↔ email cliente, imposta `prossima_call` (istante reale ISO) con source `calendar`; azzera quelle sparite |
 | `spese-scansiona` | finance | `{ storage_path }` (bucket `ricevute`) | `{ ok, spesa }` | Claude vision legge importo/descrizione/data e INSERISCE la spesa variabile con `ricevuta_path` |
 | `f24-estrai` | finance | `{ storage_path }` (bucket `f24`) · `{ f24_id }` (rilettura) | `{ ok, righe: F24[] }` | Claude legge il PDF, una riga `f24` per rata; in rilettura aggiorna la riga e aggiunge le rate mancanti |
 | `onboarding-completato` | cliente | `{}` | `{ ok, completato: boolean }` | Se le 3 schede sono `inviato`: calcola `profilo`/`ore_operative`, `stato_onboarding='completato'` (solo da nuovo/in_lavorazione), `onboarding_completato_il`; Telegram una sola volta |
@@ -44,5 +44,5 @@ Risposta sempre `{ ok: true, ...dati }` oppure `{ ok: false, error: "<messaggio 
 2. Notion: timeout 20 s + un secondo tentativo. Un cliente che fallisce → `logError(…, { silent: true })`; Telegram solo se falliscono tutti.
 3. Nessun lavoro dopo la risposta HTTP (niente fire-and-forget).
 4. Nel `context` di `logError` mai token, cookie o segreti.
-5. Le date "a muro" italiane si salvano come se fossero UTC: non convertire fusi a metà strada.
+5. Le date sono istanti reali (`timestamptz`): il backend salva ISO UTC così com'è, il frontend formatta nel fuso del browser (Italia). Niente più "ora a muro salvata come UTC" del vecchio sistema.
 6. La fase del cliente avanza da sola ma non regredisce mai e non tocca `completato`.

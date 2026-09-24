@@ -10,7 +10,7 @@ import { HAS_ANTHROPIC, streamAnthropicText } from "../_shared/anthropic.ts";
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, renderScheda, schedeComplete } from "../_shared/materiale.ts";
 
-interface Body {
+type Body = {
   cliente_id?: unknown;
 }
 

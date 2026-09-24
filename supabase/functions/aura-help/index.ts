@@ -1,7 +1,7 @@
 /**
  * aura-help — aiuto contestuale di Aura mentre il cliente compila una scheda.
  * Body: { domanda, questionario_id, domanda_id } → { ok, risposta }.
- * Rate limit: private.aura_help_allowed(user, 20, 3600). Aura NON risponde al
+ * Rate limit: public.aura_help_allowed(user, 20, 3600) (wrapper, solo service_role). Aura NON risponde al
  * posto del cliente: spiega la domanda e lo aiuta a formulare la SUA risposta.
  */
 import { gestisciErrore, HttpError, json, leggiBody, preflight } from "../_shared/http.ts";
@@ -97,9 +97,8 @@ Deno.serve(async (req: Request) => {
     const q: QuestionarioId | null = eQuestionarioId(body.questionario_id) ? body.questionario_id : null;
     const domandaId = typeof body.domanda_id === "string" ? body.domanda_id.trim().slice(0, 80) : "";
 
-    // Rate limit per utente (schema private, solo service_role).
+    // Rate limit per utente: wrapper public.aura_help_allowed (EXECUTE solo service_role).
     const { data: permesso, error: errLimite } = await adminClient()
-      .schema("private")
       .rpc("aura_help_allowed", { p_user: c.id, p_max: 20, p_window_secs: 3600 });
     if (errLimite) {
       await logError("aura-help:rate_limit", errLimite, { user: c.id }, { silent: true });

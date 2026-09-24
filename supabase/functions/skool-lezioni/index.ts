@@ -26,7 +26,8 @@ Deno.serve(async (req: Request) => {
     if (!r.ok) {
       await logError("skool-sync", `skool sync: ${r.motivo}`, { dettaglio: r.dettaglio.slice(0, 300) });
       // Niente totale/nuove: il catalogo già salvato resta valido (Aura continua a usarlo).
-      await aggiornaSync("skool", { esito: "errore", dettaglio: r.dettaglio.slice(0, 500) });
+      // sync_stati.esito accetta solo ok|errore|parziale: il motivo va nel dettaglio.
+      await aggiornaSync("skool", { esito: "errore", dettaglio: `${r.motivo}: ${r.dettaglio}`.slice(0, 500) });
       const cookieScaduto = r.motivo === "cookie_scaduto";
       if (cookieScaduto && daCron) await notifyTelegram(MSG_COOKIE);
       const msg = r.motivo === "config"
