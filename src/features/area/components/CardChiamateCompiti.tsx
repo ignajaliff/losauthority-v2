@@ -61,7 +61,7 @@ const ETICHETTA_STATO_COMPITO: Record<string, string> = {
 function RigaCompito({ compito }: { compito: MioCompito }) {
   return (
     <li className="flex flex-wrap items-center gap-2 py-2">
-      <Badge variant={compito.stato === "done" ? "default" : compito.stato === "in_progress" ? "secondary" : "outline"}>
+      <Badge variant={compito.stato === "done" ? "active" : compito.stato === "in_progress" ? "expiring" : "outline"}>
         {ETICHETTA_STATO_COMPITO[compito.stato] ?? compito.stato}
       </Badge>
       <span className={compito.stato === "done" ? "flex-1 text-sm text-muted-foreground line-through" : "flex-1 text-sm"}>

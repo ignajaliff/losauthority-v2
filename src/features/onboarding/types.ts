@@ -17,14 +17,14 @@ export function eStatoOnboarding(valore: string): valore is StatoOnboarding {
   return (STATI_ONBOARDING as readonly string[]).includes(valore);
 }
 
-export type VarianteBadge = "default" | "secondary" | "outline" | "destructive";
+export type VarianteBadge = "active" | "expiring" | "churn" | "outline";
 
 export const VARIANTE_STATO_ONBOARDING: Record<StatoOnboarding, VarianteBadge> = {
   nuovo: "outline",
-  in_lavorazione: "secondary",
-  completato: "secondary",
-  hub_creato: "default",
-  fuori_target: "destructive",
+  in_lavorazione: "expiring",
+  completato: "expiring",
+  hub_creato: "active",
+  fuori_target: "churn",
 };
 
 export interface RigaListaOnboarding {

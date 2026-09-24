@@ -47,7 +47,7 @@ function ErroreRiga({ errore }: { errore: ErroreLog }) {
 /** Tabella degli errori: data/ora, scope, messaggio e dettagli espandibili. */
 export function ErroriTabella({ errori }: { errori: ErroreLog[] }) {
   return (
-    <div className="rounded-xl ring-1 ring-foreground/10">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

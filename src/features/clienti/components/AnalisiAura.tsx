@@ -24,7 +24,7 @@ export function AnalisiAura({ clienteId }: { clienteId: string }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           Analisi di Aura
-          <Badge variant={ha ? "secondary" : "outline"}>{ha ? "Pronta" : "Nessuna"}</Badge>
+          <Badge variant={ha ? "active" : "outline"}>{ha ? "Pronta" : "Nessuna"}</Badge>
         </CardTitle>
         <CardDescription>
           Aura legge le 3 schede del cliente: cosa funziona, cosa no, come risolverlo e il piano.

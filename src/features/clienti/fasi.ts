@@ -26,13 +26,13 @@ export function etichettaFase(value: string | null | undefined, breve = false): 
   return breve ? f.breve : f.label;
 }
 
-export type BadgeVariante = "default" | "secondary" | "outline" | "destructive";
+export type BadgeVariante = "active" | "expiring" | "churn" | "neutral" | "outline";
 
 /** Variante del Badge shadcn per la fase. */
 export function varianteFase(value: string | null | undefined): BadgeVariante {
-  if (value === "completato") return "default";
+  if (value === "completato") return "active";
   if (value === "onboarding") return "outline";
-  return "secondary";
+  return "expiring";
 }
 
 export type StatoOnboardingValore = "nuovo" | "in_lavorazione" | "completato" | "hub_creato" | "fuori_target";
@@ -51,8 +51,8 @@ export function etichettaStatoOnboarding(value: string | null | undefined): stri
 
 /** Variante del Badge shadcn per lo stato dell'onboarding. */
 export function varianteStatoOnboarding(value: string | null | undefined): BadgeVariante {
-  if (value === "hub_creato") return "default";
-  if (value === "fuori_target") return "destructive";
+  if (value === "hub_creato") return "active";
+  if (value === "fuori_target") return "churn";
   if (value === "nuovo") return "outline";
-  return "secondary";
+  return "expiring";
 }

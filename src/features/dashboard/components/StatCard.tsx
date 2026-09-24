@@ -1,24 +1,34 @@
-import { Card, CardContent } from "@/shared/components/ui/card";
 import { Skeleton } from "@/shared/components/ui/skeleton";
 
 interface StatCardProps {
   etichetta: string;
-  valore: number | undefined;
+  valore: number | string | undefined;
   caricamento: boolean;
+  /** Riga sotto la cifra (es. "ultimi 7 giorni"). */
+  nota?: string;
+  /** Colore della cifra: su = salvia, giù = argilla. */
+  direzione?: "su" | "giu" | "piatta";
 }
 
-/** Contatore sintetico della dashboard. */
-export function StatCard({ etichetta, valore, caricamento }: StatCardProps) {
+const COLORE_DIREZIONE = {
+  su: "text-status-active",
+  giu: "text-status-churn",
+  piatta: "text-foreground",
+} as const;
+
+/** Contatore della dashboard (Marmo): occhiello + cifra in mono. */
+export function StatCard({ etichetta, valore, caricamento, nota, direzione = "piatta" }: StatCardProps) {
   return (
-    <Card size="sm">
-      <CardContent className="grid gap-1">
-        <p className="text-xs text-muted-foreground">{etichetta}</p>
-        {caricamento ? (
-          <Skeleton className="h-8 w-16" />
-        ) : (
-          <p className="text-2xl font-semibold tabular-nums tracking-tight">{valore ?? "—"}</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card px-6 py-5">
+      <span className="eyebrow text-[11px] tracking-[0.12em]">{etichetta}</span>
+      {caricamento ? (
+        <Skeleton className="h-8 w-16" />
+      ) : (
+        <span className={`figure text-[30px] leading-none font-medium tracking-[-0.02em] whitespace-nowrap ${COLORE_DIREZIONE[direzione]}`}>
+          {valore ?? "—"}
+        </span>
+      )}
+      {nota ? <span className="text-xs text-muted-foreground">{nota}</span> : null}
+    </div>
   );
 }

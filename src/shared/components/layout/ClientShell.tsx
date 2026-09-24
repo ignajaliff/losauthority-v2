@@ -1,25 +1,22 @@
 import { Link, Outlet } from "react-router-dom";
-import { LogOut } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { Button } from "@/shared/components/ui/button";
+import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
 
-/** Shell dell'area cliente: header essenziale + contenuto. */
+/** Shell dell'area cliente (Marmo): logo, "Esci", colonna centrale da 820px. */
 export function ClientShell() {
-  const { utente, signOut } = useAuth();
+  const { signOut } = useAuth();
   return (
-    <div className="min-h-screen bg-background">
-      <header className="flex h-14 items-center gap-3 border-b px-4 md:px-6">
-        <Link to="/area" className="text-base font-semibold tracking-tight">
-          Los Authority
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="flex items-center justify-between gap-4 border-b bg-card px-6 py-4">
+        <Link to="/area" aria-label="La tua area" className="text-foreground">
+          <MarmoLogo altezza={22} />
         </Link>
-        <div className="ml-auto flex items-center gap-3">
-          <span className="hidden text-sm text-muted-foreground sm:inline">{utente?.nombre}</span>
-          <Button size="sm" variant="ghost" aria-label="Esci" onClick={() => void signOut()}>
-            <LogOut className="size-4" aria-hidden />
-          </Button>
-        </div>
+        <Button size="sm" variant="ghost" onClick={() => void signOut()}>
+          Esci
+        </Button>
       </header>
-      <main className="mx-auto w-full max-w-3xl p-4 md:p-6">
+      <main className="mx-auto w-full max-w-[820px] flex-1 px-6 pt-11 pb-20">
         <Outlet />
       </main>
     </div>

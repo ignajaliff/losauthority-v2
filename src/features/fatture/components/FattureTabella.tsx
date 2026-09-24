@@ -21,7 +21,7 @@ export function StatoFattura({ fattura }: { fattura: Pick<Fattura, "pagata" | "p
   if (fattura.pagata) {
     return (
       <span className="flex flex-wrap items-center gap-1.5">
-        <Badge variant="secondary">Pagata</Badge>
+        <Badge variant="active" dot>Pagata</Badge>
         {fattura.pagata_il ? <span className="text-xs text-muted-foreground">il {formatDate(fattura.pagata_il)}</span> : null}
       </span>
     );
@@ -29,7 +29,7 @@ export function StatoFattura({ fattura }: { fattura: Pick<Fattura, "pagata" | "p
   const scaduta = Boolean(fattura.prossimo_pagamento && fattura.prossimo_pagamento < todayIso());
   return (
     <span className="flex flex-wrap items-center gap-1.5">
-      <Badge variant={scaduta ? "destructive" : "outline"}>{scaduta ? "Scaduta" : "Da pagare"}</Badge>
+      <Badge variant={scaduta ? "churn" : "outline"}>{scaduta ? "Scaduta" : "Da pagare"}</Badge>
       {fattura.prossimo_pagamento ? (
         <span className="text-xs text-muted-foreground">
           {scaduta ? "scaduta il" : "scade il"} {formatDate(fattura.prossimo_pagamento)}

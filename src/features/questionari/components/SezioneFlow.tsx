@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/shared/components/ui/alert";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
+import { AuraSfera } from "@/shared/components/brand/AuraSfera";
 import { DomandaCampo } from "./domande/DomandaCampo";
 import { SEZIONE_TEMPO_ID } from "../definizioni/onboarding";
 import { totaleOre, type ErroriDomande } from "../schema";
@@ -32,16 +33,24 @@ export function SezioneFlow(props: SezioneFlowProps) {
 
   return (
     <div className="grid gap-4">
-      <div>
-        <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Sezione {indice + 1} di {totale}
-        </p>
-        <p className="mt-1 text-base leading-relaxed">{sezione.intro}</p>
+      <div className="flex items-start gap-5">
+        <AuraSfera dimensione={56} />
+        <div className="min-w-0 flex-1 pt-1">
+          <p className="eyebrow">
+            Sezione {indice + 1} di {totale}
+          </p>
+          <p
+            aria-live="polite"
+            className="mt-3 font-display text-[clamp(18px,2.4vw,23px)] leading-[1.4] font-normal tracking-[-0.01em] text-foreground italic"
+          >
+            {sezione.intro}
+          </p>
+        </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">
+          <CardTitle className="font-display text-2xl font-medium">
             <span aria-hidden>{sezione.emoji}</span> {sezione.titolo}
           </CardTitle>
           {sezione.nota ? <CardDescription>{sezione.nota}</CardDescription> : null}

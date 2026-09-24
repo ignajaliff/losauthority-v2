@@ -10,10 +10,10 @@ interface UltimiOnboardingProps {
   errore: boolean;
 }
 
-function varianteStato(stato: string): "default" | "secondary" | "destructive" | "outline" {
-  if (stato === "completato" || stato === "hub_creato") return "default";
-  if (stato === "fuori_target") return "destructive";
-  if (stato === "in_lavorazione") return "secondary";
+function varianteStato(stato: string): "active" | "expiring" | "churn" | "outline" {
+  if (stato === "hub_creato") return "active";
+  if (stato === "fuori_target") return "churn";
+  if (stato === "in_lavorazione" || stato === "completato") return "expiring";
   return "outline";
 }
 

@@ -44,7 +44,7 @@ export default function SchedaClientePage() {
 
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div className="grid min-w-0 gap-2">
-          <h2 className="text-2xl font-semibold tracking-tight break-words">{cliente.utente.nombre}</h2>
+          <h2 className="text-[32px] leading-[1.1] break-words">{cliente.utente.nombre}</h2>
           <p className="text-sm text-muted-foreground">{cliente.utente.email}</p>
           <div className="flex flex-wrap items-center gap-2">
             <BadgeFase fase={cliente.fase} />
@@ -56,7 +56,7 @@ export default function SchedaClientePage() {
       </header>
 
       <Tabs value={tab} onValueChange={(v) => cambiaTab(String(v))}>
-        <TabsList>
+        <TabsList variant="line">
           <TabsTrigger value="panoramica">Panoramica</TabsTrigger>
           <TabsTrigger value="call">Call</TabsTrigger>
           {puoFinance ? <TabsTrigger value="fatture">Fatture</TabsTrigger> : null}

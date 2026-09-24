@@ -55,7 +55,7 @@ function FattureCella({ c }: { c: ClienteRiga }) {
 export function TabellaClienti({ righe }: { righe: ClienteRiga[] }) {
   const navigate = useNavigate();
   return (
-    <div className="rounded-xl bg-card ring-1 ring-foreground/10">
+    <div className="overflow-hidden rounded-lg border bg-card">
       <Table>
         <TableHeader>
           <TableRow>

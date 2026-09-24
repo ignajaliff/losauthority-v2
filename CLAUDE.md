@@ -173,7 +173,7 @@ Funciones en `private`: `tiene_rol(text)`, `es_team()`, `es_finance()`, `handle_
 * `scripts/migrate-data.mjs` idempotente (dry-run por defecto), helper compartido `shared/utils/invocaEdge.ts`
 
 **Lo que está pendiente**:
-* Prueba manual en browser de todos los módulos (ningún agente ejecutó `npm run dev`): flujo bozza → invio con RLS real, uploads a buckets, Select de Base UI dentro de los formularios
+* Prueba manual en browser de todos los módulos (solo se verificaron login y una vista previa estática del diseño): flujo bozza → invio con RLS real, uploads a buckets, Select de Base UI dentro de los formularios
 * Secrets de las Edge Functions en el dashboard (lista en docs/edge-functions.md) y `vault.create_secret` para el cron
 * Deshabilitar signup público en el dashboard del proyecto nuevo (security-rules §1)
 * Crear el primer usuario admin desde el dashboard (dev@gmail.com está en la allowlist)
@@ -181,10 +181,22 @@ Funciones en `private`: `tiene_rol(text)`, `es_team()`, `es_finance()`, `handle_
 * Repo remoto en GitHub (hoy solo local)
 
 **Problemas conocidos o deuda técnica**:
-* Badge "compiti completi" usa la variante `default` porque el tema no tiene token `success`; agregar token en `index.css` si se quiere verde
-* Gráfico de Finance con paleta neutra shadcn (`--chart-*`): revisar cuando se inyecte el design system
 * `profilo` del cliente: el cálculo determinista solo produce `saturo` o null (el viejo sistema nunca implementó la fase 2 con IA)
 * `calendar-sync` no cierra automáticamente las call pasadas de origen manual (el viejo sí)
+
+---
+
+## Design system "Marmo Console"
+
+El look es el mismo del gestionale anterior (monocromo, tema claro "carta"), portado a tokens Tailwind v4 en `src/index.css`:
+* **Fuentes** (`@fontsource`): Cormorant Garamond para `h1/h2/h3` y la utilidad `display`; Hanken Grotesk Variable (`font-sans`); JetBrains Mono Variable (`font-mono`, utilidad `figure` para cifras).
+* **Colores**: ramp neutra `--ink-*` mapeada a los tokens shadcn (`background` = ink-50, `card` = blanco, `primary` = ink-950, `border` = ink-150, `input` = ink-200). Tres tonos de estado: `status-active` (sage), `status-expiring` (ochre), `status-churn` (clay) con su `-soft` de fondo; alias `success/warning/danger`. Nunca colores fijos en TSX.
+* **Radios**: `rounded-sm` 4px (botones, inputs), `rounded-md` 6px, `rounded-lg` 10px (cards, tablas), `rounded-2xl` 16px (cards del área cliente).
+* **Badge**: variantes `active | expiring | churn | neutral | outline` (+ prop `dot`); los alias shadcn `default/secondary/destructive` siguen funcionando pero los módulos usan los tonos.
+* **Utilidades propias**: `eyebrow` (11px, mayúsculas, espaciado), `figure`, `display`.
+* **Brand** en `src/shared/components/brand/`: `MarmoLogo` (W + WESLEY CAICEDO), `Monogramma` (iniciales en serif), `AuraSfera` (esfera animada de las schede; keyframes `marmo-aura-*` en index.css).
+* **Shells**: `AppShell` sidebar 256px + topbar 64px con blur; `ClientShell` columna de 820px; `PageHeader` con `occhiello` opcional. Tabs `variant="line"` para la scheda cliente.
+* **Login**: split-screen con el video `public/marmo/hero-statue.mp4` en escala de grises (copiado del proyecto viejo).
 
 ---
 

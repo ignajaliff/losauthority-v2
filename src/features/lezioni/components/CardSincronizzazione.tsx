@@ -14,10 +14,10 @@ interface CardSincronizzazioneProps {
   onSincronizza: () => void;
 }
 
-function badgeEsito(esito: string | null): { variant: "default" | "secondary" | "destructive" | "outline"; testo: string } {
-  if (esito === "ok") return { variant: "secondary", testo: "Riuscita" };
-  if (esito === "cookie_scaduto") return { variant: "destructive", testo: "Accesso Skool scaduto" };
-  if (esito === "errore") return { variant: "destructive", testo: "Errore" };
+function badgeEsito(esito: string | null): { variant: "active" | "churn" | "outline"; testo: string } {
+  if (esito === "ok") return { variant: "active", testo: "Riuscita" };
+  if (esito === "cookie_scaduto") return { variant: "churn", testo: "Accesso Skool scaduto" };
+  if (esito === "errore") return { variant: "churn", testo: "Errore" };
   if (!esito) return { variant: "outline", testo: "Mai lanciata" };
   return { variant: "outline", testo: esito };
 }

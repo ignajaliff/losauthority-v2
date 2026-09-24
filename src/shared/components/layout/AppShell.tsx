@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { useAuth, esFinance, etichettaRuolo } from "@/features/auth";
 import { Button } from "@/shared/components/ui/button";
-import { Separator } from "@/shared/components/ui/separator";
+import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
+import { Monogramma } from "@/shared/components/brand/Monogramma";
 import { cn } from "@/lib/utils";
 
 interface VoceNav {
@@ -58,25 +59,28 @@ function titoloPer(pathname: string): string {
   return TITOLI.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Gestionale";
 }
 
-function VoceSidebar({ voce }: { voce: VoceNav }) {
+function VoceSidebar({ voce, compatta = false }: { voce: VoceNav; compatta?: boolean }) {
   const Icon = voce.icon;
   return (
     <NavLink
       to={voce.href}
       className={({ isActive }) =>
         cn(
-          "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-          isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:bg-muted hover:text-foreground",
+          "flex shrink-0 items-center gap-3 rounded-md text-sm transition-colors",
+          compatta ? "px-3 py-2" : "px-3 py-2.5",
+          isActive
+            ? "bg-sidebar-accent font-semibold text-sidebar-foreground [&_svg]:opacity-100"
+            : "font-medium text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground [&_svg]:opacity-70",
         )
       }
     >
-      <Icon className="size-4" aria-hidden />
+      <Icon className="size-[17px]" strokeWidth={1.5} aria-hidden />
       {voce.label}
     </NavLink>
   );
 }
 
-/** Shell del gestionale: sidebar + topbar + contenuto (Outlet). */
+/** Shell del gestionale (Marmo Console): sidebar 256px + topbar 64px + contenuto. */
 export function AppShell() {
   const { utente, signOut } = useAuth();
   const navigate = useNavigate();
@@ -86,51 +90,64 @@ export function AppShell() {
   const eAdmin = rol === "admin";
 
   const filtra = (v: VoceNav) => (!v.soloFinance || puoFinance) && (!v.soloAdmin || eAdmin);
+  const principali = VOCI_PRINCIPALI.filter(filtra);
+  const secondarie = VOCI_SECONDARIE.filter(filtra);
 
   return (
     <div className="flex min-h-screen bg-background">
-      <aside className="hidden w-60 shrink-0 flex-col border-r bg-sidebar p-4 md:flex">
-        <div className="mb-6 px-3">
-          <p className="text-lg font-semibold tracking-tight">Los Authority</p>
-          <p className="text-xs text-muted-foreground">Gestionale</p>
+      <aside className="sticky top-0 hidden h-screen w-(--sidebar-w) shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
+        <div className="flex h-(--header-h) items-center border-b border-border-faint px-5">
+          <MarmoLogo altezza={20} />
         </div>
-        <nav aria-label="Principale" className="flex flex-col gap-1">
-          {VOCI_PRINCIPALI.filter(filtra).map((v) => (
+
+        <nav aria-label="Principale" className="flex flex-1 flex-col gap-0.5 px-3.5 pt-4">
+          <p className="eyebrow px-2.5 pt-2 pb-1.5 text-[10px]">Gestionale</p>
+          {principali.map((v) => (
+            <VoceSidebar key={v.href} voce={v} />
+          ))}
+          <p className="eyebrow px-2.5 pt-5 pb-1.5 text-[10px]">Sistema</p>
+          {secondarie.map((v) => (
             <VoceSidebar key={v.href} voce={v} />
           ))}
         </nav>
-        <Separator className="my-4" />
-        <nav aria-label="Secondaria" className="flex flex-col gap-1">
-          {VOCI_SECONDARIE.filter(filtra).map((v) => (
-            <VoceSidebar key={v.href} voce={v} />
-          ))}
-        </nav>
-        <div className="mt-auto px-3 pt-4">
-          <p className="truncate text-sm font-medium">{utente?.nombre}</p>
-          <p className="truncate text-xs text-muted-foreground">{utente?.email}</p>
-          <p className="text-xs text-muted-foreground">{rol ? etichettaRuolo(rol) : ""}</p>
+
+        <div className="border-t border-border-faint p-3.5">
+          <div className="flex min-w-0 items-center gap-[11px] px-2.5 py-2">
+            <Monogramma nome={utente?.nombre || utente?.email} inverso />
+            <span className="min-w-0">
+              <span className="block truncate text-[13px] font-semibold text-sidebar-foreground">
+                {rol ? etichettaRuolo(rol) : "Utente"}
+              </span>
+              <span className="block max-w-[150px] truncate text-[11px] text-muted-foreground">{utente?.email}</span>
+            </span>
+          </div>
         </div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-3 border-b px-4 md:px-6">
-          <h1 className="text-base font-semibold">{titoloPer(pathname)}</h1>
-          <div className="ml-auto flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex h-(--header-h) shrink-0 items-center justify-between gap-3 border-b bg-card/85 px-4 backdrop-blur-md md:px-8">
+          <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-[-0.01em]">{titoloPer(pathname)}</h1>
+          <div className="flex shrink-0 items-center gap-3">
             <Button size="sm" onClick={() => navigate("/clienti/nuovo")}>
-              <Plus className="size-4" aria-hidden />
+              <Plus aria-hidden />
               Nuovo cliente
             </Button>
-            <Button size="sm" variant="ghost" aria-label="Esci" onClick={() => void signOut()}>
-              <LogOut className="size-4" aria-hidden />
+            <Button size="icon" variant="outline" className="text-muted-foreground" aria-label="Esci" title="Esci" onClick={() => void signOut()}>
+              <LogOut aria-hidden />
             </Button>
           </div>
         </header>
-        <nav aria-label="Principale (mobile)" className="flex gap-1 overflow-x-auto border-b px-2 py-2 md:hidden">
-          {[...VOCI_PRINCIPALI, ...VOCI_SECONDARIE].filter(filtra).map((v) => (
-            <VoceSidebar key={v.href} voce={v} />
+
+        <nav
+          aria-label="Principale (mobile)"
+          className="flex gap-1 overflow-x-auto border-b bg-card px-3 py-2 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {[...principali, ...secondarie].map((v) => (
+            <VoceSidebar key={v.href} voce={v} compatta />
           ))}
         </nav>
-        <main className="flex-1 p-4 md:p-6">
+
+        <main className="flex-1 p-4 md:p-8">
           <Outlet />
         </main>
       </div>

@@ -19,18 +19,18 @@ export function SkeletonBlocco({ altezza = "h-48" }: { altezza?: string }) {
 /** Stato di errore di lettura, coerente in tutto il progetto. */
 export function ErroreCaricamento({ messaggio }: { messaggio?: string }) {
   return (
-    <div role="alert" className="text-destructive text-sm">
+    <div role="alert" className="rounded-sm border border-status-churn/30 bg-status-churn-soft/60 px-3 py-2 text-sm text-status-churn">
       {messaggio ?? "Non è stato possibile caricare i dati. Prova a ricaricare la pagina."}
     </div>
   );
 }
 
-/** Stato vuoto. */
+/** Stato vuoto (Marmo): riquadro tratteggiato su fondo carta, titolo in serif. */
 export function StatoVuoto({ titolo, testo }: { titolo: string; testo?: string }) {
   return (
-    <div className="rounded-lg border border-dashed p-8 text-center">
-      <p className="font-medium">{titolo}</p>
-      {testo ? <p className="mt-1 text-sm text-muted-foreground">{testo}</p> : null}
+    <div className="rounded-lg border border-dashed border-input bg-muted/40 px-6 py-10 text-center">
+      <p className="display text-xl text-foreground">{titolo}</p>
+      {testo ? <p className="mx-auto mt-1.5 max-w-md text-sm leading-relaxed text-muted-foreground">{testo}</p> : null}
     </div>
   );
 }

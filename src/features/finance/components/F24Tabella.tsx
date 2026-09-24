@@ -14,16 +14,16 @@ interface F24TabellaProps {
   onElimina: (f24: F24) => void;
 }
 
-type VarianteBadge = "outline" | "secondary" | "destructive" | "default";
+type VarianteBadge = "outline" | "active" | "churn" | "expiring";
 
 /** Etichetta della scadenza: scaduto / oggi / domani / entro 7 giorni / data. */
 export function badgeScadenza(scadenza: string | null, oggi = todayIso()): { variante: VarianteBadge; testo: string } {
   if (!scadenza) return { variante: "outline", testo: "Senza scadenza" };
   const giorni = Math.round((Date.parse(scadenza) - Date.parse(oggi)) / 86400000);
-  if (giorni < 0) return { variante: "destructive", testo: `Scaduto il ${formatDate(scadenza)}` };
-  if (giorni === 0) return { variante: "destructive", testo: "Scade oggi" };
-  if (giorni === 1) return { variante: "destructive", testo: "Scade domani" };
-  if (giorni <= 7) return { variante: "default", testo: `Scade il ${formatDate(scadenza)}` };
+  if (giorni < 0) return { variante: "churn", testo: `Scaduto il ${formatDate(scadenza)}` };
+  if (giorni === 0) return { variante: "churn", testo: "Scade oggi" };
+  if (giorni === 1) return { variante: "churn", testo: "Scade domani" };
+  if (giorni <= 7) return { variante: "expiring", testo: `Scade il ${formatDate(scadenza)}` };
   return { variante: "outline", testo: `Scade il ${formatDate(scadenza)}` };
 }
 
@@ -46,7 +46,7 @@ export function F24Tabella({ righe, onModifica, onElimina }: F24TabellaProps) {
       <TableBody>
         {righe.map((f) => {
           const badge = f.pagato
-            ? { variante: "secondary" as const, testo: `Pagato${f.pagato_il ? ` il ${formatDate(f.pagato_il)}` : ""}` }
+            ? { variante: "active" as const, testo: `Pagato${f.pagato_il ? ` il ${formatDate(f.pagato_il)}` : ""}` }
             : badgeScadenza(f.scadenza);
           return (
             <TableRow key={f.id} className={f.pagato ? "text-muted-foreground" : undefined}>

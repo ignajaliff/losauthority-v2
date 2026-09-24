@@ -21,7 +21,7 @@ function Voce({ etichetta, children }: { etichetta: string; children: React.Reac
 export function PanoramicaTab({ cliente }: { cliente: ClienteDettaglio }) {
   return (
     <div className="grid gap-6">
-      <dl className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <dl className="flex flex-wrap items-center gap-x-8 gap-y-4 rounded-lg bg-card p-4 border">
         <Voce etichetta="Fase">
           <BadgeFase fase={cliente.fase} />
         </Voce>

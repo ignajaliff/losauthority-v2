@@ -7,7 +7,7 @@ import { useMioCliente } from "../hooks/useArea";
 import { CardHub, CardSchede } from "../components/CardSchede";
 import { CardChiamate, CardCompiti } from "../components/CardChiamateCompiti";
 
-/** Hub dell'area cliente: schede, hub Notion, call, compiti e fatture proprie. */
+/** Hub dell'area cliente (Marmo): schede, hub Notion, call, compiti e fatture proprie. */
 export default function AreaPage() {
   const { utente } = useAuth();
   const { data: cliente } = useMioCliente(utente?.id);
@@ -16,8 +16,12 @@ export default function AreaPage() {
   const nome = primoNome(utente.nombre);
 
   return (
-    <div className="grid gap-6">
-      <PageHeader titolo={nome ? `Ciao, ${nome}` : "La tua area"} sottotitolo="Il tuo percorso Los Authority, in un posto solo." />
+    <div className="grid gap-7">
+      <PageHeader
+        occhiello={`La tua area${nome ? ` · ${nome}` : ""}`}
+        titolo="Le tue schede"
+        sottotitolo="Compila le 3 schede: più le riempi, migliore sarà l'ambiente che Wesley e il suo team costruiranno per te."
+      />
 
       {cliente?.notion_hub_url ? <CardHub url={cliente.notion_hub_url} /> : null}
 

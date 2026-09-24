@@ -37,12 +37,12 @@ export function PipelineBoard({ leads, onApri, onSposta }: PipelineBoardProps) {
             <section
               key={stage.key}
               aria-label={`Colonna ${stage.label}`}
-              className="flex w-72 shrink-0 flex-col rounded-xl bg-muted/50 ring-1 ring-foreground/10"
+              className="flex w-72 shrink-0 flex-col rounded-lg bg-muted/50 border"
             >
               <header className="flex items-center justify-between gap-2 px-3 py-2.5">
                 <h3 className="flex items-center gap-2 text-sm font-medium">
                   {stage.label}
-                  <span className="rounded-full bg-background px-2 py-0.5 font-mono text-xs text-muted-foreground ring-1 ring-foreground/10">
+                  <span className="rounded-full bg-background px-2 py-0.5 font-mono text-xs text-muted-foreground border">
                     {lista.length}
                   </span>
                 </h3>
