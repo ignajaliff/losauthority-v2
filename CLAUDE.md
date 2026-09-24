@@ -70,7 +70,7 @@ Migraciones versionadas en `supabase/migrations/` (aplicadas con el MCP; el arch
 |--------|--------|-----------------|-------|
 | Auth | Completo | user_roles, private.admin_emails | Login /auth/login, ProtectedRoute, roles admin/staff/staff_fatture/cliente |
 | Dashboard | UI lista | vista_clienti, clienti, error_log | Conteos, próximas call, últimos onboarding, errores |
-| Pipeline (lead) | UI lista | lead | Kanban por etapa |
+| Pipeline (lead) | UI lista | lead | Tabla CRM con embudo por stage, búsqueda, cambio de stage inline y panel lateral |
 | Clienti | UI lista | clienti, tags, clienti_tags, note_clienti, analisi, hub_board, hub_compiti | Lista (vista_clienti) + ficha con tabs |
 | Chiamate | UI lista | chiamate, chiamate_azioni, fathom_webhook_log | Tab Call de la ficha |
 | Onboarding / Questionari | UI lista | questionario_invii, questionario_risposte, questionario_allegati | 3 fichas: onboarding, avatar_dolori, offerta |

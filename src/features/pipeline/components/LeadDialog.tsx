@@ -4,13 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/shared/components/ui/sheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,17 +42,17 @@ interface LeadDialogProps {
 /** Dialog di creazione/modifica lead. Il form vive in un figlio così si rimonta a ogni apertura. */
 export function LeadDialog({ open, onOpenChange, lead }: LeadDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{lead ? "Modifica lead" : "Nuovo lead"}</DialogTitle>
-          <DialogDescription>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-[440px]">
+        <SheetHeader className="border-b px-6 py-[18px]">
+          <SheetTitle className="font-display text-xl font-medium">{lead ? "Modifica lead" : "Nuovo lead"}</SheetTitle>
+          <SheetDescription>
             {lead ? "Aggiorna i dati e la prossima azione." : "Aggiungi un contatto alla pipeline."}
-          </DialogDescription>
-        </DialogHeader>
+          </SheetDescription>
+        </SheetHeader>
         <LeadForm key={lead?.id ?? "nuovo"} lead={lead} onChiudi={() => onOpenChange(false)} />
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -84,7 +84,7 @@ function LeadForm({ lead, onChiudi }: { lead: Lead | null; onChiudi: () => void 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4" noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
         <FormField
           control={form.control}
           name="nome"
@@ -217,7 +217,7 @@ function LeadForm({ lead, onChiudi }: { lead: Lead | null; onChiudi: () => void 
           )}
         />
 
-        <DialogFooter className="sm:justify-between">
+        <SheetFooter className="flex-row items-center justify-between p-0 pt-2">
           {lead ? (
             <Button
               type="button"
@@ -240,7 +240,7 @@ function LeadForm({ lead, onChiudi }: { lead: Lead | null; onChiudi: () => void 
               {salva.isPending ? "Salvo…" : "Salva"}
             </Button>
           </div>
-        </DialogFooter>
+        </SheetFooter>
       </form>
 
       <AlertDialog open={confermaElimina} onOpenChange={setConfermaElimina}>

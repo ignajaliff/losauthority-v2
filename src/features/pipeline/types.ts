@@ -4,7 +4,7 @@ export type Lead = Tables<"lead">;
 export type LeadInsert = TablesInsert<"lead">;
 export type LeadUpdate = TablesUpdate<"lead">;
 
-/** Stage della pipeline, nell'ordine delle colonne del kanban (stesso CHECK della tabella). */
+/** Stage della pipeline, nell'ordine dell'imbuto (stesso CHECK della tabella). */
 export const LEAD_STAGE_KEYS = ["nuovo", "contattato", "call_fissata", "proposta", "cliente", "perso"] as const;
 export type LeadStage = (typeof LEAD_STAGE_KEYS)[number];
 
