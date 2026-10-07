@@ -20,8 +20,9 @@ El frontend (React + Vite 6) se publica como **Cloudflare Worker con static asse
 1. **Subir el código**: todo el proyecto tiene que estar commiteado (incluidos `package.json` y `package-lock.json` juntos) en un repo **privado** de GitHub. El repo contiene documentos internos (PDF de clientes, `.skill`): no hacerlo público. `.env`, `dist/` y `node_modules/` ya están en `.gitignore`.
 2. Cloudflare → **Workers & Pages → Create → Import a repository** → elegir el repo.
    - Nombre del proyecto: **`los-authority-v2`** (no `los-authority`: ese Worker ya existe y sirve la landing `wesleycaicedo.com`).
-   - Build command: `npm run build`
+   - Build command: `npm run build` (**obligatorio**: si queda vacío, el deploy falla con *«The `assets` property in your configuration is missing the required `directory` property»*, porque `wrangler` lee `wrangler.jsonc` sin el `wrangler.json` que genera el build)
    - Deploy command: `npx wrangler deploy`
+   - Alternativa en un solo campo: Deploy command `npm run deploy` (compila y despliega), con el Build command vacío
    - Root directory: vacío (la raíz)
 3. **Variables del build** (Settings → Build → *Build variables and secrets*, no las de runtime):
    - `VITE_SUPABASE_URL` = `https://tcvftvvbheacsjbadtfg.supabase.co`

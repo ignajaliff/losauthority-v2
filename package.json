@@ -9,6 +9,7 @@
     "typecheck": "tsc -b --noEmit",
     "lint": "oxlint",
     "preview": "vite preview",
+    "deploy": "npm run build && wrangler deploy",
     "db:types": "supabase gen types typescript --project-id tcvftvvbheacsjbadtfg --schema public > src/integrations/supabase/types.ts",
     "migrate:data": "node scripts/migrate-data.mjs"
   },

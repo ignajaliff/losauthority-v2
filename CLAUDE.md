@@ -233,7 +233,7 @@ Funciones en `private`: `tiene_rol(text)`, `es_team()`, `es_finance()`, `handle_
 * Deshabilitar signup público en el dashboard del proyecto nuevo (security-rules §1)
 * Crear el primer usuario admin desde el dashboard (dev@gmail.com está en la allowlist)
 * Ensayo de migración de datos, cron jobs aplicados; re-registro de webhooks al cutover (docs/cutover.md)
-* Repo remoto en GitHub (hoy solo local)
+* ~~Repo remoto en GitHub~~ → subido el 08/10/2026 a https://github.com/ignajaliff/losauthority-v2 (**público**, rama `main`, commit `51b7626`); los PDF, las `.skill` y los documentos de Wesley quedan fuera por `.gitignore` (decisión del usuario). Desde ahora: no escribir contraseñas ni datos de clientes en archivos del repo
 
 **Problemas conocidos o deuda técnica**:
 * `profilo` del cliente: el cálculo determinista solo produce `saturo` o null (el viejo sistema nunca implementó la fase 2 con IA)
