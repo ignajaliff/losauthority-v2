@@ -13,7 +13,8 @@ type Body = {
   nombre?: unknown;
   password?: unknown;
   telefono?: unknown;
-  tag_ids?: unknown;
+  /** Label dei tag (colonna clienti.tags). */
+  tags?: unknown;
   rol?: unknown;
   user_id?: unknown;
 }
@@ -87,21 +88,18 @@ async function creaCliente(body: Body): Promise<Response> {
   if (!nombre) throw new HttpError(400, "Inserisci il nome del cliente.");
   const { password } = passwordValida(body.password);
   const telefono = testo(body.telefono);
-  const tagIds = Array.isArray(body.tag_ids)
-    ? [...new Set(body.tag_ids.filter((t): t is string => typeof t === "string" && t.length > 0))]
+  const tags = Array.isArray(body.tags)
+    ? [...new Set(body.tags.filter((t): t is string => typeof t === "string").map((t) => t.trim()).filter((t) => t.length > 0 && t.length <= 60))]
     : [];
 
   const id = await creaUtenteAuth(email, password, nombre, "gestione-utenti:crea_cliente");
   const admin = adminClient();
-  if (telefono) {
-    const { error } = await admin.from("clienti").update({ telefono }).eq("id", id);
-    if (error) await logError("gestione-utenti:crea_cliente:telefono", error, { id }, { silent: true });
-  }
-  if (tagIds.length > 0) {
-    const { error } = await admin
-      .from("clienti_tags")
-      .insert(tagIds.map((tag_id) => ({ cliente_id: id, tag_id })));
-    if (error) await logError("gestione-utenti:crea_cliente:tag", error, { id, tag: tagIds.length }, { silent: true });
+  const patch: Record<string, unknown> = {};
+  if (telefono) patch.telefono = telefono;
+  if (tags.length > 0) patch.tags = tags;
+  if (Object.keys(patch).length > 0) {
+    const { error } = await admin.from("clienti").update(patch).eq("id", id);
+    if (error) await logError("gestione-utenti:crea_cliente:dati", error, { id, tag: tags.length }, { silent: true });
   }
   return json({ ok: true, id, password });
 }

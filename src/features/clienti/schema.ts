@@ -12,7 +12,7 @@ export const nuovoClienteSchema = z.object({
     .trim()
     .refine((v) => v.length === 0 || v.length >= 8, "Almeno 8 caratteri, oppure lascia vuoto"),
   telefono: z.string().trim(),
-  tag_ids: z.array(z.string()),
+  tags: z.array(z.string().trim().min(1).max(60)),
   nuovo_tag: z.string().trim().max(60, "Massimo 60 caratteri"),
 });
 export type NuovoClienteValues = z.infer<typeof nuovoClienteSchema>;
@@ -37,10 +37,22 @@ export const statoClienteSchema = z.object({
 });
 export type StatoClienteValues = z.infer<typeof statoClienteSchema>;
 
-export const notaSchema = z.object({
-  testo: z.string().trim().min(1, "Scrivi la nota").max(5000, "Massimo 5000 caratteri"),
-});
-export type NotaValues = z.infer<typeof notaSchema>;
+/** Link della lezione Skool con cui fare un sotto-compito: vuoto oppure URL della classroom. */
+const linkSkoolSchema = z
+  .string()
+  .trim()
+  .max(500, "Massimo 500 caratteri")
+  .refine((v) => v === "" || /^https:\/\/(www\.)?skool\.com\//.test(v), "Deve essere un link di skool.com (https://www.skool.com/…)");
+
+export const compitoSchema = z
+  .object({
+    testo: z.string().trim().min(1, "Scrivi il compito").max(1000, "Massimo 1000 caratteri"),
+    link_skool: linkSkoolSchema,
+    /** Mini messaggio accanto al link ("Dal minuto 20:03"); ha senso solo con il link. */
+    nota_skool: z.string().trim().max(120, "Massimo 120 caratteri"),
+  })
+  .refine((v) => v.nota_skool === "" || v.link_skool !== "", { message: "La nota ha senso solo insieme al link della lezione", path: ["nota_skool"] });
+export type CompitoValues = z.infer<typeof compitoSchema>;
 
 export const nuovoTagSchema = z.object({
   label: z.string().trim().min(1, "Scrivi il nome del tag").max(60, "Massimo 60 caratteri"),

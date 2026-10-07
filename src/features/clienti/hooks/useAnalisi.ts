@@ -6,26 +6,22 @@ import { invocaEdge, messaggioErrore } from "../invocaEdge";
 import type { StatoAnalisi } from "../types";
 import { chiaviClienti } from "./chiavi";
 
-/** Analisi di Aura del cliente + numero di schede già inviate (ne servono 3). */
+/** Analisi di Aura del cliente + se la scheda onboarding è stata inviata. */
 export function useAnalisi(clienteId: string) {
   return useQuery({
     queryKey: chiaviClienti.analisi(clienteId),
     queryFn: async (): Promise<StatoAnalisi> => {
-      const [analisi, invii] = await Promise.all([
+      const [analisi, scheda] = await Promise.all([
         supabase
           .from("analisi")
           .select("contenuto, generato_il")
           .eq("cliente_id", clienteId)
           .maybeSingle(),
-        supabase
-          .from("questionario_invii")
-          .select("id", { count: "exact", head: true })
-          .eq("cliente_id", clienteId)
-          .eq("stato", "inviato"),
+        supabase.from("data_onboarding").select("stato").eq("id", clienteId).maybeSingle(),
       ]);
       if (analisi.error) throw analisi.error;
-      if (invii.error) throw invii.error;
-      return { analisi: analisi.data, schedeInviate: invii.count ?? 0 };
+      if (scheda.error) throw scheda.error;
+      return { analisi: analisi.data, schedaInviata: scheda.data?.stato === "inviato" };
     },
   });
 }
@@ -35,7 +31,7 @@ interface RispostaAnalisi {
   contenuto: string;
 }
 
-/** "Genera analisi con Aura": legge le 3 schede e scrive `analisi`. */
+/** "Genera analisi con Aura": legge la scheda onboarding e scrive `analisi`. */
 export function useGeneraAnalisi(clienteId: string) {
   const queryClient = useQueryClient();
   return useMutation({

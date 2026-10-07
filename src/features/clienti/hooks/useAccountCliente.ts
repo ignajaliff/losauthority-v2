@@ -18,7 +18,8 @@ export interface NuovoClienteInput {
   email: string;
   password?: string;
   telefono?: string;
-  tag_ids: string[];
+  /** Label dei tag: finiscono in `clienti.tags`. */
+  tags: string[];
 }
 
 export function useCreaCliente() {
@@ -31,7 +32,7 @@ export function useCreaCliente() {
         nombre: input.nombre,
         password: input.password || undefined,
         telefono: input.telefono || undefined,
-        tag_ids: input.tag_ids,
+        tags: input.tags,
       });
       return {
         id: r.id ?? "",

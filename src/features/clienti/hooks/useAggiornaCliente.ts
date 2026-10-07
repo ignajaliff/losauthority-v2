@@ -25,27 +25,13 @@ export function useAggiornaCliente(clienteId: string, messaggio = "Modifiche sal
   });
 }
 
-/** Allinea le righe di `clienti_tags` all'insieme di tag scelto. */
+/** Salva l'insieme di label scelte in `clienti.tags`. */
 export function useAggiornaTagCliente(clienteId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ attuali, scelti }: { attuali: string[]; scelti: string[] }) => {
-      const daTogliere = attuali.filter((id) => !scelti.includes(id));
-      const daAggiungere = scelti.filter((id) => !attuali.includes(id));
-      if (daTogliere.length > 0) {
-        const { error } = await supabase
-          .from("clienti_tags")
-          .delete()
-          .eq("cliente_id", clienteId)
-          .in("tag_id", daTogliere);
-        if (error) throw error;
-      }
-      if (daAggiungere.length > 0) {
-        const { error } = await supabase
-          .from("clienti_tags")
-          .insert(daAggiungere.map((tag_id) => ({ cliente_id: clienteId, tag_id })));
-        if (error) throw error;
-      }
+    mutationFn: async (tags: string[]) => {
+      const { error } = await supabase.from("clienti").update({ tags: [...new Set(tags)] }).eq("id", clienteId);
+      if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Tag aggiornati");

@@ -1,4 +1,4 @@
-// Passi 5-8 · analisi, note_clienti, chiamate + chiamate_azioni, fathom_webhook_log.
+// Passi 5-8 · analisi, note (client_notes → clienti.note), chiamate + chiamate_azioni, fathom_webhook_log.
 import { leggiTutto, scriviBlocchi, testo } from "./comune.mjs";
 
 function clienteMappato(ctx, idVecchio) {
@@ -27,25 +27,44 @@ export async function migraAnalisi(ctx) {
   await scriviBlocchi(ctx, "analisi", righe, { onConflict: "cliente_id", idDi: (r) => r.cliente_id });
 }
 
+/** "[gg/mm/aaaa] testo": le note datate del vecchio sistema diventano paragrafi di clienti.note. */
+function paragrafoNota(n) {
+  const giorno = n.created_at ? new Date(n.created_at).toLocaleDateString("it-IT") : null;
+  const corpo = testo(n.body);
+  return giorno ? `[${giorno}] ${corpo}` : corpo;
+}
+
+/**
+ * client_notes → clienti.note (una sola nota per cliente, decisione 26/09/2026).
+ * Deterministico e rieseguibile: nota = note di client_details + note datate in ordine.
+ */
 export async function migraNote(ctx) {
-  const vecchie = await leggiTutto(ctx.old, "client_notes");
-  ctx.report.conta("note_clienti", "vecchio", vecchie.length);
-  const righe = [];
+  const vecchie = await leggiTutto(ctx.old, "client_notes", { ordine: { colonna: "created_at", ascendente: true } });
+  const dettagli = await leggiTutto(ctx.old, "client_details", { select: "id, note" });
+  ctx.report.conta("clienti.note", "vecchio", vecchie.length);
+  const baseDi = new Map(dettagli.map((d) => [clienteMappato(ctx, d.id), testo(d.note)]));
+
+  const paragrafi = new Map();
   for (const n of vecchie) {
     const clienteId = clienteMappato(ctx, n.client_id);
     if (!clienteId) {
-      ctx.report.salta("note_clienti", n.id, "cliente non migrato");
+      ctx.report.salta("clienti.note", n.id, "cliente non migrato");
       continue;
     }
-    const corpo = testo(n.body);
-    if (!corpo) {
-      ctx.report.salta("note_clienti", n.id, "testo vuoto");
+    if (!testo(n.body)) {
+      ctx.report.salta("clienti.note", n.id, "testo vuoto");
       continue;
     }
-    if (corpo.length > 5000) ctx.report.nota(`Nota ${n.id} troncata a 5000 caratteri`);
-    righe.push({ id: n.id, cliente_id: clienteId, autore_id: null, testo: corpo.slice(0, 5000), created_at: n.created_at });
+    paragrafi.set(clienteId, [...(paragrafi.get(clienteId) ?? []), paragrafoNota(n)]);
   }
-  await scriviBlocchi(ctx, "note_clienti", righe);
+
+  const righe = [];
+  for (const [clienteId, blocchi] of paragrafi) {
+    const note = [baseDi.get(clienteId), ...blocchi].filter(Boolean).join("\n\n");
+    if (note.length > 5000) ctx.report.nota(`Cliente ${clienteId}: note troncate a 5000 caratteri`);
+    righe.push({ id: clienteId, note: note.slice(0, 5000) });
+  }
+  await scriviBlocchi(ctx, "clienti", righe, { onConflict: "id", idDi: (r) => r.id });
 }
 
 export async function migraChiamate(ctx) {

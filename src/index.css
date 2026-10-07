@@ -265,6 +265,29 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.001ms !important;
     }
+    /* Eccezione (stesso layer, così vince per specificità): la linea del tempo del
+       piano d'azione tiene un movimento minimo — richiesta esplicita del 29/09/2026. */
+    .marmo-tappe-riga,
+    .marmo-tappe-punto {
+      transition-duration: 300ms !important;
+    }
+    .marmo-tappe-scheda {
+      animation-duration: 250ms !important;
+    }
+    /* Cervello del tuo branding: linee che si disegnano e nodi che entrano, più brevi; il respiro resta lento. */
+    .marmo-cervello-linea {
+      animation-duration: 600ms !important;
+    }
+    .marmo-cervello-nodo {
+      animation-duration: 300ms !important;
+    }
+    .marmo-cervello-respiro {
+      animation: marmo-cervello-respiro 7s ease-in-out infinite !important;
+    }
+    /* Carta dell'avatar: il giro fronte/dossier resta, più corto. */
+    .marmo-carta-gira {
+      animation-duration: 320ms !important;
+    }
   }
 }
 
@@ -343,6 +366,44 @@
 .marmo-aura--speaking .marmo-aura-dot {
   animation-duration: 2.4s;
 }
+
+/* Tre puntini di caricamento pagina (ContenutoPagina). */
+.marmo-punti {
+  display: inline-flex;
+  gap: 6px;
+}
+.marmo-punti i {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--color-muted-foreground);
+  animation: marmo-punti 1.2s ease-in-out infinite;
+}
+.marmo-punti i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.marmo-punti i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+@keyframes marmo-punti {
+  0%,
+  80%,
+  100% {
+    opacity: 0.25;
+    transform: translateY(0);
+  }
+  40% {
+    opacity: 1;
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marmo-punti i {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .marmo-aura-breathe {
     animation: marmo-aura-breathe 6s ease-in-out infinite !important;
@@ -356,6 +417,53 @@
   .marmo-aura--speaking .marmo-aura-dot {
     animation-duration: 2.4s !important;
   }
+}
+
+/* Cervello del tuo branding (area cliente): le linee si "disegnano" dal cervello
+   verso i quattro nodi (pathLength="1" sul path → dasharray in unità di percorso)
+   e l'alone dietro al cervello respira piano. */
+@keyframes marmo-cervello-linea {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.marmo-cervello-linea {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: marmo-cervello-linea 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes marmo-cervello-respiro {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.85;
+  }
+}
+.marmo-cervello-respiro {
+  animation: marmo-cervello-respiro 7s ease-in-out infinite;
+}
+
+/* Carta d'identità dell'avatar: "Gira per il dossier" ruota la carta sul suo asse. */
+@keyframes marmo-carta-gira {
+  from {
+    transform: perspective(1400px) rotateY(-75deg);
+    opacity: 0;
+  }
+  to {
+    transform: perspective(1400px) rotateY(0);
+    opacity: 1;
+  }
+}
+.marmo-carta-gira {
+  transform-origin: center;
+  animation: marmo-carta-gira 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @media print {

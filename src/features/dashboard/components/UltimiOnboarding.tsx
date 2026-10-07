@@ -24,7 +24,7 @@ export function UltimiOnboarding({ onboarding, caricamento, errore }: UltimiOnbo
     <ListaCard
       titolo="Ultimi onboarding"
       sottotitolo="Le schede più recenti dei tuoi clienti"
-      link={{ href: "/onboarding", testo: "Tutti" }}
+      link={{ href: "/clienti", testo: "Tutti" }}
       caricamento={caricamento}
       errore={errore}
       vuoto={righe.length === 0}
@@ -32,7 +32,7 @@ export function UltimiOnboarding({ onboarding, caricamento, errore }: UltimiOnbo
     >
       {righe.map((o) => (
         <li key={o.id}>
-          <Link to={`/onboarding/${o.id}`} className="flex items-center gap-3 py-2 hover:bg-muted/50">
+          <Link to={`/clienti/${o.id}?tab=onboarding`} className="flex items-center gap-3 py-2 hover:bg-muted/50">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{o.nombre || o.email || "—"}</p>
               <p className="truncate text-xs text-muted-foreground">{o.email}</p>

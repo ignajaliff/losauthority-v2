@@ -1,0 +1,23 @@
+/* Vista di stampa dell'offerta (/stampa/offerta/:id): window.print → "Salva come PDF". */
+@page {
+  margin: 16mm;
+}
+@media print {
+  .no-stampa {
+    display: none !important;
+  }
+  .offerta-stampa {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  .offerta-stampa article {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .offerta-stampa section {
+    break-inside: avoid;
+  }
+  .offerta-stampa a {
+    text-decoration: none;
+  }
+}

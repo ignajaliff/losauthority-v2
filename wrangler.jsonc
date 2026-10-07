@@ -1,0 +1,14 @@
+// Deploy del gestionale su Cloudflare Workers (solo static assets, nessun Worker script).
+// Il build lo fa @cloudflare/vite-plugin (vite.config.ts): non mettere qui `assets.directory`,
+// lo imposta il plugin. Guida completa: docs/deploy-cloudflare.md
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // NON usare "los-authority": è il Worker che oggi serve la landing wesleycaicedo.com.
+  "name": "los-authority-v2",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    // SPA: ogni percorso dell'app (/area/..., /contratto/:token, /stampa/...) risponde con index.html;
+    // i file che non esistono (richieste non di navigazione) restano 404.
+    "not_found_handling": "single-page-application"
+  }
+}

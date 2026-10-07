@@ -2,18 +2,17 @@ import { useState } from "react";
 import { Button } from "@/shared/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import { ErroreCaricamento, SkeletonRighe } from "@/shared/components/layout/StatoCaricamento";
+import { useCreaTag, useTags } from "@/features/tag";
 import { useAggiornaTagCliente } from "../hooks/useAggiornaCliente";
-import { useCreaTag, useTags } from "../hooks/useTags";
 import type { ClienteDettaglio } from "../types";
 import { TagPicker } from "./TagPicker";
 
-/** Tag del cliente: aggiungi/rimuovi righe in `clienti_tags`, con creazione al volo. */
+/** Tag del cliente: la colonna `clienti.tags` (label), con creazione al volo nel catalogo. */
 export function TagCliente({ cliente }: { cliente: ClienteDettaglio }) {
   const { data: tags, isLoading, isError } = useTags();
-  const creaTag = useCreaTag();
+  const creaTag = useCreaTag({ silenzioso: true });
   const aggiorna = useAggiornaTagCliente(cliente.id);
-  const attuali = cliente.tags.map((t) => t.id);
-  const [scelti, setScelti] = useState<string[]>(attuali);
+  const [scelti, setScelti] = useState<string[]>(cliente.tags);
   const [nuovoTag, setNuovoTag] = useState("");
   const occupato = creaTag.isPending || aggiorna.isPending;
 
@@ -22,11 +21,11 @@ export function TagCliente({ cliente }: { cliente: ClienteDettaglio }) {
     if (nuovoTag.trim()) {
       const creato = await creaTag.mutateAsync(nuovoTag).catch(() => null);
       if (!creato) return;
-      finali = [...new Set([...scelti, creato.id])];
+      finali = [...new Set([...scelti, creato.label])];
       setScelti(finali);
       setNuovoTag("");
     }
-    aggiorna.mutate({ attuali, scelti: finali });
+    aggiorna.mutate(finali);
   }
 
   return (

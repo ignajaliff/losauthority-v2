@@ -1,6 +1,8 @@
 export { FASI, STATI_ONBOARDING, etichettaFase, etichettaStatoOnboarding, varianteFase, varianteStatoOnboarding } from "./fasi";
 export type { Fase, FaseValore, StatoOnboardingValore } from "./fasi";
 export { useClienti } from "./hooks/useClienti";
-export { useTags } from "./hooks/useTags";
-export { chiaviClienti, chiaviTag } from "./hooks/chiavi";
-export type { ClienteRiga, Tag } from "./types";
+export { useCambiaStatoCompito, useCompiti } from "./hooks/useCompiti";
+export { avanzamento, eFatto, indiceTappaCorrente, raggruppaTappe } from "./compiti";
+export type { Compito, StatoCompito, Tappa } from "./types";
+export { chiaviClienti } from "./hooks/chiavi";
+export type { ClienteRiga } from "./types";

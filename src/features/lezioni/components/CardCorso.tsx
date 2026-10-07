@@ -1,5 +1,4 @@
 import { BookOpen, ExternalLink } from "lucide-react";
-import { Badge } from "@/shared/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/shared/components/ui/card";
 import type { GruppoCorso } from "../types";
 
@@ -33,18 +32,6 @@ export function CardCorso({ gruppo }: { gruppo: GruppoCorso }) {
                 ) : (
                   <span className="font-medium">{l.titolo}</span>
                 )}
-                {l.descrizione ? (
-                  <p className="line-clamp-2 text-xs text-muted-foreground">{l.descrizione}</p>
-                ) : null}
-                {l.keywords.length > 0 ? (
-                  <div className="mt-1 flex flex-wrap gap-1">
-                    {l.keywords.map((k) => (
-                      <Badge key={k} variant="outline" className="h-4 px-1.5 text-[10px]">
-                        {k}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : null}
               </div>
             </li>
           ))}

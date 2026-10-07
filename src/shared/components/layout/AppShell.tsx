@@ -1,21 +1,24 @@
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   BookOpen,
-  Inbox,
+  FileSignature,
   KanbanSquare,
   LayoutGrid,
   LogOut,
   Plus,
   ShieldAlert,
+  Tag,
   Tags,
   TrendingUp,
   UserCog,
   Users,
 } from "lucide-react";
 import { useAuth, esFinance, etichettaRuolo } from "@/features/auth";
+import { NuovoLeadRapido } from "@/features/pipeline";
 import { Button } from "@/shared/components/ui/button";
 import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
 import { Monogramma } from "@/shared/components/brand/Monogramma";
+import { ContenutoPagina } from "@/shared/components/layout/ContenutoPagina";
 import { cn } from "@/lib/utils";
 
 interface VoceNav {
@@ -30,8 +33,9 @@ const VOCI_PRINCIPALI: VoceNav[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutGrid },
   { href: "/pipeline", label: "Pipeline", icon: KanbanSquare },
   { href: "/clienti", label: "Clienti", icon: Users },
-  { href: "/onboarding", label: "Onboarding", icon: Inbox },
   { href: "/finance", label: "Finance", icon: TrendingUp, soloFinance: true },
+  { href: "/contratti", label: "Contratti", icon: FileSignature, soloFinance: true },
+  { href: "/offerte", label: "Offerte", icon: Tag, soloAdmin: true },
   { href: "/lezioni", label: "Lezioni", icon: BookOpen, soloAdmin: true },
 ];
 
@@ -46,8 +50,10 @@ const TITOLI: Array<[string, string]> = [
   ["/pipeline", "Pipeline"],
   ["/clienti/nuovo", "Nuovo cliente"],
   ["/clienti", "Clienti"],
-  ["/onboarding", "Onboarding"],
   ["/finance", "Finance"],
+  ["/contratti/nuovo", "Nuovo invito"],
+  ["/contratti", "Contratti"],
+  ["/offerte", "Offerte"],
   ["/lezioni", "Lezioni"],
   ["/staff/nuovo", "Nuovo staff"],
   ["/staff", "Staff"],
@@ -128,6 +134,7 @@ export function AppShell() {
         <header className="sticky top-0 z-10 flex h-(--header-h) shrink-0 items-center justify-between gap-3 border-b bg-card/85 px-4 backdrop-blur-md md:px-8">
           <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-[-0.01em]">{titoloPer(pathname)}</h1>
           <div className="flex shrink-0 items-center gap-3">
+            <NuovoLeadRapido />
             <Button size="sm" onClick={() => navigate("/clienti/nuovo")}>
               <Plus aria-hidden />
               Nuovo cliente
@@ -148,7 +155,7 @@ export function AppShell() {
         </nav>
 
         <main className="flex-1 p-4 md:p-8">
-          <Outlet />
+          <ContenutoPagina />
         </main>
       </div>
     </div>

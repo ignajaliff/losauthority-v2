@@ -28,6 +28,16 @@ export const leadSchema = z.object({
 
 export type LeadFormValues = z.infer<typeof leadSchema>;
 
+/** Alta rapida dalla topbar: solo i campi che servono per annotare chi ti ha scritto. */
+export const leadRapidoSchema = leadSchema.pick({ nome: true, contatto: true, fonte: true, note: true });
+
+export type LeadRapidoValues = z.infer<typeof leadRapidoSchema>;
+
+/** Il lead rapido nasce in stage "nuovo", senza valore né prossima azione. */
+export function rapidoToLead(values: LeadRapidoValues): LeadInsert {
+  return formToLead({ ...values, stage: "nuovo", valore: "", prossima_azione: "", prossima_azione_il: "" });
+}
+
 /** Valori iniziali del form: da un lead esistente o vuoti per un nuovo lead. */
 export function leadToForm(lead: Lead | null): LeadFormValues {
   return {

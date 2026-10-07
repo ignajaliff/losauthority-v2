@@ -1,108 +1,66 @@
 /**
- * Il "materiale" del cliente per i prompt di Aura: le risposte delle 3 schede
- * lette dal DB (questionario_invii stato='inviato' + questionario_risposte;
- * multi-valore = più righe con `ordine`) e rese in testo leggibile come nel
- * sistema precedente (render() di analysis/generate.ts + format.ts):
- *   ## Titolo sezione
+ * Il "materiale" del cliente per i prompt di Aura: la riga di `data_onboarding`
+ * (onboarding v3, una colonna per campo) resa in testo leggibile, solo per le
+ * domande del percorso del cliente:
+ *   ## Titolo blocco
  *   - Domanda
  *     → risposta
- * Gli allegati non entrano mai; una scheda non inviata → "(non compilato)".
+ * Gli allegati entrano solo come testo estratto (`materiali_testo`); una
+ * scheda non inviata → "(non compilato)".
  */
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
-import { type Campo, type QuestionarioId, SEZIONI } from "./domande.ts";
+import { conParole, formattaValore } from "./onboarding/definizione.ts";
+import { leggiRiga, renderScheda as renderRiga, type RigaOnboarding } from "./onboarding/profilo.ts";
 
-export interface RispostaRiga {
-  domanda_id: string;
-  ordine: number;
-  valore: string;
-}
+/** La riga di data_onboarding del cliente (stato inviato). null = non inviata. */
+export type Scheda = RigaOnboarding | null;
 
-/** Risposte di UNA scheda: id domanda → valori in ordine. null = non inviata. */
-export type Scheda = Map<string, string[]> | null;
-
-export interface Materiale {
-  onboarding: Scheda;
-  avatar: Scheda;
-  offerta: Scheda;
-}
-
-interface Invio {
-  id: string;
-  questionario_id: string;
-}
-
-/** Legge le 3 schede inviate di un cliente. Lancia l'errore Postgres. */
-export async function leggiMateriale(admin: SupabaseClient, clienteId: string): Promise<Materiale> {
-  const { data: inviiRaw, error } = await admin
-    .from("questionario_invii")
-    .select("id, questionario_id")
-    .eq("cliente_id", clienteId)
-    .eq("stato", "inviato");
+/** Legge la scheda INVIATA di un cliente (null se manca o non è ancora confermata). Lancia l'errore Postgres. */
+export async function leggiMateriale(admin: SupabaseClient, clienteId: string): Promise<Scheda> {
+  const { data, error } = await admin
+    .from("data_onboarding")
+    .select("*")
+    .eq("id", clienteId)
+    .eq("stato", "inviato")
+    .maybeSingle();
   if (error) throw error;
-  const invii = (inviiRaw ?? []) as Invio[];
-  if (invii.length === 0) return { onboarding: null, avatar: null, offerta: null };
-
-  const { data: risposteRaw, error: errR } = await admin
-    .from("questionario_risposte")
-    .select("invio_id, domanda_id, ordine, valore")
-    .in("invio_id", invii.map((i) => i.id))
-    .order("ordine");
-  if (errR) throw errR;
-  const righe = (risposteRaw ?? []) as Array<RispostaRiga & { invio_id: string }>;
-
-  const perScheda = (q: QuestionarioId): Scheda => {
-    const invio = invii.find((i) => i.questionario_id === q);
-    if (!invio) return null;
-    const mappa = new Map<string, string[]>();
-    for (const r of righe) {
-      if (r.invio_id !== invio.id) continue;
-      const lista = mappa.get(r.domanda_id) ?? [];
-      lista.push(r.valore);
-      mappa.set(r.domanda_id, lista);
-    }
-    return mappa;
-  };
-  return { onboarding: perScheda("onboarding"), avatar: perScheda("avatar_dolori"), offerta: perScheda("offerta") };
-}
-
-export const schedeComplete = (m: Materiale): boolean => !!m.onboarding && !!m.avatar && !!m.offerta;
-
-/** Valore leggibile: etichette dei menu, unità dei numeri, liste unite da ", ". */
-export function formattaValore(campo: Campo, valori: string[] | undefined): string {
-  const puliti = (valori ?? []).map((v) => v.trim()).filter(Boolean);
-  if (puliti.length === 0) return "—";
-  const etichette = puliti.map((v) => campo.opzioni?.[v] ?? v);
-  if (campo.tipo === "numero" && etichette.length === 1) {
-    const n = Number(etichette[0].replace(",", "."));
-    return Number.isFinite(n) && campo.unita ? `${n} ${campo.unita}` : etichette[0];
-  }
-  return etichette.join(", ") || "—";
-}
-
-/** Rende una scheda nel formato del vecchio render(): sezioni + domanda → risposta. */
-export function renderScheda(q: QuestionarioId, scheda: Scheda): string {
-  if (!scheda) return "(non compilato)";
-  const lines: string[] = [];
-  for (const s of SEZIONI[q]) {
-    lines.push(`\n## ${s.titolo}`);
-    for (const c of s.campi) {
-      if (c.tipo === "file") continue;
-      lines.push(`- ${c.label}\n  → ${formattaValore(c, scheda.get(c.id))}`);
-    }
-  }
-  return lines.join("\n");
+  return (data as RigaOnboarding | null) ?? null;
 }
 
 /**
- * Dossier delle 3 schede (identico a renderClientDossier del vecchio sistema),
- * riusato da genera-hub e aura-compiti per ancorare l'output ai fatti reali.
+ * Le risposte anche in bozza (aura-help: contesto mentre il cliente compila):
+ * id → valori già resi leggibili (etichette dei menu, parole del mestiere).
  */
-export function renderDossier(m: Materiale): string {
-  return (
-    `=== ONBOARDING ===${renderScheda("onboarding", m.onboarding)}\n\n` +
-    `=== AVATAR & DOLORI ===${renderScheda("avatar_dolori", m.avatar)}\n\n` +
-    `=== OFFERTA ===${renderScheda("offerta", m.offerta)}`
-  );
+export async function leggiRisposteAncheBozza(admin: SupabaseClient, clienteId: string): Promise<Map<string, string[]>> {
+  const { data } = await admin.from("data_onboarding").select("*").eq("id", clienteId).maybeSingle();
+  return data ? rigaInMappa(data as RigaOnboarding) : new Map();
+}
+
+/** Riga → mappa id → [testo leggibile], solo domande del percorso con una risposta. */
+export function rigaInMappa(riga: RigaOnboarding): Map<string, string[]> {
+  const s = leggiRiga(riga);
+  const mappa = new Map<string, string[]>();
+  for (const d of s.domande) {
+    if (d.tipo === "file-list") continue;
+    const testo = formattaValore(d, s.risposte[d.id], s.parole);
+    if (testo !== "—") mappa.set(d.id, [testo]);
+  }
+  return mappa;
+}
+
+/** Il testo di una domanda con le parole del mestiere del cliente (per aura-help). */
+export function testoDomandaPerCliente(riga: RigaOnboarding | null, testo: string): string {
+  return conParole(testo, leggiRiga(riga ?? {}).parole);
+}
+
+/** Rende la scheda nel formato "- Domanda → risposta", blocco per blocco. */
+export function renderScheda(scheda: Scheda): string {
+  return renderRiga(scheda);
+}
+
+/** Dossier del cliente (riusato da genera-hub e aura-compiti per ancorare l'output ai fatti reali). */
+export function renderDossier(scheda: Scheda): string {
+  return `=== ONBOARDING ===${renderScheda(scheda)}`;
 }
 
 /** Nome da mostrare per un cliente (nombre, poi email, poi fallback). */

@@ -11,16 +11,16 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/shared/components/ui/input";
 import { CredenzialiCard } from "../components/CredenzialiCard";
 import { TagPicker } from "../components/TagPicker";
+import { useCreaTag, useTags } from "@/features/tag";
 import { useCreaCliente } from "../hooks/useAccountCliente";
-import { useCreaTag, useTags } from "../hooks/useTags";
 import { nuovoClienteSchema, type NuovoClienteValues } from "../schema";
 import type { CredenzialiCliente } from "../types";
 
-const DEFAULTS: NuovoClienteValues = { nombre: "", email: "", password: "", telefono: "", tag_ids: [], nuovo_tag: "" };
+const DEFAULTS: NuovoClienteValues = { nombre: "", email: "", password: "", telefono: "", tags: [], nuovo_tag: "" };
 
 export default function NuovoClientePage() {
   const { data: tags, isLoading, isError } = useTags();
-  const creaTag = useCreaTag();
+  const creaTag = useCreaTag({ silenzioso: true });
   const crea = useCreaCliente();
   const [credenziali, setCredenziali] = useState<CredenzialiCliente | null>(null);
   const form = useForm<NuovoClienteValues>({ resolver: zodResolver(nuovoClienteSchema), defaultValues: DEFAULTS });
@@ -28,15 +28,15 @@ export default function NuovoClientePage() {
   const occupato = creaTag.isPending || crea.isPending;
 
   async function onSubmit(v: NuovoClienteValues) {
-    let tagIds = v.tag_ids;
+    let tags = v.tags;
     if (v.nuovo_tag) {
-      // Il tag nuovo va inserito in `tags` prima di passarne l'id alla Edge Function.
+      // Il tag nuovo entra nel catalogo `tags`; al cliente si passa la sua label.
       const creato = await creaTag.mutateAsync(v.nuovo_tag).catch(() => null);
       if (!creato) return;
-      tagIds = [...new Set([...tagIds, creato.id])];
+      tags = [...new Set([...tags, creato.label])];
     }
     const r = await crea
-      .mutateAsync({ nombre: v.nombre, email: v.email.toLowerCase(), password: v.password, telefono: v.telefono, tag_ids: tagIds })
+      .mutateAsync({ nombre: v.nombre, email: v.email.toLowerCase(), password: v.password, telefono: v.telefono, tags })
       .catch(() => null);
     if (r) setCredenziali(r);
   }
@@ -116,7 +116,7 @@ export default function NuovoClientePage() {
                 />
                 <FormField
                   control={form.control}
-                  name="tag_ids"
+                  name="tags"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tag (facoltativi)</FormLabel>

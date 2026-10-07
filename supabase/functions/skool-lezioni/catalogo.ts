@@ -91,7 +91,8 @@ function toLesson(raw: unknown, index: number): Lezione | null {
   }
 
   const bodyRaw = firstStr(o, ["description", "body", "content", "text", "summary", "metaDescription"]);
-  const descrizione = bodyRaw ? bodyRaw.replace(/\s+/g, " ").slice(0, 400) : null;
+  // 2000 e non 400: le live hanno i capitoli con il minutaggio nella descrizione e il coach li usa tutti.
+  const descrizione = bodyRaw ? bodyRaw.replace(/\s+/g, " ").slice(0, 2000) : null;
 
   const ordineRaw = o.order ?? o.position ?? o.index;
   const ordine = typeof ordineRaw === "number" && Number.isFinite(ordineRaw) ? ordineRaw : index;

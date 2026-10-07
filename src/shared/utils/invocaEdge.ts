@@ -1,4 +1,4 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
+import { FunctionsFetchError, FunctionsHttpError } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logDev, MESSAGGIO_ERRORE_GENERICO } from "./errors";
@@ -39,7 +39,14 @@ export async function invocaFunzioneSicura<T>(
   nome: string,
   body: Record<string, unknown>,
 ): Promise<RispostaEdge<T>> {
-  const { data, error } = await supabase.functions.invoke<RispostaEdge<T>>(nome, { body });
+  let esito = await supabase.functions.invoke<RispostaEdge<T>>(nome, { body });
+  if (esito.error instanceof FunctionsFetchError) {
+    // Safari: la prima richiesta dopo una pausa può morire con "Load failed" su una connessione
+    // HTTP/3 ormai chiusa, PRIMA di partire (e Safari non ritenta i POST). Un secondo tentativo basta.
+    await new Promise((r) => setTimeout(r, 700));
+    esito = await supabase.functions.invoke<RispostaEdge<T>>(nome, { body });
+  }
+  const { data, error } = esito;
   if (error) {
     const msg = await messaggioDalContesto(error);
     if (msg) return { ok: false, error: msg };
@@ -60,9 +67,11 @@ export async function invocaEdge<T>(nome: string, body: Record<string, unknown>)
   return r;
 }
 
-/** Descrizione per il toast: il messaggio della funzione se c'è, altrimenti quello generico. */
+/** Descrizione per il toast: il messaggio della funzione se c'è, uno chiaro se è caduta la rete, altrimenti quello generico. */
 export function messaggioErrore(e: unknown): string {
-  return e instanceof ErroreEdge ? e.message : MESSAGGIO_ERRORE_GENERICO;
+  if (e instanceof ErroreEdge) return e.message;
+  if (e instanceof FunctionsFetchError) return "La connessione si è interrotta prima di arrivare al server: controlla la rete e riprova.";
+  return MESSAGGIO_ERRORE_GENERICO;
 }
 
 /** onError standard per le mutation che chiamano una Edge Function. */

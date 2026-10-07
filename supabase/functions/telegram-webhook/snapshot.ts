@@ -16,10 +16,7 @@ interface Cliente {
   stato_onboarding: string;
   prossima_call: string | null;
   data_inizio: string | null;
-}
-interface ClienteTag {
-  cliente_id: string;
-  tags: { label: string } | { label: string }[] | null;
+  tags: string[] | null;
 }
 interface Fattura {
   cliente_id: string;
@@ -56,24 +53,13 @@ const eur = (v: number): string =>
 const data = (iso: string | null | undefined): string => (iso ? iso.slice(0, 10).split("-").reverse().join("/") : "—");
 const somma = <T>(righe: T[], f: (r: T) => number): number => righe.reduce((s, r) => s + f(r), 0);
 
-function labelsTag(righe: ClienteTag[]): Map<string, string[]> {
-  const m = new Map<string, string[]>();
-  for (const r of righe) {
-    const lista = Array.isArray(r.tags) ? r.tags : r.tags ? [r.tags] : [];
-    const attuali = m.get(r.cliente_id) ?? [];
-    m.set(r.cliente_id, attuali.concat(lista.map((t) => t.label)));
-  }
-  return m;
-}
-
 export async function costruisciSnapshot(): Promise<string> {
   const admin = adminClient();
   const oggi = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Rome" }).format(new Date());
 
-  const [utentiRes, clientiRes, tagRes, fattureRes, f24Res, speseRes, chiamateRes] = await Promise.all([
+  const [utentiRes, clientiRes, fattureRes, f24Res, speseRes, chiamateRes] = await Promise.all([
     admin.from("user_roles").select("id, nombre, email").eq("rol", "cliente"),
-    admin.from("clienti").select("id, fase, stato_onboarding, prossima_call, data_inizio"),
-    admin.from("clienti_tags").select("cliente_id, tags(label)"),
+    admin.from("clienti").select("id, fase, stato_onboarding, prossima_call, data_inizio, tags"),
     admin.from("fatture").select("cliente_id, importo, pagata, prossimo_pagamento, descrizione"),
     admin.from("f24").select("descrizione, importo, scadenza, pagato"),
     admin.from("spese").select("descrizione, importo, tipo, data, attiva"),
@@ -82,7 +68,6 @@ export async function costruisciSnapshot(): Promise<string> {
 
   const utenti = (utentiRes.data ?? []) as Utente[];
   const clienti = new Map(((clientiRes.data ?? []) as Cliente[]).map((c) => [c.id, c]));
-  const tag = labelsTag((tagRes.data ?? []) as ClienteTag[]);
   const fatture = (fattureRes.data ?? []) as Fattura[];
   const f24 = (f24Res.data ?? []) as F24[];
   const spese = (speseRes.data ?? []) as Spesa[];
@@ -94,7 +79,7 @@ export async function costruisciSnapshot(): Promise<string> {
     const sue = fatture.filter((f) => f.cliente_id === u.id);
     const tot = somma(sue, (f) => n(f.importo));
     const pag = somma(sue.filter((f) => f.pagata), (f) => n(f.importo));
-    const t = tag.get(u.id) ?? [];
+    const t = c?.tags ?? [];
     const call = c?.prossima_call ? `${data(c.prossima_call)} ${c.prossima_call.slice(11, 16)}` : "nessuna";
     return `- ${nome.get(u.id)} (${u.email ?? "—"})${t.length ? ` [${t.join("/")}]` : ""} · fase: ${c?.fase ?? "—"} · onboarding: ${c?.stato_onboarding ?? "—"} · inizio: ${data(c?.data_inizio)} · prossima call: ${call} · fatturato ${eur(tot)} (incassato ${eur(pag)})`;
   });

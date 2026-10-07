@@ -7,7 +7,7 @@
 import { caricaEnv, FILE_ENV, Report } from "./migrate/comune.mjs";
 import { migraUtenti } from "./migrate/utenti.mjs";
 import { migraClienti, migraTag } from "./migrate/clienti.mjs";
-import { migraQuestionari } from "./migrate/questionari.mjs";
+import { migraOnboarding } from "./migrate/onboarding.mjs";
 import { migraAnalisi, migraChiamate, migraFathomLog, migraNote } from "./migrate/contenuti.mjs";
 import { migraF24, migraFatture, migraSpese } from "./migrate/finanza.mjs";
 import { migraErrorLog, migraLead } from "./migrate/altro.mjs";
@@ -15,10 +15,10 @@ import { migraErrorLog, migraLead } from "./migrate/altro.mjs";
 const PASSI = [
   ["1. Utenti (auth.users + profiles.role → auth.users + user_roles)", migraUtenti],
   ["2a. Tag (client_tags → tags)", migraTag],
-  ["2b/3. Clienti e tag dei clienti (client_details + onboarding_submissions → clienti, clienti_tags)", migraClienti],
-  ["4. Questionari (onboarding_submissions, questionnaire_submissions, onboarding_drafts → questionario_invii/risposte)", migraQuestionari],
+  ["2b/3. Clienti con i loro tag (client_details + onboarding_submissions → clienti, colonna tags)", migraClienti],
+  ["4. Onboarding (onboarding_submissions + onboarding_drafts → data_onboarding; avatar/offerta non migrati)", migraOnboarding],
   ["5. Analisi (client_analyses → analisi)", migraAnalisi],
-  ["6. Note (client_notes → note_clienti)", migraNote],
+  ["6. Note (client_notes → clienti.note, accodate al campo note)", migraNote],
   ["7. Chiamate (client_calls → chiamate + chiamate_azioni)", migraChiamate],
   ["8. Log webhook Fathom (fathom_webhook_log)", migraFathomLog],
   ["9a. Fatture (invoices → fatture, bucket invoices → fatture)", migraFatture],

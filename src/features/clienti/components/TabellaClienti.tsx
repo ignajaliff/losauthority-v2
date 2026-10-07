@@ -12,6 +12,8 @@ import { ProssimaCallCella } from "./ProssimaCallCella";
  * diventa l'avanzamento dei compiti della call corrente.
  */
 function StatoCella({ c }: { c: ClienteRiga }) {
+  // Contratto pagato ma programma non ancora attivato (modulo Contratti): prima di tutto il resto.
+  if (c.da_attivare) return <Badge variant="expiring" dot>Da attivare</Badge>;
   if (c.fase === "onboarding") return <BadgeStatoOnboarding stato={c.stato_onboarding} />;
   if (c.call_corrente == null || !c.totale) return <span className="text-muted-foreground">—</span>;
   const fatti = c.fatti ?? 0;

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-const DIMENSIONI = { xs: 24, sm: 32, md: 40, lg: 56 } as const;
+const DIMENSIONI = { xs: 24, sm: 32, md: 40, lg: 56, xl: 80 } as const;
 
 interface MonogrammaProps {
   nome?: string | null;

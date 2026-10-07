@@ -1,16 +1,13 @@
 /**
- * Parte DETERMINISTICA del profilo cliente, portata da src/lib/profile/pipeline.ts
- * del sistema precedente: legge le risposte dell'onboarding (per id di domanda)
- * e calcola le ore operative settimanali e i punteggi di profilo.
+ * Parte DETERMINISTICA del profilo cliente (portata dal sistema precedente):
+ * legge la riga di data_onboarding v3 e calcola le ore operative settimanali
+ * (dalle fasce di `ore_per_attivita`) e i punteggi di profilo.
  */
+import { ATTIVITA_OPERATIVE, ORE_FASCIA } from "../_shared/onboarding/blocco-d-g.ts";
 
 export type ProfiloPrevalente = "invisibile" | "non_converte" | "saturo" | "ia_curioso";
 
-export interface RispostaOnboarding {
-  domanda_id: string;
-  ordine: number;
-  valore: string;
-}
+export type RigaOnboarding = Record<string, unknown>;
 
 export interface RisultatoProfilo {
   /** Profilo con punteggio più alto (null se nessun criterio deterministico scatta). */
@@ -19,25 +16,13 @@ export interface RisultatoProfilo {
   punteggi: Record<ProfiloPrevalente, number>;
 }
 
-/** Ore che entrano nel calcolo del baseline operativo (identico al vecchio schema). */
-export const ORE_OPERATIVE_IDS = [
-  "ore_idee",
-  "ore_scrittura",
-  "ore_riprese",
-  "ore_editing",
-  "ore_pubblicazione",
-] as const;
-
-/** Numero dalla risposta testuale (ordine 0); 0 se assente o non numerico. */
-function numero(risposte: RispostaOnboarding[], domandaId: string): number {
-  const r = risposte.find((x) => x.domanda_id === domandaId && x.ordine === 0) ??
-    risposte.find((x) => x.domanda_id === domandaId);
-  if (!r) return 0;
-  const n = Number(r.valore.replace(",", ".").trim());
-  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : 0;
+/** Ore medie dichiarate per un'attività (fascia → ore medie); 0 se assente. */
+function oreAttivita(fasce: Record<string, unknown>, attivita: string): number {
+  const f = fasce[attivita];
+  return typeof f === "string" ? (ORE_FASCIA[f] ?? 0) : 0;
 }
 
-export function calcolaProfilo(risposte: RispostaOnboarding[]): RisultatoProfilo {
+export function calcolaProfilo(riga: RigaOnboarding): RisultatoProfilo {
   const punteggi: Record<ProfiloPrevalente, number> = {
     invisibile: 0,
     non_converte: 0,
@@ -45,11 +30,12 @@ export function calcolaProfilo(risposte: RispostaOnboarding[]): RisultatoProfilo
     ia_curioso: 0,
   };
 
-  const oreOperative = ORE_OPERATIVE_IDS.reduce((somma, id) => somma + numero(risposte, id), 0);
+  const fasce = riga.ore_per_attivita && typeof riga.ore_per_attivita === "object" ? (riga.ore_per_attivita as Record<string, unknown>) : {};
+  const oreOperative = Math.round(ATTIVITA_OPERATIVE.reduce((somma, id) => somma + oreAttivita(fasce, id), 0));
 
-  // SATURO — regole deterministiche del vecchio pipeline.
+  // SATURO — regole deterministiche del vecchio pipeline (soglie sulle ore dei contenuti).
   if (oreOperative >= 10) punteggi.saturo += 2;
-  if (numero(risposte, "ore_editing") >= 3) punteggi.saturo += 1;
+  if (oreAttivita(fasce, "montare") >= 3) punteggi.saturo += 1;
 
   let profilo: ProfiloPrevalente | null = null;
   let massimo = 0;

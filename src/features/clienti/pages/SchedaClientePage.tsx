@@ -4,15 +4,19 @@ import { esFinance, useAuth } from "@/features/auth";
 import { ChiamateCliente } from "@/features/chiamate";
 import { FattureCliente } from "@/features/fatture";
 import { ErroreCaricamento, SkeletonBlocco, StatoVuoto } from "@/shared/components/layout/StatoCaricamento";
+import { Badge } from "@/shared/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/components/ui/tabs";
+import { AvatarTab } from "../components/AvatarTab";
 import { BadgeFase, BadgeStatoOnboarding, BadgeTag } from "../components/BadgesCliente";
 import { ImpostazioniTab } from "../components/ImpostazioniTab";
 import { LinkRapidi } from "../components/LinkRapidi";
+import { OffertaTab } from "../components/OffertaTab";
+import { OnboardingTab } from "../components/OnboardingTab";
 import { PanoramicaTab } from "../components/PanoramicaTab";
 import { useCliente } from "../hooks/useCliente";
 
 const TAB_DEFAULT = "panoramica";
-const TAB_VALIDI = ["panoramica", "call", "fatture", "impostazioni"];
+const TAB_VALIDI = ["panoramica", "onboarding", "avatar", "offerta", "call", "fatture", "impostazioni"];
 
 export default function SchedaClientePage() {
   const { id } = useParams<{ id: string }>();
@@ -47,9 +51,14 @@ export default function SchedaClientePage() {
           <h2 className="text-[32px] leading-[1.1] break-words">{cliente.utente.nombre}</h2>
           <p className="text-sm text-muted-foreground">{cliente.utente.email}</p>
           <div className="flex flex-wrap items-center gap-2">
+            {cliente.da_attivare ? (
+              <Badge variant="expiring" dot>
+                Da attivare
+              </Badge>
+            ) : null}
             <BadgeFase fase={cliente.fase} />
             <BadgeStatoOnboarding stato={cliente.stato_onboarding} />
-            <BadgeTag labels={cliente.tags.map((t) => t.label)} />
+            <BadgeTag labels={cliente.tags} />
           </div>
         </div>
         <LinkRapidi notionHubUrl={cliente.notion_hub_url} instagram={cliente.instagram} tiktok={cliente.tiktok} telefono={cliente.telefono} />
@@ -58,12 +67,24 @@ export default function SchedaClientePage() {
       <Tabs value={tab} onValueChange={(v) => cambiaTab(String(v))}>
         <TabsList variant="line">
           <TabsTrigger value="panoramica">Panoramica</TabsTrigger>
+          <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
+          <TabsTrigger value="avatar">Avatar</TabsTrigger>
+          <TabsTrigger value="offerta">Offerta</TabsTrigger>
           <TabsTrigger value="call">Call</TabsTrigger>
           {puoFinance ? <TabsTrigger value="fatture">Fatture</TabsTrigger> : null}
           <TabsTrigger value="impostazioni">Impostazioni</TabsTrigger>
         </TabsList>
         <TabsContent value="panoramica" className="pt-4">
           <PanoramicaTab cliente={cliente} />
+        </TabsContent>
+        <TabsContent value="onboarding" className="pt-4">
+          <OnboardingTab cliente={cliente} />
+        </TabsContent>
+        <TabsContent value="avatar" className="pt-4">
+          <AvatarTab cliente={cliente} />
+        </TabsContent>
+        <TabsContent value="offerta" className="pt-4">
+          <OffertaTab cliente={cliente} />
         </TabsContent>
         <TabsContent value="call" className="pt-4">
           <ChiamateCliente clienteId={cliente.id} />

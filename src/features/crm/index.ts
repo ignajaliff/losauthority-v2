@@ -1,0 +1,14 @@
+export { AccettazioneCrm } from "./components/AccettazioneCrm";
+export { AssistenzaCrm } from "./components/AssistenzaCrm";
+export { AvvisoNuovaVersione } from "./components/AvvisoNuovaVersione";
+export { DocumentoLegaleDialog } from "./components/DocumentoLegaleDialog";
+export { FiltroStati, type FiltroStato } from "./components/FiltroStati";
+export { LeadCrmDialog, type OffertaScelta } from "./components/LeadCrmDialog";
+export { StatisticheCrm } from "./components/StatisticheCrm";
+export { TabellaLeadCrm } from "./components/TabellaLeadCrm";
+export { documentiDi, versione, versioneInArrivo } from "./documenti";
+export { useAccettaCrm, useDocumentiCrm, useStatoCrm } from "./hooks/useAccessoCrm";
+export { useEsportaContatti } from "./hooks/useEsportaContatti";
+export { chiaviCrm, useArriviLead, useCambiaStatoLeadCrm, useEliminaLeadCrm, useLeadCrm, useSalvaLeadCrm } from "./hooks/useLeadCrm";
+export { ETICHETTA_STATO_LEAD, STATI_LEAD } from "./types";
+export type { DocumentoLegale, LeadCrm, StatoLead, VersioneCrm } from "./types";

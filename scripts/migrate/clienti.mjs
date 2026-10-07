@@ -1,4 +1,4 @@
-// Passi 2-3 · tags + clienti_tags ← client_tags/client_details.tags; clienti ← client_details + onboarding_submissions.
+// Passi 2-3 · tags (catalogo) ← client_tags; clienti (con colonna tags text[]) ← client_details + onboarding_submissions.
 import { intero, leggiTutto, scriviBlocchi, testo } from "./comune.mjs";
 
 const FASI = new Set(["onboarding", "call_1", "call_2", "call_3", "call_4", "completato"]);
@@ -47,11 +47,9 @@ export async function migraClienti(ctx) {
   const idVecchi = new Set([...dettagli.map((d) => d.id), ...ultimoPer.keys()]);
   const dettaglioPer = new Map(dettagli.map((d) => [d.id, d]));
   report.conta("clienti", "vecchio", idVecchi.size);
-  report.conta("clienti_tags", "vecchio", dettagli.reduce((n, d) => n + (Array.isArray(d.tags) ? d.tags.length : 0), 0));
 
   const righeClienti = [];
   const labelUsate = [];
-  const tagPerCliente = [];
   for (const idVecchio of idVecchi) {
     const nuovoId = ctx.idNuovo(idVecchio);
     if (!nuovoId) {
@@ -64,28 +62,13 @@ export async function migraClienti(ctx) {
     }
     const d = dettaglioPer.get(idVecchio) ?? {};
     const s = ultimoPer.get(idVecchio);
-    righeClienti.push(rigaCliente(ctx, nuovoId, idVecchio, d, s));
-    for (const label of Array.isArray(d.tags) ? d.tags : []) {
-      const l = testo(label, 60);
-      if (!l) continue;
-      labelUsate.push(l);
-      tagPerCliente.push({ nuovoId, label: l });
-    }
+    const tags = [...new Set((Array.isArray(d.tags) ? d.tags : []).map((label) => testo(label, 60)).filter(Boolean))];
+    labelUsate.push(...tags);
+    righeClienti.push({ ...rigaCliente(ctx, nuovoId, idVecchio, d, s), tags });
   }
-  await scriviBlocchi(ctx, "clienti", righeClienti);
-
+  // Prima il catalogo (i tag usati dai clienti ma assenti in client_tags), poi le righe con l'array.
   await creaTagMancanti(ctx, labelUsate, null);
-  const righeTag = [];
-  for (const { nuovoId, label } of tagPerCliente) {
-    const tagId = ctx.tagPerLabel.get(label.toLowerCase());
-    if (!tagId) report.salta("clienti_tags", `${nuovoId}/${label}`, "tag non trovato");
-    else righeTag.push({ cliente_id: nuovoId, tag_id: tagId });
-  }
-  await scriviBlocchi(ctx, "clienti_tags", righeTag, {
-    onConflict: "cliente_id,tag_id",
-    ignoreDuplicates: true,
-    idDi: (r) => `${r.cliente_id}/${r.tag_id}`,
-  });
+  await scriviBlocchi(ctx, "clienti", righeClienti);
 }
 
 function rigaCliente(ctx, nuovoId, idVecchio, d, s) {

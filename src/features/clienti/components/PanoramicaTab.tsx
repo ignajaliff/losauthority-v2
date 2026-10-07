@@ -2,9 +2,8 @@ import { ExternalLink } from "lucide-react";
 import { buttonVariants } from "@/shared/components/ui/button";
 import { formatDate } from "@/shared/utils/formatDate";
 import type { ClienteDettaglio } from "../types";
-import { AnalisiAura } from "./AnalisiAura";
 import { BadgeFase } from "./BadgesCliente";
-import { NoteInterne } from "./NoteInterne";
+import { NoteCliente } from "./NoteCliente";
 import { PianoAzione } from "./PianoAzione";
 import { ProssimaCallCella } from "./ProssimaCallCella";
 
@@ -17,7 +16,7 @@ function Voce({ etichetta, children }: { etichetta: string; children: React.Reac
   );
 }
 
-/** Tab Panoramica: cruscotto, piano d'azione, analisi di Aura, note interne. */
+/** Tab Panoramica: cruscotto, piano d'azione, nota del team (l'analisi di Aura vive nel tab Onboarding). */
 export function PanoramicaTab({ cliente }: { cliente: ClienteDettaglio }) {
   return (
     <div className="grid gap-6">
@@ -39,9 +38,8 @@ export function PanoramicaTab({ cliente }: { cliente: ClienteDettaglio }) {
           )}
         </Voce>
       </dl>
-      <PianoAzione clienteId={cliente.id} haHub={Boolean(cliente.notion_hub_url)} />
-      <AnalisiAura clienteId={cliente.id} />
-      <NoteInterne clienteId={cliente.id} />
+      <PianoAzione clienteId={cliente.id} />
+      <NoteCliente cliente={cliente} />
     </div>
   );
 }

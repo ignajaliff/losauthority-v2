@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { ClienteDettaglio, Tag } from "../types";
+import type { ClienteDettaglio } from "../types";
 import { chiaviClienti } from "./chiavi";
 
-/** Scheda di un cliente: `clienti` + anagrafica (`user_roles`) + tag. */
+/** Scheda di un cliente: `clienti` (tag inclusi nella colonna `tags`) + anagrafica (`user_roles`). */
 export function useCliente(id: string | undefined) {
   return useQuery({
     queryKey: chiaviClienti.cliente(id ?? ""),
@@ -11,18 +11,14 @@ export function useCliente(id: string | undefined) {
     queryFn: async (): Promise<ClienteDettaglio | null> => {
       const { data, error } = await supabase
         .from("clienti")
-        .select("*, utente:user_roles(nombre, email, rol), clienti_tags(tags(id, label))")
+        .select("*, utente:user_roles(nombre, email, rol)")
         .eq("id", id ?? "")
         .maybeSingle();
       if (error) throw error;
       if (!data) return null;
-      const { utente, clienti_tags, ...cliente } = data;
+      const { utente, ...cliente } = data;
       if (!utente) return null;
-      const tags = clienti_tags
-        .map((ct) => ct.tags)
-        .filter((t): t is Tag => t !== null)
-        .sort((a, b) => a.label.localeCompare(b.label, "it"));
-      return { ...cliente, utente, tags };
+      return { ...cliente, utente };
     },
   });
 }

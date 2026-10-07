@@ -26,7 +26,9 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@contratti/*": ["./supabase/functions/_shared/contratti/*"],
+      "@onboarding/*": ["./supabase/functions/_shared/onboarding/*"]
     }
   },
   "include": ["src"]

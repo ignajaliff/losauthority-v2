@@ -1,20 +1,20 @@
 /**
- * aura-analisi — Aura analizza le 3 schede del cliente e scrive l'analisi
- * strategica (porta di src/lib/analysis/generate.ts + actions.ts; prompt di
- * Wesley parola per parola). Body: { cliente_id } → { ok, contenuto }.
- * 400 se le 3 schede non sono tutte inviate. Upsert su `analisi`.
+ * aura-analisi — Aura analizza la scheda onboarding del cliente e scrive
+ * l'analisi strategica (porta di src/lib/analysis/generate.ts + actions.ts;
+ * prompt di Wesley parola per parola). Body: { cliente_id } → { ok, contenuto }.
+ * 400 se la scheda non è stata inviata. Upsert su `analisi`.
  */
 import { errore, gestisciErrore, json, leggiBody, preflight } from "../_shared/http.ts";
 import { adminClient, richiediTeam } from "../_shared/supabase.ts";
 import { HAS_ANTHROPIC, streamAnthropicText } from "../_shared/anthropic.ts";
 import { logError } from "../_shared/log.ts";
-import { leggiMateriale, renderScheda, schedeComplete } from "../_shared/materiale.ts";
+import { leggiMateriale, renderScheda } from "../_shared/materiale.ts";
 
 type Body = {
   cliente_id?: unknown;
 }
 
-const SYSTEM = `Sei **Aura**, lo stratega di Los Authority (Wesley Caicedo): un esperto di marketing, posizionamento e business coaching di altissimo livello. Ricevi le risposte di 3 schede di un cliente (Onboarding, Avatar & Dolori, Offerta) e produci un'ANALISI strategica come la farebbe Wesley: lucida, diretta, anti-fuffa, che va al cuore del problema e dà soluzioni concrete.
+const SYSTEM = `Sei **Aura**, lo stratega di Los Authority (Wesley Caicedo): un esperto di marketing, posizionamento e business coaching di altissimo livello. Ricevi le risposte della scheda di onboarding di un cliente (business, clienti, comunicazione, tempo, IA, obiettivi) e produci un'ANALISI strategica come la farebbe Wesley: lucida, diretta, anti-fuffa, che va al cuore del problema e dà soluzioni concrete.
 
 **CHI È WESLEY (contesto fondamentale):** Wesley è un **consulente e formatore**, NON un'agenzia. Non fa il lavoro AL POSTO del cliente (non gli gestisce i social, non gli scrive i contenuti, non gli fa l'editing). Wesley **diagnostica, dà la strategia e il metodo, e INSEGNA al cliente a farlo da solo** — attraverso il percorso Los Authority (~6 settimane, 4 call) e strumenti AI che lo rendono autonomo. Il cliente ESEGUE (con compiti tra una call e l'altra); Wesley lo guida, lo corregge, lo porta al risultato e poi a delegare a un suo team. Quindi NON proporre MAI un servizio "fatto-per-te" da agenzia: proponi diagnosi, riposizionamento, framework, formazione, sistema AI e autonomia del cliente.
 
@@ -52,16 +52,14 @@ Deno.serve(async (req: Request) => {
       materiale = await leggiMateriale(admin, cliente_id);
     } catch (e) {
       await logError("aura-analisi:materiale", e, { cliente_id });
-      return errore("Non sono riuscita a leggere le schede del cliente. Riprova.", 500);
+      return errore("Non sono riuscita a leggere la scheda del cliente. Riprova.", 500);
     }
-    if (!schedeComplete(materiale)) {
-      return errore("Il cliente non ha ancora inviato tutte e 3 le schede.", 400);
+    if (!materiale) {
+      return errore("Il cliente non ha ancora inviato la scheda onboarding.", 400);
     }
 
     const userPrompt =
-      `RISPOSTE DEL CLIENTE\n\n=== SCHEDA 1 — ONBOARDING ===${renderScheda("onboarding", materiale.onboarding)}\n\n` +
-      `=== SCHEDA 2 — AVATAR & DOLORI ===${renderScheda("avatar_dolori", materiale.avatar)}\n\n` +
-      `=== SCHEDA 3 — OFFERTA ===${renderScheda("offerta", materiale.offerta)}\n\n` +
+      `RISPOSTE DEL CLIENTE\n\n=== SCHEDA ONBOARDING ===${renderScheda(materiale)}\n\n` +
       "Scrivi l'analisi strategica completa.";
 
     const contenuto = await streamAnthropicText({ system: SYSTEM, user: userPrompt, maxTokens: 8000, tag: "analysis" });

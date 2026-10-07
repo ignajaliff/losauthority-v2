@@ -1,0 +1,9 @@
+# Header di Cloudflare per tutti i file serviti (Workers static assets e Pages leggono questo file).
+# Gestionale privato + pagine contratto con il token nell'URL: niente indicizzazione, niente iframe
+# di altri siti, il token non esce nel Referer verso domini esterni.
+/*
+  X-Robots-Tag: noindex, nofollow
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

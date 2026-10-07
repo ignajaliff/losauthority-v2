@@ -48,9 +48,9 @@ async function generaHubCliente(admin: SupabaseClient, clienteId: string): Promi
     materiale = await leggiMateriale(admin, clienteId);
   } catch (e) {
     await logError("genera-hub:materiale", e, { clienteId });
-    return { cliente_id: clienteId, ok: false, errore: "Non sono riuscita a leggere le schede del cliente." };
+    return { cliente_id: clienteId, ok: false, errore: "Non sono riuscita a leggere la scheda del cliente." };
   }
-  if (!materiale.onboarding) return { cliente_id: clienteId, ok: false, errore: "Nessun onboarding per questo cliente." };
+  if (!materiale) return { cliente_id: clienteId, ok: false, errore: "Il cliente non ha ancora inviato la scheda onboarding." };
 
   // 1) Un foglio dal pool.
   const liberi = await fogliLiberi();

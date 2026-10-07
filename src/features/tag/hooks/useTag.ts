@@ -2,9 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logDev, MESSAGGIO_ERRORE_GENERICO } from "@/shared/utils/errors";
-import type { TagConConteggio } from "../types";
+import type { Tag, TagConConteggio } from "../types";
 
-/** Chiave condivisa: il dominio clienti la invalida quando crea un tag al volo. */
+/** Unica fonte dei tag per tutta l'app (pagina Tag, scheda cliente, nuovo cliente). */
 export const CHIAVE_TAG = ["tag", "lista"] as const;
 /** I clienti mostrano le label dei tag: dopo rinomina/elimina vanno ricaricati. */
 const CHIAVE_CLIENTI = ["clienti"] as const;
@@ -15,30 +15,49 @@ function eDuplicato(error: unknown): boolean {
   return typeof error === "object" && error !== null && "code" in error && error.code === CODICE_DUPLICATO;
 }
 
-/** Tutti i tag in ordine alfabetico, con il numero di clienti che li usano. */
+/** Tutti i tag in ordine alfabetico, con il numero di clienti che li hanno in `clienti.tags`. */
 export function useTags() {
   return useQuery({
     queryKey: CHIAVE_TAG,
     queryFn: async (): Promise<TagConConteggio[]> => {
-      const { data, error } = await supabase
-        .from("tags")
-        .select("id, label, created_at, updated_at, clienti_tags(count)")
-        .order("label", { ascending: true });
-      if (error) throw error;
-      return data.map(({ clienti_tags, ...tag }) => ({ ...tag, clienti: clienti_tags[0]?.count ?? 0 }));
+      const [tags, clienti] = await Promise.all([
+        supabase.from("tags").select("id, label, created_at, updated_at").order("label", { ascending: true }),
+        supabase.from("clienti").select("tags"),
+      ]);
+      if (tags.error) throw tags.error;
+      if (clienti.error) throw clienti.error;
+      const conteggio = new Map<string, number>();
+      for (const c of clienti.data) {
+        for (const label of c.tags) conteggio.set(label, (conteggio.get(label) ?? 0) + 1);
+      }
+      return tags.data.map((tag) => ({ ...tag, clienti: conteggio.get(tag.label) ?? 0 }));
     },
   });
 }
 
-export function useCreaTag() {
+interface OpzioniCreaTag {
+  /** Senza toast di conferma: quando la creazione è un passo di un flusso più grande (scheda cliente). */
+  silenzioso?: boolean;
+}
+
+/**
+ * Crea un tag nel catalogo e lo ritorna. Se esiste già uno con la stessa label
+ * (senza distinguere maiuscole) ritorna quello, così il chiamante può usarne la label.
+ */
+export function useCreaTag({ silenzioso = false }: OpzioniCreaTag = {}) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (label: string) => {
-      const { error } = await supabase.from("tags").insert({ label });
+    mutationFn: async (label: string): Promise<Tag> => {
+      const pulito = label.trim();
+      const esistente = await supabase.from("tags").select("*").ilike("label", pulito).maybeSingle();
+      if (esistente.error) throw esistente.error;
+      if (esistente.data) return esistente.data;
+      const { data, error } = await supabase.from("tags").insert({ label: pulito }).select("*").single();
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
-      toast.success("Tag aggiunto");
+      if (!silenzioso) toast.success("Tag aggiunto");
       void queryClient.invalidateQueries({ queryKey: CHIAVE_TAG });
     },
     onError: (error) => {
@@ -50,7 +69,7 @@ export function useCreaTag() {
   });
 }
 
-/** Rinomina: si aggiorna solo tags.label, la tabella ponte segue per FK. */
+/** Rinomina: si aggiorna tags.label; il trigger `tags_sincronizza_clienti` aggiorna gli array dei clienti. */
 export function useRinominaTag() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -72,7 +91,7 @@ export function useRinominaTag() {
   });
 }
 
-/** Elimina il tag: clienti_tags ha ON DELETE CASCADE, i clienti lo perdono da soli. */
+/** Elimina il tag: il trigger `tags_sincronizza_clienti` lo toglie dagli array dei clienti. */
 export function useEliminaTag() {
   const queryClient = useQueryClient();
   return useMutation({

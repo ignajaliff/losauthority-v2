@@ -10,3 +10,15 @@ supabase/.temp/
 .claude/
 .mcp.json
 scripts/.env.migrate
+supabase/.env.secrets
+# Cloudflare / Vite
+.env.*
+!.env.example
+!scripts/.env.migrate.example
+.dev.vars*
+.wrangler/
+# Documenti interni (clienti, metodo di Wesley): restano in locale, il repo è pubblico
+/*.pdf
+/*.skill
+/Onboarding area clienti — Istruzioni per Claude.md
+/Ricerca TikTok top video — regole per l'agente IA.md

@@ -1,8 +1,9 @@
 /**
- * payment-reminders — promemoria Telegram delle scadenze di DOMANI:
- * fatture non pagate con prossimo_pagamento = domani e F24 non pagati con
- * scadenza = domani. Lanciato da pg_cron (CRON_SECRET) o a mano dal team.
- * Risposta { ok, fatture, f24 }. Nessun messaggio se non c'è nulla.
+ * payment-reminders — promemoria Telegram 48 ORE PRIMA della scadenza (decisione
+ * di Wesley, 26/09/2026): fatture non pagate con prossimo_pagamento = oggi + 2 giorni
+ * e F24 non pagati con scadenza = oggi + 2 giorni. Lanciato da pg_cron alle 7
+ * (CRON_SECRET) o a mano dal team. Risposta { ok, fatture, f24, scadenza }.
+ * Nessun messaggio se non c'è nulla.
  */
 import { gestisciErrore, HttpError, json, preflight } from "../_shared/http.ts";
 import { adminClient, richiediCronOTeam } from "../_shared/supabase.ts";
@@ -62,15 +63,15 @@ Deno.serve(async (req: Request) => {
   try {
     await richiediCronOTeam(req);
     const admin = adminClient();
-    const domani = aggiungiGiorni(oggiRoma(), 1);
+    const scadenza = aggiungiGiorni(oggiRoma(), 2);
 
     const { data: fattureRaw, error: errFatture } = await admin
       .from("fatture")
       .select("id, importo, descrizione, cliente_id")
       .eq("pagata", false)
-      .eq("prossimo_pagamento", domani);
+      .eq("prossimo_pagamento", scadenza);
     if (errFatture) {
-      await logError("payment-reminders:fatture", errFatture, { domani });
+      await logError("payment-reminders:fatture", errFatture, { scadenza });
       throw new HttpError(500, "Non sono riuscito a leggere le fatture.");
     }
     const fatture = (fattureRaw ?? []) as Fattura[];
@@ -79,12 +80,12 @@ Deno.serve(async (req: Request) => {
       .from("f24")
       .select("id, importo, descrizione")
       .eq("pagato", false)
-      .eq("scadenza", domani);
-    if (errF24) await logError("payment-reminders:f24", errF24, { domani });
+      .eq("scadenza", scadenza);
+    if (errF24) await logError("payment-reminders:f24", errF24, { scadenza });
     const f24 = (f24Raw ?? []) as F24[];
 
     if (fatture.length === 0 && f24.length === 0) {
-      return json({ ok: true, fatture: 0, f24: 0, domani });
+      return json({ ok: true, fatture: 0, f24: 0, scadenza });
     }
 
     const blocchi: string[] = [];
@@ -108,8 +109,8 @@ Deno.serve(async (req: Request) => {
       blocchi.push(`🧾 F24 da pagare (${f24.length})\n${righe.join("\n")}\n👉 ${SITE_URL}/finance?tab=f24`);
     }
 
-    await notifyTelegram(`⏰ Scadenze di DOMANI — ${dataIt(domani)}\n\n${blocchi.join("\n\n")}`);
-    return json({ ok: true, fatture: fatture.length, f24: f24.length, domani });
+    await notifyTelegram(`⏰ Scadenze tra 2 giorni — ${dataIt(scadenza)}\n\n${blocchi.join("\n\n")}`);
+    return json({ ok: true, fatture: fatture.length, f24: f24.length, scadenza });
   } catch (err) {
     return gestisciErrore(err);
   }

@@ -1,21 +1,23 @@
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { Input } from "@/shared/components/ui/input";
 import { Label } from "@/shared/components/ui/label";
-import type { Tag } from "../types";
+import type { Tag } from "@/features/tag";
 
 interface TagPickerProps {
+  /** Catalogo (tabella `tags`). */
   tags: Tag[];
+  /** Label selezionate: è ciò che si salva in `clienti.tags`. */
   selezionati: string[];
-  onChange: (ids: string[]) => void;
+  onChange: (labels: string[]) => void;
   nuovoTag: string;
   onNuovoTagChange: (v: string) => void;
   disabled?: boolean;
 }
 
-/** Caselle per i tag esistenti + un campo per crearne uno nuovo al volo. */
+/** Caselle per i tag del catalogo + un campo per crearne uno nuovo al volo. */
 export function TagPicker({ tags, selezionati, onChange, nuovoTag, onNuovoTagChange, disabled }: TagPickerProps) {
-  const toggle = (id: string, on: boolean) => {
-    onChange(on ? [...new Set([...selezionati, id])] : selezionati.filter((x) => x !== id));
+  const toggle = (label: string, on: boolean) => {
+    onChange(on ? [...new Set([...selezionati, label])] : selezionati.filter((x) => x !== label));
   };
   return (
     <div className="grid gap-3">
@@ -24,8 +26,8 @@ export function TagPicker({ tags, selezionati, onChange, nuovoTag, onNuovoTagCha
           {tags.map((t) => (
             <Label key={t.id} className="cursor-pointer rounded-4xl border px-3 py-1.5 font-normal">
               <Checkbox
-                checked={selezionati.includes(t.id)}
-                onCheckedChange={(on) => toggle(t.id, on)}
+                checked={selezionati.includes(t.label)}
+                onCheckedChange={(on) => toggle(t.label, on)}
                 disabled={disabled}
                 aria-label={t.label}
               />

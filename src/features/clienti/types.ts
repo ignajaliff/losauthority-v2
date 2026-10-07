@@ -5,32 +5,18 @@ export type ClienteRiga = Tables<"vista_clienti">;
 
 export type Cliente = Tables<"clienti">;
 
-export type Tag = Pick<Tables<"tags">, "id" | "label">;
-
-/** Scheda cliente: dati di gestione + anagrafica da user_roles + tag. */
+/** Scheda cliente: dati di gestione (con `tags` string[]) + anagrafica da user_roles. */
 export interface ClienteDettaglio extends Cliente {
   utente: { nombre: string; email: string; rol: string };
-  tags: Tag[];
 }
 
-export interface NotaCliente {
-  id: string;
-  testo: string;
-  created_at: string;
-  autore_id: string | null;
-  autore: { nombre: string } | null;
-}
+/** Compito del piano d'azione (tabella `compiti`, una riga per voce della checklist). */
+export type Compito = Pick<Tables<"compiti">, "id" | "testo" | "stato" | "ordine" | "completato_il" | "created_at" | "padre_id" | "link_skool" | "nota_skool">;
+export type StatoCompito = "da_fare" | "fatto";
 
-export type HubCompito = Pick<
-  Tables<"hub_compiti">,
-  "id" | "titolo" | "stato" | "assegnato_a" | "scadenza" | "link_utile" | "ordine"
->;
-
-export interface HubBoardConCompiti {
-  id: string;
-  call_n: number;
-  synced_at: string;
-  compiti: HubCompito[];
+/** Tappa del piano d'azione: compito padre (padre_id null) con i suoi sotto-compiti in ordine. */
+export interface Tappa extends Compito {
+  figli: Compito[];
 }
 
 export interface AnalisiCliente {
@@ -38,13 +24,11 @@ export interface AnalisiCliente {
   generato_il: string;
 }
 
-/** Analisi di Aura + quante schede il cliente ha già inviato (servono tutte e 3). */
+/** Analisi di Aura + se il cliente ha già inviato la scheda onboarding (serve per generarla). */
 export interface StatoAnalisi {
   analisi: AnalisiCliente | null;
-  schedeInviate: number;
+  schedaInviata: boolean;
 }
-
-export const SCHEDE_RICHIESTE = 3;
 
 /** Credenziali mostrate UNA volta dopo la creazione dell'account. */
 export interface CredenzialiCliente {

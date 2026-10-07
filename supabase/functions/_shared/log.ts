@@ -42,7 +42,7 @@ export async function logError(
 
 /** Aggiorna sync_stati per un job. Non lancia mai. */
 export async function aggiornaSync(
-  chiave: "skool" | "notion_compiti" | "fathom" | "genera_hub",
+  chiave: "skool" | "notion_compiti" | "fathom" | "genera_hub" | "instagram",
   campi: { esito: "ok" | "errore" | "parziale"; dettaglio?: string; totale?: number; nuove?: number },
 ): Promise<void> {
   try {
