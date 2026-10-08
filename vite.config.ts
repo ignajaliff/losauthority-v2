@@ -23,7 +23,13 @@ export default defineConfig(({ command, mode }) => {
     const env = loadEnv(mode, process.cwd(), "VITE_");
     const mancanti = VARIABILI_BUILD.filter((nome) => !env[nome]);
     if (mancanti.length > 0) {
-      throw new Error(`Mancano ${mancanti.join(" e ")}: senza queste variabili l'app pubblicata sarebbe una pagina bianca.`);
+      // Solo i NOMI delle variabili simili che il build riceve (mai i valori): aiuta a trovare un refuso
+      // o una variabile messa tra quelle di runtime del Worker invece che tra quelle del build.
+      const simili = Object.keys(process.env).filter((k) => /vite|supabase/i.test(k));
+      throw new Error(
+        `Mancano ${mancanti.join(" e ")}: senza queste variabili l'app pubblicata sarebbe una pagina bianca. ` +
+          `Variabili simili ricevute dal build: ${simili.length > 0 ? simili.map((k) => JSON.stringify(k)).join(", ") : "nessuna"}.`,
+      );
     }
   }
   return {
