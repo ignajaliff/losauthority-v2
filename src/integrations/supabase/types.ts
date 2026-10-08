@@ -2221,6 +2221,30 @@ export type Database = {
           },
         ]
       }
+      impostazioni_app: {
+        Row: {
+          created_at: string
+          id: boolean
+          sito_aggiornato_il: string | null
+          sito_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: boolean
+          sito_aggiornato_il?: string | null
+          sito_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: boolean
+          sito_aggiornato_il?: string | null
+          sito_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lead: {
         Row: {
           contatto: string | null
@@ -3279,6 +3303,7 @@ export type Database = {
           versione_corrente: number
         }[]
       }
+      registra_sito: { Args: { p_url: string }; Returns: undefined }
       salva_concorrente: {
         Args: {
           p_cosa_fa: string

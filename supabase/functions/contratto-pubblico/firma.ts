@@ -9,6 +9,7 @@
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { logError } from "../_shared/log.ts";
 import { notifyTelegram } from "../_shared/telegram.ts";
+import { rigaLink, sitoGestionale } from "../_shared/sito.ts";
 import { archiviaPdf, componiDaRiga, contrattoPerToken, normalizzaRiga, type RigaContratto } from "../_shared/contratti-archivio.ts";
 import { STATI_APERTI, STATI_FIRMATI, TIPI_CLIENTE, type DocumentoContratto, type TipoCliente } from "../_shared/contratti/tipi.ts";
 import { nomeCliente, validaDati, validaFirma, type Errori } from "../_shared/contratti/validazione.ts";
@@ -127,9 +128,9 @@ export async function firma(admin: SupabaseClient, token: string, body: Record<s
   }
 
   // Niente nome né importo: Telegram non deve ricevere dati del cliente. Chi ha firmato si vede dal gestionale (serve il login).
-  const sito = (Deno.env.get("SITE_URL") ?? "").replace(/\/$/, "");
+  const sito = await sitoGestionale(admin);
   await notifyTelegram(
-    `✍️ Un contratto è stato firmato.\nAprilo nel gestionale (Contratti) e, quando arriva il pagamento, segnalo.` + (sito ? `\n${sito}/contratti/${firmata.id}` : ""),
+    `✍️ Un contratto è stato firmato.\nAprilo nel gestionale (Contratti) e, quando arriva il pagamento, segnalo.` + rigaLink(sito, `/contratti/${firmata.id}`, "\n"),
   );
   return { ok: true, firmato_il: adesso };
 }

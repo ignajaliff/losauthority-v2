@@ -9,7 +9,7 @@ import { gestisciErrore, HttpError, json, preflight } from "../_shared/http.ts";
 import { adminClient, richiediCronOTeam } from "../_shared/supabase.ts";
 import { notifyTelegram } from "../_shared/telegram.ts";
 import { logError } from "../_shared/log.ts";
-import { SITE_URL } from "../_shared/config.ts";
+import { rigaLink, sitoGestionale } from "../_shared/sito.ts";
 
 interface Fattura {
   id: string;
@@ -88,6 +88,7 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true, fatture: 0, f24: 0, scadenza });
     }
 
+    const sito = await sitoGestionale(admin);
     const blocchi: string[] = [];
     if (fatture.length > 0) {
       const ids = [...new Set(fatture.map((f) => f.cliente_id))];
@@ -97,7 +98,7 @@ Deno.serve(async (req: Request) => {
         const u = utenti.get(f.cliente_id);
         const nome = u?.nombre || u?.email || "Cliente";
         const desc = f.descrizione ? ` · ${f.descrizione}` : "";
-        return `• ${nome} — ${eur(f.importo)}${desc}\n  👉 ${SITE_URL}/clienti/${f.cliente_id}`;
+        return `• ${nome} — ${eur(f.importo)}${desc}${rigaLink(sito, `/clienti/${f.cliente_id}`, "\n  👉 ")}`;
       });
       blocchi.push(`💶 Fatture in scadenza (${fatture.length})\n${righe.join("\n")}`);
     }
@@ -106,7 +107,7 @@ Deno.serve(async (req: Request) => {
         const imp = x.importo != null ? eur(x.importo) : "importo da inserire";
         return `• ${x.descrizione || "F24"} — ${imp}`;
       });
-      blocchi.push(`🧾 F24 da pagare (${f24.length})\n${righe.join("\n")}\n👉 ${SITE_URL}/finance?tab=f24`);
+      blocchi.push(`🧾 F24 da pagare (${f24.length})\n${righe.join("\n")}${rigaLink(sito, "/finance?tab=f24")}`);
     }
 
     await notifyTelegram(`⏰ Scadenze tra 2 giorni — ${dataIt(scadenza)}\n\n${blocchi.join("\n\n")}`);

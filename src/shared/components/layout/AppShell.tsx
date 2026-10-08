@@ -13,12 +13,13 @@ import {
   UserCog,
   Users,
 } from "lucide-react";
-import { useAuth, esFinance, etichettaRuolo } from "@/features/auth";
+import { useAuth, esFinance, esTeam, etichettaRuolo } from "@/features/auth";
 import { NuovoLeadRapido } from "@/features/pipeline";
 import { Button } from "@/shared/components/ui/button";
 import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
 import { Monogramma } from "@/shared/components/brand/Monogramma";
 import { ContenutoPagina } from "@/shared/components/layout/ContenutoPagina";
+import { useRegistraSito } from "@/shared/hooks/useRegistraSito";
 import { cn } from "@/lib/utils";
 
 interface VoceNav {
@@ -94,6 +95,8 @@ export function AppShell() {
   const rol = utente?.rol ?? null;
   const puoFinance = esFinance(rol);
   const eAdmin = rol === "admin";
+  // Il dominio da cui lavora il team serve ai link delle notifiche Telegram (vedi useRegistraSito).
+  useRegistraSito(esTeam(rol));
 
   const filtra = (v: VoceNav) => (!v.soloFinance || puoFinance) && (!v.soloAdmin || eAdmin);
   const principali = VOCI_PRINCIPALI.filter(filtra);

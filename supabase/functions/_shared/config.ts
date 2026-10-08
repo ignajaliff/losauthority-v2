@@ -19,5 +19,4 @@ export const TELEGRAM_ALLOWED_CHAT_IDS = (Deno.env.get("TELEGRAM_ALLOWED_CHAT_ID
   .split(",").map((s) => s.trim()).filter(Boolean);
 export const CALENDAR_SYNC_SECRET = Deno.env.get("CALENDAR_SYNC_SECRET") ?? "";
 
-/** URL pubblico del gestionale, per i link nelle notifiche. */
-export const SITE_URL = Deno.env.get("SITE_URL") || "https://app.wesleycaicedo.com";
+// Il dominio del gestionale per i link delle notifiche non è più un secret (SITE_URL): vedi _shared/sito.ts.

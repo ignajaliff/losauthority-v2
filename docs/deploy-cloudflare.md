@@ -50,7 +50,7 @@ npx wrangler deploy
 ## En Supabase, antes de dar el link a nadie
 
 1. **Authentication → Sign In / Providers → «Allow new users to sign up» = OFF.** Con la clave publicable dentro del JS, cualquiera podría crearse una cuenta cliente y gastar Anthropic y Apify. Las cuentas las crea el team desde el gestionale (`gestione-utenti`, con service role), no les afecta.
-2. **Edge Functions → Secrets → `SITE_URL`** = `https://app.wesleycaicedo.com` (sin barra final; mientras no haya dominio, la URL `*.workers.dev`). Lo usan los links de los avisos de Telegram, de los recordatorios y del contrato firmado.
+2. ~~`SITE_URL`~~: ya no hace falta (desde el 08/10/2026). Los enlaces de los avisos de Telegram usan solos el dominio desde el que el team abre el gestionale; al cambiar de dominio basta con que alguien del team entre una vez.
 3. **Authentication → URL Configuration**: Site URL = el mismo dominio; Redirect URLs = `https://app.wesleycaicedo.com/**` y `http://localhost:5173/**`.
 4. Los links de contrato y de acceso que copia Wesley salen del dominio desde el que trabaja (`window.location.origin`): trabajar siempre desde `app.wesleycaicedo.com`, no desde una URL de preview.
 

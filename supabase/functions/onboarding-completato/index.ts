@@ -8,7 +8,7 @@ import { gestisciErrore, HttpError, json, preflight } from "../_shared/http.ts";
 import { adminClient, richiediUtente } from "../_shared/supabase.ts";
 import { notifyTelegram } from "../_shared/telegram.ts";
 import { logError } from "../_shared/log.ts";
-import { SITE_URL } from "../_shared/config.ts";
+import { rigaLink, sitoGestionale } from "../_shared/sito.ts";
 import { instagramDaLink } from "../_shared/instagram.ts";
 import { calcolaProfilo, type RigaOnboarding } from "./profilo.ts";
 
@@ -68,8 +68,10 @@ Deno.serve(async (req: Request) => {
 
     // 4) Telegram solo alla transizione: una volta per cliente.
     if (cambiaStato) {
+      const sito = await sitoGestionale(admin);
       await notifyTelegram(
-        `🎉 Onboarding completato!\nCliente: ${c.nombre || "(senza nome)"}\nEmail: ${c.email || "(senza email)"}\n👉 ${SITE_URL}/clienti/${c.id}?tab=onboarding`,
+        `🎉 Onboarding completato!\nCliente: ${c.nombre || "(senza nome)"}\nEmail: ${c.email || "(senza email)"}` +
+          rigaLink(sito, `/clienti/${c.id}?tab=onboarding`),
       );
     }
     return json({ ok: true, completato: true });

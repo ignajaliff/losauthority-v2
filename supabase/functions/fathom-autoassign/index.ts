@@ -2,7 +2,7 @@ import { errore, gestisciErrore, json, preflight } from "../_shared/http.ts";
 import { adminClient, richiediCronOTeam } from "../_shared/supabase.ts";
 import { aggiornaSync, logError } from "../_shared/log.ts";
 import { notifyTelegram } from "../_shared/telegram.ts";
-import { SITE_URL } from "../_shared/config.ts";
+import { rigaLink, sitoGestionale } from "../_shared/sito.ts";
 import {
   cleanCallTitle,
   fathomConfigurato,
@@ -132,10 +132,11 @@ Deno.serve(async (req: Request) => {
   }
 
   if (esito.nuove.length > 0) {
+    const sito = await sitoGestionale(adminClient());
     await notifyTelegram(
       `📞 Call assegnate in automatico (${esito.nuove.length})\n\n` +
         esito.nuove.map((n) => `• ${n}`).join("\n") +
-        `\n\n👉 ${SITE_URL}/clienti`,
+        rigaLink(sito, "/clienti", "\n\n👉 "),
     );
   }
   await aggiornaSync("fathom", {
