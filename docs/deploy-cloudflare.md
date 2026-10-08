@@ -2,6 +2,12 @@
 
 El frontend (React + Vite 6) se publica como **Cloudflare Worker con static assets**: no hay código de servidor, solo los archivos de `dist/`. El backend sigue en Supabase (base de datos, auth, Edge Functions) y no cambia.
 
+## Desde el 08/10/2026: el panel de Cloudflare casi no importa
+
+- Las dos variables públicas (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` = clave **publicable**) están en **`.env.production`**, versionado: no hace falta ponerlas en el panel. Nunca poner ahí claves secretas.
+- `wrangler.jsonc` tiene `build.command = "npm run build"`: `npx wrangler deploy` compila solo antes de publicar, aunque el **Build command** del panel esté vacío (si está puesto, compila dos veces: no pasa nada).
+- Cada push a `main` publica en https://losauthority-v2.ignaciojaliff29.workers.dev (o en el dominio propio, cuando se conecte).
+
 ## Qué hay en el repo
 
 | Archivo | Para qué |

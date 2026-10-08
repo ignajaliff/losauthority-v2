@@ -5,6 +5,11 @@
   // Deve coincidere con il nome del progetto su Cloudflare. NON usare "los-authority": è il Worker della landing.
   "name": "losauthority-v2",
   "compatibility_date": "2026-10-01",
+  // `wrangler deploy` compila da solo prima di pubblicare: il deploy funziona anche con il
+  // «Build command» di Cloudflare vuoto.
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
     // Esplicita: così `wrangler deploy` funziona anche senza la configurazione generata dal build.
     "directory": "./dist",
