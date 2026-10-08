@@ -59,3 +59,7 @@ Las Edge Functions aceptan cualquier origen (CORS `*`): no hay que tocar nada pa
 ## Probado (07/10/2026)
 
 `npm ci` limpio con el lockfile nuevo (Node 20, 22 y 24); build en una copia limpia de los archivos que irían al repo, con Node 22 (falla sin las variables, pasa con ellas); `wrangler deploy --dry-run` (193 archivos); `vite preview` en el runtime de Cloudflare: todas las rutas profundas devuelven la app, cabeceras de `_headers` aplicadas, `_headers`/`wrangler.json` no se publican; login real de un cliente en Chrome headless y las 12 páginas del área cliente sin errores, recarga directa de una ruta profunda, 375 px sin scroll horizontal; `npm run dev` con Node 20.
+
+## Si un build falla con «assets.directory … does not exist»
+
+Es un build de un commit anterior a `a81ce2b` (por ejemplo un «Retry» de un build viejo): esos commits no tienen `build.command` en `wrangler.jsonc` y `wrangler deploy` no compila. Con el código actual el log muestra `[custom build] Running: npm run build` justo después de `Executing user deploy command`. Para publicar, hacer push a `main` o relanzar el build del último commit.
