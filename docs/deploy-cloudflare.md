@@ -8,7 +8,7 @@ El frontend (React + Vite 6) se publica como **Cloudflare Worker con static asse
 |---|---|
 | `package.json` | `vite` 6.4.4, `@vitejs/plugin-react` 5.2.0 (la 6 solo funciona con Vite 8), `@cloudflare/vite-plugin` y `wrangler` |
 | `vite.config.ts` | plugin `cloudflare()`; el build **falla** si faltan `VITE_SUPABASE_URL` o `VITE_SUPABASE_ANON_KEY` (sin ellas la app quedaría en blanco); chunks separados para react, supabase y la librería de UI |
-| `wrangler.jsonc` | nombre `los-authority-v2` y `not_found_handling: "single-page-application"`: cualquier ruta (`/area/...`, `/contratto/:token`, `/stampa/...`) responde con `index.html`. **No** poner `assets.directory`: lo pone el plugin |
+| `wrangler.jsonc` | nombre `losauthority-v2` (igual que el proyecto en Cloudflare), `assets.directory: "./dist"` y `not_found_handling: "single-page-application"`: cualquier ruta (`/area/...`, `/contratto/:token`, `/stampa/...`) responde con `index.html`. |
 | `.node-version` | Node 22.16.0 en el build de Cloudflare (`wrangler` necesita Node 22 o más) |
 | `public/_headers` | `noindex`, sin iframes de otros sitios, `nosniff`, el token de los contratos no sale en el Referer |
 | `src/main.tsx` | tras un deploy nuevo, una pestaña vieja que no encuentra un chunk se recarga sola una vez |
@@ -19,7 +19,7 @@ El frontend (React + Vite 6) se publica como **Cloudflare Worker con static asse
 
 1. **Subir el código**: todo el proyecto tiene que estar commiteado (incluidos `package.json` y `package-lock.json` juntos) en un repo **privado** de GitHub. El repo contiene documentos internos (PDF de clientes, `.skill`): no hacerlo público. `.env`, `dist/` y `node_modules/` ya están en `.gitignore`.
 2. Cloudflare → **Workers & Pages → Create → Import a repository** → elegir el repo.
-   - Nombre del proyecto: **`los-authority-v2`** (no `los-authority`: ese Worker ya existe y sirve la landing `wesleycaicedo.com`).
+   - Nombre del proyecto: **`losauthority-v2`** (el mismo de `wrangler.jsonc`) (no `los-authority`: ese Worker ya existe y sirve la landing `wesleycaicedo.com`).
    - Build command: `npm run build` (**obligatorio**: si queda vacío, el deploy falla con *«The `assets` property in your configuration is missing the required `directory` property»*, porque `wrangler` lee `wrangler.jsonc` sin el `wrangler.json` que genera el build)
    - Deploy command: `npx wrangler deploy`
    - Alternativa en un solo campo: Deploy command `npm run deploy` (compila y despliega), con el Build command vacío
