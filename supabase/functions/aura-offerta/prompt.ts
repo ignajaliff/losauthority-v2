@@ -57,6 +57,8 @@ export interface DatiPrompt {
   scheda: string;
   /** La fotografia dell'onboarding (lettura di Aura) e le note per l'agente offerta, già rese in testo. */
   lettura: string;
+  /** Il blocco `=== KIT BRAND DEL CLIENTE ===` (`_shared/kit-brand.ts`), null se il kit è vuoto. */
+  kitBrand: string | null;
   conoscenza: string;
   /** Gli avatar completi del cliente (carta + dossier), già resi in testo. */
   avatar: string;
@@ -143,6 +145,7 @@ export function costruisciPrompt(d: DatiPrompt): Blocco[] {
     `=== FOTOGRAFIA DELL'ONBOARDING (lettura di Aura per Wesley) E NOTE PER TE ===\n${taglia(d.lettura, 4000)}`,
     `=== IL SUO AVATAR (cliente ideale: la trasformazione, le obiezioni e il linguaggio vengono da qui) ===\n${taglia(d.avatar, 5000)}`,
   ];
+  if (d.kitBrand) cliente.push(d.kitBrand);
   const variabile = [`=== CARTA DELL'OFFERTA FINORA ===\n${renderCarta(d.offerta, d.diagnosi)}`];
   if (d.storico.length > 0) {
     const righe = d.storico.map((m) => `${m.ruolo === "cliente" ? "CLIENTE" : "AURA"}: ${taglia(m.contenuto, 2500)}`);

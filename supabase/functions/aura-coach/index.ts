@@ -15,6 +15,7 @@ import { adminClient, richiediUtente } from "../_shared/supabase.ts";
 import { ANTHROPIC_MODEL, HAS_ANTHROPIC, streamAnthropicText } from "../_shared/anthropic.ts";
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, nomeCliente, renderScheda } from "../_shared/materiale.ts";
+import { bloccoKitBrand } from "../_shared/kit-brand.ts";
 import { costruisciPrompt, estraiRisposta, lezioniPertinenti, SYSTEM, type Lezione, type Storico } from "./prompt.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
@@ -50,7 +51,7 @@ async function perRiprova(admin: SupabaseClient, clienteId: string, auraId: stri
 }
 
 async function contesto(admin: SupabaseClient, clienteId: string, escludiAuraId: string) {
-  const [scheda, conoscenza, lezioni, storico, nome] = await Promise.all([
+  const [scheda, conoscenza, lezioni, storico, nome, kitBrand] = await Promise.all([
     leggiMateriale(admin, clienteId).catch(() => null),
     admin.from("aura_conoscenza").select("titolo, contenuto").eq("ambito", "generale").eq("attivo", true).order("ordine"),
     admin.from("lezioni").select("id, corso, titolo, url, descrizione, keywords").eq("attiva", true).order("corso").order("ordine"),
@@ -63,12 +64,14 @@ async function contesto(admin: SupabaseClient, clienteId: string, escludiAuraId:
       .order("created_at", { ascending: false })
       .limit(MAX_STORICO),
     nomeCliente(admin, clienteId),
+    bloccoKitBrand(admin, clienteId),
   ]);
   if (lezioni.error) throw lezioni.error;
   const blocchi = ((conoscenza.data ?? []) as Array<{ titolo: string; contenuto: string }>).map((b) => `## ${b.titolo}\n${b.contenuto}`);
   return {
     nome,
     scheda: renderScheda(scheda),
+    kitBrand,
     conoscenza: blocchi.join("\n\n"),
     lezioni: (lezioni.data ?? []) as Lezione[],
     storico: ((storico.data ?? []) as Storico[]).reverse(),

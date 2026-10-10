@@ -14,6 +14,7 @@ import { adminClient, richiediUtente } from "../_shared/supabase.ts";
 import { ANTHROPIC_MODEL, HAS_ANTHROPIC, streamAnthropicText } from "../_shared/anthropic.ts";
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, nomeCliente, renderScheda } from "../_shared/materiale.ts";
+import { bloccoKitBrand } from "../_shared/kit-brand.ts";
 import { costruisciPrompt, estraiStile, SYSTEM } from "./prompt.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
@@ -69,17 +70,19 @@ async function perRiprova(admin: SupabaseClient, clienteId: string, stileId: str
 }
 
 async function contesto(admin: SupabaseClient, clienteId: string) {
-  const [scheda, analisi, conoscenza, nome] = await Promise.all([
+  const [scheda, analisi, conoscenza, nome, kitBrand] = await Promise.all([
     leggiMateriale(admin, clienteId).catch(() => null),
     admin.from("analisi").select("contenuto").eq("cliente_id", clienteId).maybeSingle(),
     admin.from("aura_conoscenza").select("titolo, contenuto").eq("ambito", "idee").eq("attivo", true).order("ordine"),
     nomeCliente(admin, clienteId),
+    bloccoKitBrand(admin, clienteId),
   ]);
   const blocchi = ((conoscenza.data ?? []) as Array<{ titolo: string; contenuto: string }>).map((b) => `## ${b.titolo}\n${b.contenuto}`);
   return {
     nome,
     scheda: renderScheda(scheda),
     analisi: (analisi.data as { contenuto: string } | null)?.contenuto ?? null,
+    kitBrand,
     conoscenza: blocchi.join("\n\n"),
   };
 }

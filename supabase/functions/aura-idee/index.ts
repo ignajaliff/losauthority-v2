@@ -18,6 +18,7 @@ import { adminClient, richiediUtente } from "../_shared/supabase.ts";
 import { ANTHROPIC_MODEL, HAS_ANTHROPIC, streamAnthropicText } from "../_shared/anthropic.ts";
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, nomeCliente, renderScheda } from "../_shared/materiale.ts";
+import { bloccoKitBrand } from "../_shared/kit-brand.ts";
 import { costruisciPrompt, estraiProposte, SYSTEM, type RicercaScelta, type StileScelto, type Storico, type TopPubblicazione, type VideoRicerca } from "./prompt.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 
@@ -127,7 +128,7 @@ async function perRiprova(admin: SupabaseClient, clienteId: string, auraId: stri
 }
 
 async function contesto(admin: SupabaseClient, clienteId: string, sessioneId: string, escludiAuraId: string) {
-  const [scheda, analisi, conoscenza, storico, idee, top, nome] = await Promise.all([
+  const [scheda, analisi, conoscenza, storico, idee, top, nome, kitBrand] = await Promise.all([
     leggiMateriale(admin, clienteId).catch(() => null),
     admin.from("analisi").select("contenuto").eq("cliente_id", clienteId).maybeSingle(),
     admin.from("aura_conoscenza").select("titolo, contenuto").eq("ambito", "idee").eq("attivo", true).order("ordine"),
@@ -148,6 +149,7 @@ async function contesto(admin: SupabaseClient, clienteId: string, sessioneId: st
       .order("visualizzazioni", { ascending: false })
       .limit(5),
     nomeCliente(admin, clienteId),
+    bloccoKitBrand(admin, clienteId),
   ]);
   const blocchi = ((conoscenza.data ?? []) as Array<{ titolo: string; contenuto: string }>).map((b) => `## ${b.titolo}\n${b.contenuto}`);
   const storicoOrdinato = ((storico.data ?? []) as Storico[]).reverse();
@@ -160,6 +162,7 @@ async function contesto(admin: SupabaseClient, clienteId: string, sessioneId: st
     nome,
     scheda: renderScheda(scheda),
     analisi: (analisi.data as { contenuto: string } | null)?.contenuto ?? null,
+    kitBrand,
     conoscenza: blocchi.join("\n\n"),
     storico: storicoOrdinato,
     ideeRecenti: ((idee.data ?? []) as Array<{ titolo: string }>).map((i) => i.titolo),

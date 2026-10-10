@@ -1,157 +1,249 @@
 /**
- * aura-compiti — "Genera compiti con Aura": dal riassunto di una call ai compiti
- * sulla board "Compiti per call n°X" dell'hub Notion del cliente (porta di
- * generaCompitiDaCall in src/lib/hub/actions.ts). A DUE STADI: piano (JSON
- * piccolo) → espansione di ogni compito in parallelo, col piano nel contesto.
- * Body: { chiamata_id, call_n: 1..4 } → { ok, scritti, totale }.
+ * aura-compiti — il piano d'azione del cliente scritto da Aura dalla sua (unica)
+ * call con Wesley, direttamente in `compiti` (tappe + sotto-compiti). Niente
+ * Notion, niente bottone: la call entra in coda dal trigger del database appena
+ * ha cliente e riassunto (migrazioni 44-45) e questa funzione la lavora.
+ *   · `{}` (trigger, cron ogni 10 min, team): svuota la coda (`da_generare`, o
+ *     `in_corso` ferma da più di 10 minuti), al massimo due call per giro; dopo
+ *     tre prese in carico senza esito la call passa a `errore`.
+ *   · `{ chiamata_id, rigenera?: true }` (team): lavora quella call adesso;
+ *     con `rigenera` sostituisce il piano di Aura già presente.
+ * Stati: in_corso → pronto | errore (motivo in `piano_errore`) | saltato (il
+ * cliente ha già un piano di Aura e non si rigenera). Telegram quando è pronto.
  */
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
 import { errore, gestisciErrore, json, leggiBody, preflight } from "../_shared/http.ts";
-import { adminClient, richiediTeam } from "../_shared/supabase.ts";
+import { adminClient, richiediCronOTeam } from "../_shared/supabase.ts";
 import { HAS_ANTHROPIC } from "../_shared/anthropic.ts";
-import { HAS_NOTION } from "../_shared/config.ts";
 import { logError } from "../_shared/log.ts";
-import { fathomConfigurato, getFathomSummary, traduciRiassunto } from "../_shared/fathom.ts";
-import { leggiMateriale, nomeCliente, renderDossier } from "../_shared/materiale.ts";
-import { syncCliente } from "../_shared/hub-sync.ts";
-import { generaPiano, pianoInTesto } from "./piano.ts";
-import { espandiCompito, type LessonRef } from "./espandi.ts";
-import { createCompito, NOTION_WESLEY_USER_ID } from "./scrivi.ts";
+import { notifyTelegram } from "../_shared/telegram.ts";
+import { rigaLink, sitoGestionale } from "../_shared/sito.ts";
+import { fathomConfigurato, getFathomTranscript, traduciRiassunto } from "../_shared/fathom.ts";
+import { leggiContesto } from "./contesto.ts";
+import { generaSottoCompiti, generaTappe } from "./genera.ts";
+import type { CallLetta } from "./prompt.ts";
+import { cancellaPerChiamata, cancellaPianoAura, haPianoAura, scriviPiano } from "./scrivi.ts";
 
 type Body = {
   chiamata_id?: unknown;
-  call_n?: unknown;
-}
+  rigenera?: unknown;
+};
+
 interface RigaChiamata {
   id: string;
   cliente_id: string | null;
+  titolo: string | null;
+  registrata_il: string | null;
   riassunto: string | null;
+  riassunto_originale: string | null;
+  trascrizione: string | null;
   fathom_recording_id: string | null;
+  piano_stato: string | null;
+  piano_tentativi: number;
 }
-interface RigaBoard {
-  id: string;
-  call_n: number;
-  notion_db_id: string;
+const COLONNE =
+  "id, cliente_id, titolo, registrata_il, riassunto, riassunto_originale, trascrizione, fathom_recording_id, piano_stato, piano_tentativi";
+
+/** Un'elaborazione `in_corso` da più di tanto è caduta: si riprende. */
+const FERMA_DOPO_MS = 10 * 60_000;
+const MAX_PER_GIRO = 2;
+/** Dopo tante prese in carico senza esito la call va in errore (niente giri infiniti a pagamento). */
+const MAX_TENTATIVI = 3;
+/** Dopo questo tempo non si inizia una seconda call nello stesso giro (limite della funzione). */
+const BUDGET_GIRO_MS = 60_000;
+/** Scadenza di tutte le chiamate a Claude di una call: sotto il limite della funzione (~150 s). */
+const BUDGET_CALL_MS = 115_000;
+const MSG_RIASSUNTO = "Fathom non ha ancora il riassunto di questa call: riprova tra qualche minuto.";
+const MSG_TENTATIVI = `Aura ha provato ${MAX_TENTATIVI} volte senza riuscire a finire il piano. Controlla gli errori e riprova con «Rigenera».`;
+
+type Esito = { stato: "pronto" | "saltato"; tappe: number; sotto: number } | { stato: "errore"; errore: string };
+
+/**
+ * Prende in carico la call con un update condizionale: con il trigger, il cron e
+ * un clic del team insieme, la lavora uno solo. null = l'ha già presa qualcun altro.
+ */
+async function prendiInCarico(admin: SupabaseClient, id: string, filtro: string, tentativi: number): Promise<RigaChiamata | null> {
+  const { data, error } = await admin
+    .from("chiamate")
+    .update({ piano_stato: "in_corso", piano_avviato_il: new Date().toISOString(), piano_errore: null, piano_tentativi: tentativi })
+    .eq("id", id)
+    .or(filtro)
+    .select(COLONNE);
+  if (error) throw error;
+  const righe = (data ?? []) as RigaChiamata[];
+  return righe[0] ?? null;
 }
 
 /**
- * Il catalogo che diamo ad Aura: solo lezioni attive, ordinate per corso.
- * [] se il catalogo è vuoto (Aura semplicemente non aggancia nulla).
+ * La call come la legge Aura: la trascrizione integrale (letta da Fathom una volta e
+ * salvata), altrimenti il riassunto. Se il riassunto c'è solo in originale (call
+ * arrivata senza cliente e assegnata a mano) lo traduce e lo salva: così la scheda
+ * mostra il riassunto in italiano senza passare da «Scarica riassunto».
  */
-async function lessonCatalog(admin: SupabaseClient): Promise<LessonRef[]> {
-  const { data } = await admin
-    .from("lezioni")
-    .select("titolo, corso, url")
-    .eq("attiva", true)
-    .order("corso", { ascending: true, nullsFirst: false })
-    .order("ordine", { ascending: true })
-    .limit(200);
-  return ((data ?? []) as LessonRef[]).map((r) => ({ titolo: r.titolo, corso: r.corso ?? null, url: r.url ?? null }));
+async function leggiCall(admin: SupabaseClient, riga: RigaChiamata): Promise<CallLetta> {
+  let trascrizione = riga.trascrizione;
+  let riassunto = riga.riassunto;
+  const [trascrizioneNuova, riassuntoNuovo] = await Promise.all([
+    !trascrizione && riga.fathom_recording_id && fathomConfigurato() ? getFathomTranscript(riga.fathom_recording_id) : null,
+    !riassunto && riga.riassunto_originale ? traduciRiassunto(riga.riassunto_originale) : null,
+  ]);
+  const patch: Record<string, string> = {};
+  if (trascrizioneNuova) {
+    trascrizione = trascrizioneNuova;
+    patch.trascrizione = trascrizioneNuova;
+  }
+  if (riassuntoNuovo) {
+    riassunto = riassuntoNuovo;
+    patch.riassunto = riassuntoNuovo;
+  }
+  if (Object.keys(patch).length > 0) {
+    const { error } = await admin.from("chiamate").update(patch).eq("id", riga.id);
+    if (error) await logError("aura-compiti:call", error, { chiamata_id: riga.id }, { silent: true });
+  }
+  const { data: azioni } = await admin.from("chiamate_azioni").select("testo").eq("chiamata_id", riga.id).order("ordine");
+  const testo = trascrizione ?? riassunto ?? riga.riassunto_originale ?? "";
+  return {
+    titolo: riga.titolo || "Call con Wesley",
+    data: riga.registrata_il ? new Date(riga.registrata_il).toLocaleDateString("it-IT", { day: "numeric", month: "long", year: "numeric" }) : null,
+    fonte: trascrizione ? "trascrizione" : "riassunto",
+    testo,
+    azioni: ((azioni ?? []) as Array<{ testo: string }>).map((a) => a.testo),
+  };
 }
 
-/** Board del cliente; se manca la fotografia, prova una sync prima di arrendersi. */
-async function boardsCliente(admin: SupabaseClient, clienteId: string, hubUrl: string): Promise<RigaBoard[]> {
-  const leggi = async () => {
-    const { data } = await admin.from("hub_board").select("id, call_n, notion_db_id").eq("cliente_id", clienteId);
-    return (data ?? []) as RigaBoard[];
-  };
-  let boards = await leggi();
-  if (boards.length === 0) {
-    await syncCliente(admin, clienteId, hubUrl);
-    boards = await leggi();
+async function chiudi(admin: SupabaseClient, id: string, patch: Record<string, unknown>): Promise<void> {
+  const { error } = await admin.from("chiamate").update(patch).eq("id", id);
+  if (error) await logError("aura-compiti:stato", error, { chiamata_id: id }, { silent: true });
+}
+
+/** Un'altra call dello stesso cliente sta scrivendo il piano in questo momento? */
+async function altraInCorso(admin: SupabaseClient, clienteId: string, chiamataId: string): Promise<boolean> {
+  const { count, error } = await admin
+    .from("chiamate")
+    .select("id", { count: "exact", head: true })
+    .eq("cliente_id", clienteId)
+    .eq("piano_stato", "in_corso")
+    .neq("id", chiamataId)
+    .gte("piano_avviato_il", new Date(Date.now() - FERMA_DOPO_MS).toISOString());
+  if (error) throw error;
+  return (count ?? 0) > 0;
+}
+
+async function salta(admin: SupabaseClient, id: string, motivo: string): Promise<Esito> {
+  await chiudi(admin, id, { piano_stato: "saltato", piano_errore: motivo });
+  return { stato: "saltato", tappe: 0, sotto: 0 };
+}
+
+const MSG_GIA_PIANO = "Il cliente ha già un piano scritto da Aura. Con «Rigenera» lo sostituisci con uno nuovo da questa call.";
+const MSG_ALTRA_CALL = "Aura sta già scrivendo il piano del cliente da un'altra call.";
+
+async function elabora(admin: SupabaseClient, riga: RigaChiamata, rigenera: boolean): Promise<Esito> {
+  const clienteId = riga.cliente_id as string;
+  if (!rigenera) {
+    if (await haPianoAura(admin, clienteId)) return salta(admin, riga.id, MSG_GIA_PIANO);
+    if (await altraInCorso(admin, clienteId, riga.id)) return salta(admin, riga.id, MSG_ALTRA_CALL);
   }
-  return boards;
+
+  const scadenza = Date.now() + BUDGET_CALL_MS;
+  const [ctx, call] = await Promise.all([leggiContesto(admin, clienteId), leggiCall(admin, riga)]);
+  if (!call.testo.trim()) throw new Error(MSG_RIASSUNTO);
+
+  // Prima si genera tutto, poi si tocca il piano: se Aura fallisce il piano vecchio resta com'è.
+  const tappe = await generaTappe(ctx, call, scadenza);
+  if (!tappe) throw new Error("Aura non è riuscita a scrivere le tappe del piano. Riprova.");
+  const sotto = await Promise.all(tappe.map((_, i) => generaSottoCompiti(ctx, call, tappe, i, scadenza)));
+
+  // Ricontrollo prima di scrivere: nel frattempo un'altra call può aver scritto il piano.
+  if (!rigenera && (await haPianoAura(admin, clienteId))) return salta(admin, riga.id, MSG_GIA_PIANO);
+  if (rigenera) await cancellaPianoAura(admin, clienteId);
+
+  let esito;
+  try {
+    esito = await scriviPiano(admin, clienteId, riga.id, tappe.map((t, i) => ({ titolo: t.titolo, sotto: sotto[i] })));
+  } catch (err) {
+    await cancellaPerChiamata(admin, riga.id);
+    throw err;
+  }
+  await chiudi(admin, riga.id, { piano_stato: "pronto", piano_generato_il: new Date().toISOString(), piano_errore: null });
+
+  const sito = await sitoGestionale(admin);
+  await notifyTelegram(
+    `🗺️ Piano d'azione pronto\nCliente: ${ctx.nome}\n${esito.tappe} tappe · ${esito.sotto} sotto-compiti, dalla call «${call.titolo}»` +
+      rigaLink(sito, `/clienti/${clienteId}`),
+  );
+  return { stato: "pronto", ...esito };
+}
+
+/** Lavora una call presa in carico; qualsiasi errore finisce in `piano_errore` ed error_log (Telegram solo per i guasti veri). */
+async function lavora(admin: SupabaseClient, riga: RigaChiamata, rigenera: boolean): Promise<Esito> {
+  try {
+    return await elabora(admin, riga, rigenera);
+  } catch (err) {
+    const messaggio = (err instanceof Error ? err.message : String(err)).slice(0, 500);
+    await chiudi(admin, riga.id, { piano_stato: "errore", piano_errore: messaggio });
+    await logError("aura-compiti:piano", err, { chiamata_id: riga.id, cliente_id: riga.cliente_id }, { silent: messaggio === MSG_RIASSUNTO });
+    return { stato: "errore", errore: messaggio };
+  }
+}
+
+/** La coda: `da_generare`, oppure `in_corso` ferma da troppo. Il filtro vale sia per la lettura sia per la presa in carico. */
+const filtroCoda = (soglia: string) => `piano_stato.eq.da_generare,and(piano_stato.eq.in_corso,piano_avviato_il.lt.${soglia})`;
+
+async function svuotaCoda(admin: SupabaseClient, soglia: string): Promise<Array<{ id: string } & Esito>> {
+  const { data, error } = await admin
+    .from("chiamate")
+    .select("id, piano_tentativi")
+    .or(filtroCoda(soglia))
+    .order("registrata_il", { ascending: true, nullsFirst: false })
+    .limit(MAX_PER_GIRO);
+  if (error) throw error;
+  const inizio = Date.now();
+  const esiti: Array<{ id: string } & Esito> = [];
+  for (const r of (data ?? []) as Array<{ id: string; piano_tentativi: number }>) {
+    if (esiti.length > 0 && Date.now() - inizio > BUDGET_GIRO_MS) break;
+    if (r.piano_tentativi >= MAX_TENTATIVI) {
+      // Stesso filtro della presa in carico: se nel frattempo l'ha presa qualcun altro, non si tocca.
+      await admin.from("chiamate").update({ piano_stato: "errore", piano_errore: MSG_TENTATIVI }).eq("id", r.id).or(filtroCoda(soglia));
+      esiti.push({ id: r.id, stato: "errore", errore: MSG_TENTATIVI });
+      continue;
+    }
+    const presa = await prendiInCarico(admin, r.id, filtroCoda(soglia), r.piano_tentativi + 1);
+    if (!presa) continue;
+    esiti.push({ id: r.id, ...(await lavora(admin, presa, false)) });
+  }
+  return esiti;
 }
 
 Deno.serve(async (req: Request) => {
   const pre = preflight(req);
   if (pre) return pre;
   try {
-    await richiediTeam(req);
-    const { chiamata_id, call_n } = await leggiBody<Body>(req);
-    const callN = Number(call_n);
-    if (typeof chiamata_id !== "string" || !chiamata_id || !Number.isInteger(callN) || callN < 1 || callN > 4) {
-      return errore("Dati non validi.", 400);
-    }
-    if (!HAS_NOTION || !HAS_ANTHROPIC) return errore("NOTION_TOKEN o ANTHROPIC_API_KEY non configurati.", 500);
+    const chi = await richiediCronOTeam(req);
+    if (!HAS_ANTHROPIC) return errore("ANTHROPIC_API_KEY non configurata.", 500);
+    const body = await leggiBody<Body>(req);
     const admin = adminClient();
+    const soglia = new Date(Date.now() - FERMA_DOPO_MS).toISOString();
 
-    // 1) La call e il suo riassunto (se manca lo scarico ora da Fathom).
-    const { data: cRaw } = await admin
-      .from("chiamate")
-      .select("id, cliente_id, riassunto, fathom_recording_id")
-      .eq("id", chiamata_id)
-      .maybeSingle();
-    const chiamata = cRaw as RigaChiamata | null;
-    if (!chiamata) return errore("Call non trovata.", 404);
-    if (!chiamata.cliente_id) return errore("Questa call non è assegnata a nessun cliente.", 400);
-    const clienteId = chiamata.cliente_id;
-
-    let summary = chiamata.riassunto;
-    if (!summary && chiamata.fathom_recording_id && fathomConfigurato()) {
-      const originale = await getFathomSummary(chiamata.fathom_recording_id);
-      if (originale) {
-        summary = await traduciRiassunto(originale);
-        await admin.from("chiamate").update({ riassunto: summary, riassunto_originale: originale }).eq("id", chiamata_id);
+    // Team: una call precisa, adesso (con «Rigenera» sostituisce il piano di Aura).
+    if (typeof body.chiamata_id === "string" && body.chiamata_id) {
+      if (chi === "cron") return errore("Dati non validi.", 400);
+      const { data } = await admin.from("chiamate").select(COLONNE).eq("id", body.chiamata_id).maybeSingle();
+      const riga = data as RigaChiamata | null;
+      if (!riga) return errore("Call non trovata.", 404);
+      if (!riga.cliente_id) return errore("Questa call non è assegnata a nessun cliente.", 400);
+      if (!riga.riassunto && !riga.riassunto_originale && !riga.trascrizione) {
+        return errore("Fathom non ha ancora il riassunto di questa call: scaricalo prima.", 400);
       }
-    }
-    if (!summary) return errore("Fathom non ha ancora il riassunto di questa call: riprova tra qualche minuto.", 400);
-
-    // 2) Hub, board di destinazione, compiti già aperti e PROFILO del cliente
-    //    (per ancorare i compiti ai suoi fatti reali: numeri, nomi, parole sue).
-    const { data: clRaw } = await admin.from("clienti").select("notion_hub_url").eq("id", clienteId).maybeSingle();
-    const hubUrl = (clRaw as { notion_hub_url: string | null } | null)?.notion_hub_url;
-    if (!hubUrl) return errore("Questo cliente non ha ancora un hub Notion collegato.", 400);
-
-    const boards = await boardsCliente(admin, clienteId, hubUrl);
-    const target = boards.find((b) => b.call_n === callN);
-    if (!target) return errore(`Board "Compiti per call n°${callN}" non trovata nell'hub.`, 404);
-
-    const [{ data: apertiRaw }, { data: analisiRaw }, materiale, clientName] = await Promise.all([
-      admin.from("hub_compiti").select("titolo").in("board_id", boards.map((b) => b.id)).neq("stato", "done"),
-      admin.from("analisi").select("contenuto").eq("cliente_id", clienteId).maybeSingle(),
-      leggiMateriale(admin, clienteId),
-      nomeCliente(admin, clienteId, "il cliente"),
-    ]);
-    const aperti = ((apertiRaw ?? []) as Array<{ titolo: string }>).map((t) => t.titolo);
-    const analisi = (analisiRaw as { contenuto: string } | null)?.contenuto ?? "";
-    const profilo = (analisi.trim().length > 40 ? `ANALISI STRATEGICA (già scritta da Aura):\n${analisi}\n\n` : "") + renderDossier(materiale);
-
-    // 3) Aura propone: piano (stadio 1) e catalogo lezioni insieme, poi espansione in parallelo (stadio 2).
-    const [piano, lezioni] = await Promise.all([
-      generaPiano({ clientName, callNumber: callN, profilo, summary, compitiAperti: aperti }),
-      lessonCatalog(admin).catch(() => [] as LessonRef[]),
-    ]);
-    if (!piano || piano.length === 0) {
-      await logError("aura-compiti:piano", "piano non generato", { chiamata_id, clienteId });
-      return errore("Aura non è riuscita a generare compiti da questa call. Riprova.", 502);
-    }
-    const ctx = { clientName, callNumber: callN, profilo, summary, lezioni };
-    const pianoText = pianoInTesto(piano);
-    const bodies = await Promise.all(piano.map((item) => espandiCompito(ctx, pianoText, item)));
-
-    // 4) Scrittura sulla board: compiti del cliente numerati (1., 2., …); impegni
-    //    di Wesley con prefisso [WESLEY] e Assigned To.
-    let scritti = 0;
-    let nCliente = 0;
-    for (let i = 0; i < piano.length; i++) {
-      const p = piano[i];
-      const isWesley = p.chi === "wesley";
-      const titolo = isWesley ? `[WESLEY] ${p.titolo}` : `${++nCliente}. ${p.titolo}`;
-      const ok = await createCompito(target.notion_db_id, titolo, {
-        assignUserId: isWesley ? NOTION_WESLEY_USER_ID || null : null,
-        body: bodies[i],
-      });
-      if (ok) scritti++;
-    }
-    if (scritti === 0) {
-      await logError("aura-compiti:zero", "Nessun compito scritto", { clienteId, chiamata_id });
-      return errore("Non sono riuscita a scrivere i compiti su Notion. Riprova.", 502);
+      const presa = await prendiInCarico(admin, riga.id, `piano_stato.is.null,piano_stato.neq.in_corso,piano_avviato_il.lt.${soglia}`, 1);
+      if (!presa) return errore("Aura sta già scrivendo il piano da questa call: aspetta che finisca.", 409);
+      const esito = await lavora(admin, presa, body.rigenera === true);
+      if (esito.stato === "errore") return errore(esito.errore, 502);
+      return json({ ok: true, ...esito });
     }
 
-    // 5) Risincronizza il gestionale (prima della risposta: niente lavoro dopo l'HTTP).
-    await syncCliente(admin, clienteId, hubUrl);
-    return json({ ok: true, scritti, totale: piano.length });
+    // Trigger / cron: la coda, dalla call più vecchia.
+    const esiti = await svuotaCoda(admin, soglia);
+    return json({ ok: true, elaborate: esiti.length, esiti });
   } catch (err) {
     return gestisciErrore(err);
   }

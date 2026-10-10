@@ -52,6 +52,8 @@ export interface DatiPrompt {
   scheda: string;
   /** La fotografia dell'onboarding (lettura di Aura) e le note per l'agente avatar, già rese in testo. */
   lettura: string;
+  /** Il blocco `=== KIT BRAND DEL CLIENTE ===` (`_shared/kit-brand.ts`), null se il kit è vuoto. */
+  kitBrand: string | null;
   conoscenza: string;
   /** La riga `avatar` com'è ora: i campi già compilati entrano nel prompt. */
   avatar: Record<string, unknown>;
@@ -100,6 +102,7 @@ export function costruisciPrompt(d: DatiPrompt): Blocco[] {
     `=== CLIENTE: ${d.nome} ===\n--- Profilo onboarding (quello che sai già di lui: usalo, non richiederlo) ---${taglia(d.scheda, 7000)}`,
     `=== FOTOGRAFIA DELL'ONBOARDING (lettura di Aura per Wesley) E NOTE PER TE ===\n${taglia(d.lettura, 4000)}`,
   ];
+  if (d.kitBrand) cliente.push(d.kitBrand);
   const variabile = [`=== CARTA DELL'AVATAR FINORA ===\n${renderCarta(d.avatar, d.diagnosi)}`];
   if (d.storico.length > 0) {
     const righe = d.storico.map((m) => `${m.ruolo === "cliente" ? "CLIENTE" : "AURA"}: ${taglia(m.contenuto, 1500)}`);

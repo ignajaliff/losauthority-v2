@@ -20,6 +20,7 @@ import { ANTHROPIC_MODEL, HAS_ANTHROPIC, streamAnthropicText } from "../_shared/
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, nomeCliente, renderScheda } from "../_shared/materiale.ts";
 import { leggiLettura, renderLettura } from "../_shared/onboarding/lettura.ts";
+import { bloccoKitBrand } from "../_shared/kit-brand.ts";
 import { costruisciPrompt, messaggioApertura, renderAvatar, SYSTEM, type Storico } from "./prompt.ts";
 import { campiMancanti, estraiScheda, type CampiDiagnosi, type CampiOfferta } from "./scheda.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
@@ -94,7 +95,7 @@ async function perRiprova(admin: SupabaseClient, clienteId: string, auraId: stri
 
 /** Contesto del turno: si escludono la riga Aura in corso e il messaggio del cliente (entra a parte come NUOVO MESSAGGIO). */
 async function contesto(admin: SupabaseClient, clienteId: string, offertaId: string, escludi: string[]) {
-  const [scheda, conoscenza, storico, nome, diagnosi, avatars, lettura] = await Promise.all([
+  const [scheda, conoscenza, storico, nome, diagnosi, avatars, lettura, kitBrand] = await Promise.all([
     leggiMateriale(admin, clienteId).catch(() => null),
     admin.from("aura_conoscenza").select("titolo, contenuto").eq("ambito", "offerta").eq("attivo", true).order("ordine"),
     admin
@@ -109,12 +110,14 @@ async function contesto(admin: SupabaseClient, clienteId: string, offertaId: str
     admin.from("offerta_diagnosi").select("*").eq("offerta_id", offertaId).maybeSingle(),
     avatarDi(admin, clienteId),
     leggiLettura(admin, clienteId).catch(() => null),
+    bloccoKitBrand(admin, clienteId),
   ]);
   const blocchi = ((conoscenza.data ?? []) as Array<{ titolo: string; contenuto: string }>).map((b) => `## ${b.titolo}\n${b.contenuto.trim()}`);
   return {
     nome,
     scheda: renderScheda(scheda),
     lettura: lettura ? renderLettura(lettura, "offerta") : "(non disponibile)",
+    kitBrand,
     conoscenza: blocchi.join("\n\n"),
     avatar: renderAvatar(avatars.slice(0, 3)),
     storico: ((storico.data ?? []) as Storico[]).reverse(),

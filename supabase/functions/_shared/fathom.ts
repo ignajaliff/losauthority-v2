@@ -189,6 +189,37 @@ export async function getFathomSummary(recordingId: string): Promise<string | nu
   return s && s.trim() ? s : null;
 }
 
+/** Massimo di testo della trascrizione che teniamo (una call di un'ora in italiano sta sotto i 100k caratteri). */
+const MAX_TRASCRIZIONE = 300_000;
+
+/**
+ * Trascrizione integrale di una registrazione, resa "Chi parla: testo" una riga
+ * per intervento (Fathom: `transcript[]` con `speaker.display_name`, `text`,
+ * `timestamp`; nomi letti in modo difensivo). null se l'API non la dà o è vuota.
+ */
+export async function getFathomTranscript(recordingId: string): Promise<string | null> {
+  if (!recordingId) return null;
+  const data = await fathomGet(`/recordings/${encodeURIComponent(recordingId)}/transcript`, 20000);
+  if (!data) return null;
+  const raw = pick(asObj(data), ["transcript", "items", "segments"]) ?? data;
+  if (typeof raw === "string") return raw.trim().slice(0, MAX_TRASCRIZIONE) || null;
+  if (!Array.isArray(raw)) return null;
+  const righe: string[] = [];
+  for (const item of raw) {
+    if (typeof item === "string") {
+      if (item.trim()) righe.push(item.trim());
+      continue;
+    }
+    const o = asObj(item);
+    const testo = asString(pick(o, ["text", "content", "sentence"]))?.trim();
+    if (!testo) continue;
+    const chi = asString(pick(asObj(o.speaker), ["display_name", "name"])) ?? asString(o.speaker_name) ?? asString(o.speaker);
+    righe.push(chi ? `${chi.trim()}: ${testo}` : testo);
+  }
+  const testo = righe.join("\n");
+  return testo ? testo.slice(0, MAX_TRASCRIZIONE) : null;
+}
+
 /**
  * Action items di una registrazione. L'API espone gli action items solo nella lista
  * /meetings (include_action_items): cerchiamo la recording tra le recenti. [] se assente.

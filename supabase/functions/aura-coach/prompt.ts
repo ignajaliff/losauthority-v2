@@ -33,6 +33,7 @@ Come rispondi, SEMPRE in questo ordine:
 3. Se nessuna lezione risponde davvero alla domanda, dillo con onestà, dai comunque un consiglio pratico in una frase e suggerisci di scriverlo a Wesley nella prossima live. NON mettere il blocco <lezioni>.
 
 Le LEZIONI PIÙ PERTINENTI dopo il catalogo sono un aiuto (combaciano per parole chiave): scegli tu se sono davvero quelle giuste, guardando anche il resto del catalogo.
+Se nel contesto c'è il blocco KIT BRAND DEL CLIENTE, per colori, font, tono di voce e regole della marca usa SOLO quei dati: non inventare codici colore o font.
 Scrivi in testo semplice: NIENTE markdown, niente asterischi, niente titoli, niente elenchi. Non mettere link nel testo: i link li mostra l'app.
 Non promettere risultati. Nessun consiglio legale, medico o finanziario. Niente testo dopo il blocco </lezioni>.`;
 
@@ -44,6 +45,8 @@ export interface Storico {
 export interface DatiCoach {
   nome: string;
   scheda: string;
+  /** Il blocco `=== KIT BRAND DEL CLIENTE ===` (`_shared/kit-brand.ts`), null se il kit è vuoto. */
+  kitBrand: string | null;
   conoscenza: string;
   lezioni: Lezione[];
   pertinenti: Lezione[];
@@ -129,6 +132,7 @@ export function costruisciPrompt(d: DatiCoach): Blocco[] {
   const catalogo = [...perCorso.entries()].map(([corso, ls]) => `## ${corso}\n${ls.map(rigaLezione).join("\n")}`).join("\n\n");
   fisso.push(`=== CATALOGO LEZIONI SKOOL (usa SOLO questi id) ===\n${catalogo}`);
   const cliente = [`=== CLIENTE: ${d.nome} ===\n--- Scheda onboarding (per capire il suo contesto) ---${taglia(d.scheda, 5000)}`];
+  if (d.kitBrand) cliente.push(d.kitBrand);
   const variabile: string[] = [];
   if (d.pertinenti.length > 0) {
     variabile.push(`=== LEZIONI PIÙ PERTINENTI PER PAROLE CHIAVE ===\n${d.pertinenti.map((l) => `${rigaLezione(l)} (corso: ${l.corso ?? "—"})`).join("\n")}`);

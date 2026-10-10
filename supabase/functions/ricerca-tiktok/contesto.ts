@@ -37,10 +37,14 @@ interface Offerta {
   per_chi: string | null;
   trasformazione: string | null;
 }
+interface KitBrandBreve {
+  nome_brand: string | null;
+  payoff: string | null;
+}
 
 /** Il contesto del cliente in poche righe, o null se non c'è niente (le keyword partono allora dal solo tema). Non lancia mai. */
 export async function contestoCliente(admin: SupabaseClient, clienteId: string): Promise<string | null> {
-  const [onb, avatar, offerta] = await Promise.all([
+  const [onb, avatar, offerta, brand] = await Promise.all([
     admin.from("data_onboarding").select("attivita_breve, tipo, mercato, parole").eq("id", clienteId).maybeSingle(),
     admin
       .from("avatar")
@@ -57,7 +61,8 @@ export async function contestoCliente(admin: SupabaseClient, clienteId: string):
       .order("stato")
       .order("updated_at", { ascending: false })
       .limit(1),
-  ]).catch(() => [null, null, null] as const);
+    admin.from("kit_brand").select("nome_brand, payoff").eq("id", clienteId).maybeSingle(),
+  ]).catch(() => [null, null, null, null] as const);
 
   const righe: string[] = [];
   const o = (onb?.data ?? null) as Onboarding | null;
@@ -91,6 +96,14 @@ export async function contestoCliente(admin: SupabaseClient, clienteId: string):
     const parti = [of.per_chi ? `per chi: ${testo(of.per_chi, 200)}` : null, of.trasformazione ? `trasformazione: ${testo(of.trasformazione, 300)}` : null].filter(Boolean);
     if (parti.length > 0) righe.push(`Offerta${of.nome ? ` «${testo(of.nome, 60)}»` : ""}: ${parti.join("; ")}.`);
   }
+
+  // Kit Brand: solo nome e payoff (colori, font e documenti non servono alle keyword).
+  const b = ((brand?.data ?? null) as KitBrandBreve | null);
+  const nomeBrand = testo(b?.nome_brand, 60);
+  const payoff = testo(b?.payoff, 160);
+  if (nomeBrand && payoff) righe.push(`Brand «${nomeBrand}» (non cercarlo), payoff: «${payoff}».`);
+  else if (nomeBrand) righe.push(`Brand «${nomeBrand}» (non cercarlo).`);
+  else if (payoff) righe.push(`Payoff del brand: «${payoff}».`);
 
   return righe.length > 0 ? righe.join("\n") : null;
 }

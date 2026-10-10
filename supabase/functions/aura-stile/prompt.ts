@@ -53,6 +53,8 @@ export interface DatiStile {
   script: string[];
   scheda: string;
   analisi: string | null;
+  /** Il blocco `=== KIT BRAND DEL CLIENTE ===` (`_shared/kit-brand.ts`), null se il kit è vuoto. */
+  kitBrand: string | null;
   conoscenza: string;
 }
 
@@ -63,6 +65,7 @@ export function costruisciPrompt(d: DatiStile): string {
   parti.push(`=== METODO DI WESLEY ===\n${d.conoscenza || "(nessun blocco caricato: usa buon senso)"}`);
   parti.push(`=== CLIENTE: ${d.nome} ===\n--- Scheda onboarding ---${d.scheda}`);
   if (d.analisi) parti.push(`--- Analisi strategica di Aura ---\n${taglia(d.analisi, 5000)}`);
+  if (d.kitBrand) parti.push(d.kitBrand);
   const esempi = d.script.map((s, i) => `--- Script ${i + 1} ---\n${taglia(s, 6000)}`).join("\n\n");
   parti.push(`=== SCRIPT DI ESEMPIO (${d.script.length}) · stile che il cliente chiama "${d.titolo}" ===\n${esempi}`);
   if (d.note) parti.push(`=== COSA PIACE AL CLIENTE DI QUESTO STILE ===\n${taglia(d.note, 2000)}`);

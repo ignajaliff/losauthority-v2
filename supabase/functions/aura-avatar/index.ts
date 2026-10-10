@@ -19,6 +19,7 @@ import { ANTHROPIC_MODEL, HAS_ANTHROPIC, streamAnthropicText } from "../_shared/
 import { logError } from "../_shared/log.ts";
 import { leggiMateriale, nomeCliente, renderScheda } from "../_shared/materiale.ts";
 import { leggiLettura, renderLettura } from "../_shared/onboarding/lettura.ts";
+import { bloccoKitBrand } from "../_shared/kit-brand.ts";
 import { costruisciPrompt, messaggioApertura, SYSTEM, type Storico } from "./prompt.ts";
 import { campiMancanti, estraiScheda, type CampiAvatar, type CampiDiagnosi } from "./scheda.ts";
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2";
@@ -80,7 +81,7 @@ async function perRiprova(admin: SupabaseClient, clienteId: string, auraId: stri
 
 /** Contesto del turno: si escludono la riga Aura in corso e il messaggio del cliente (entra a parte come NUOVO MESSAGGIO). */
 async function contesto(admin: SupabaseClient, clienteId: string, avatarId: string, escludi: string[]) {
-  const [scheda, conoscenza, storico, nome, diagnosi, lettura] = await Promise.all([
+  const [scheda, conoscenza, storico, nome, diagnosi, lettura, kitBrand] = await Promise.all([
     leggiMateriale(admin, clienteId).catch(() => null),
     admin.from("aura_conoscenza").select("titolo, contenuto").eq("ambito", "avatar").eq("attivo", true).order("ordine"),
     admin
@@ -94,12 +95,14 @@ async function contesto(admin: SupabaseClient, clienteId: string, avatarId: stri
     nomeCliente(admin, clienteId),
     admin.from("avatar_diagnosi").select("*").eq("avatar_id", avatarId).maybeSingle(),
     leggiLettura(admin, clienteId).catch(() => null),
+    bloccoKitBrand(admin, clienteId),
   ]);
   const blocchi = ((conoscenza.data ?? []) as Array<{ titolo: string; contenuto: string }>).map((b) => `## ${b.titolo}\n${b.contenuto.trim()}`);
   return {
     nome,
     scheda: renderScheda(scheda),
     lettura: lettura ? renderLettura(lettura, "avatar") : "(non disponibile)",
+    kitBrand,
     conoscenza: blocchi.join("\n\n"),
     storico: ((storico.data ?? []) as Storico[]).reverse(),
     diagnosi: (diagnosi.data as Record<string, unknown> | null) ?? null,
