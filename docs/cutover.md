@@ -22,7 +22,7 @@ Obiettivo: un solo giorno di passaggio, il vecchio progetto Supabase `zmisvqovyx
 3. Comunicare le **password temporanee** agli utenti (l'API non migra gli hash) oppure far usare "Reset password" dallo staff.
 4. ✅ Applicata il 25/09/2026: `supabase/migrations/20260924000010_cron_jobs.sql` (secret `cron_secret` in Vault). Verificare `select * from cron.job;`.
 5. Sul progetto vecchio: `select cron.unschedule(jobname) from cron.job;` (spegne i 5 job).
-6. **Webhook Fathom**: registrare `https://tcvftvvbheacsjbadtfg.supabase.co/functions/v1/fathom-webhook?token=<FATHOM_WEBHOOK_TOKEN>` (via API Fathom, come faceva `/api/fathom/register`); rimuovere il vecchio.
+6. **Webhook Fathom**: lanciare `select private.chiama_edge_function('fathom-webhook-setup')` nel SQL Editor (registra via API il webhook verso `fathom-webhook?token=…`, idempotente; la risposta in `net._http_response` elenca anche gli altri webhook dell'account); rimuovere il vecchio della v1 via API (`DELETE /external/v1/webhooks/{id}`).
 7. **Webhook Telegram**: `https://api.telegram.org/bot<TOKEN>/setWebhook?url=https://tcvftvvbheacsjbadtfg.supabase.co/functions/v1/telegram-webhook&secret_token=<TELEGRAM_WEBHOOK_SECRET>`.
 8. **Google Apps Script** (`integrations/google-calendar` nel vecchio repo): cambiare URL in `https://tcvftvvbheacsjbadtfg.supabase.co/functions/v1/calendar-sync` e il secret.
 9. Lanciare a mano dal gestionale: Lezioni → Sincronizza ora; e le funzioni `notion-compiti` e `fathom-autoassign` (da un utente team, POST con il JWT) per ripopolare gli snapshot.
