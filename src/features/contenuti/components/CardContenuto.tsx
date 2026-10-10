@@ -1,20 +1,32 @@
 import type { DragEvent } from "react";
-import { CalendarDays, CheckCircle2, FileText, FolderOpen, GripVertical, Link2 } from "lucide-react";
+import { ArrowRightLeft, CalendarDays, CheckCircle2, FileText, FolderOpen, GripVertical, Link2 } from "lucide-react";
 import { Badge } from "@/shared/components/ui/badge";
+import { Button } from "@/shared/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/shared/components/ui/dropdown-menu";
 import { formatDateShort } from "@/shared/utils/formatDate";
 import { cn } from "@/lib/utils";
-import { eTipologiaContenuto, TIPOLOGIE_CONTENUTO, type Contenuto } from "../types";
+import {
+  eTipologiaContenuto,
+  ETICHETTA_STATO_CONTENUTO,
+  STATO_CONTENUTO_KEYS,
+  TIPOLOGIE_CONTENUTO,
+  type Contenuto,
+  type StatoContenuto,
+} from "../types";
+import { PuntoStato } from "./PuntoStato";
 
 interface CardContenutoProps {
   contenuto: Contenuto;
   inTrascinamento: boolean;
   onApri: (c: Contenuto) => void;
+  /** Cambio di fase senza trascinare (menu «Sposta in…», solo sotto md). */
+  onSposta: (stato: StatoContenuto) => void;
   onDragStart: (c: Contenuto) => void;
   onDragEnd: () => void;
 }
 
 /** Una idea di video: card trascinabile tra le colonne, clic per aprirla. */
-export function CardContenuto({ contenuto: c, inTrascinamento, onApri, onDragStart, onDragEnd }: CardContenutoProps) {
+export function CardContenuto({ contenuto: c, inTrascinamento, onApri, onSposta, onDragStart, onDragEnd }: CardContenutoProps) {
   const tipologia = eTipologiaContenuto(c.tipologia) ? TIPOLOGIE_CONTENUTO[c.tipologia] : null;
 
   function handleDragStart(e: DragEvent<HTMLElement>) {
@@ -44,7 +56,7 @@ export function CardContenuto({ contenuto: c, inTrascinamento, onApri, onDragSta
       )}
     >
       <div className="flex items-start gap-2">
-        <GripVertical className="mt-0.5 size-4 shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground" aria-hidden />
+        <GripVertical className="mt-0.5 hidden size-4 shrink-0 text-muted-foreground/50 group-hover:text-muted-foreground md:block" aria-hidden />
         <p className="min-w-0 flex-1 text-sm leading-snug font-medium">{c.titolo}</p>
       </div>
 
@@ -90,6 +102,23 @@ export function CardContenuto({ contenuto: c, inTrascinamento, onApri, onDragSta
             Drive
           </a>
         ) : null}
+      </div>
+
+      {/* Sul telefono il trascinamento non c'è: la fase si cambia da qui. Il wrapper ferma il click (anche dal portal). */}
+      <div className="md:hidden" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+        <DropdownMenu>
+          <DropdownMenuTrigger render={<Button size="sm" variant="outline" aria-label={`Sposta "${c.titolo}" in un'altra fase`} />}>
+            <ArrowRightLeft aria-hidden /> Sposta in…
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-auto min-w-52">
+            {STATO_CONTENUTO_KEYS.filter((s) => s !== c.stato).map((s) => (
+              <DropdownMenuItem key={s} className="gap-2 py-2.5" onClick={() => onSposta(s)}>
+                <PuntoStato stato={s} />
+                {ETICHETTA_STATO_CONTENUTO[s]}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </article>
   );

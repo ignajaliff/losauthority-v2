@@ -5,7 +5,7 @@ import { logDev, MESSAGGIO_ERRORE_GENERICO } from "@/shared/utils/errors";
 import type { Compito, StatoCompito } from "../types";
 import { chiaviClienti } from "./chiavi";
 
-const COLONNE = "id, testo, stato, ordine, completato_il, created_at, padre_id, link_skool, nota_skool";
+const COLONNE = "id, testo, stato, ordine, completato_il, created_at, padre_id, link_skool, nota_skool, origine, pagina";
 
 /** Compiti del piano d'azione di un cliente (tappe e sotto-compiti insieme), nell'ordine in cui vanno fatti. */
 export function useCompiti(clienteId: string) {
@@ -33,13 +33,15 @@ interface NuovoCompitoInput {
   linkSkool?: string | null;
   /** Nota accanto al link, es. "Dal minuto 20:03" (solo con linkSkool). */
   notaSkool?: string | null;
+  /** Pagina dell'area cliente dove si fa il sotto-compito («Fallo qui»), chiave di `@area/pagine` (solo con padreId). */
+  pagina?: string | null;
 }
 
 /** Nuova tappa o nuovo sotto-compito, in coda ai suoi fratelli (ordine = ultimo + 1). */
 export function useAggiungiCompito(clienteId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ testo, autoreId, padreId = null, linkSkool = null, notaSkool = null }: NuovoCompitoInput) => {
+    mutationFn: async ({ testo, autoreId, padreId = null, linkSkool = null, notaSkool = null, pagina = null }: NuovoCompitoInput) => {
       let fratelli = supabase.from("compiti").select("ordine").eq("cliente_id", clienteId);
       fratelli = padreId ? fratelli.eq("padre_id", padreId) : fratelli.is("padre_id", null);
       const { data: ultimo, error: errUltimo } = await fratelli.order("ordine", { ascending: false }).limit(1).maybeSingle();
@@ -53,6 +55,7 @@ export function useAggiungiCompito(clienteId: string) {
           padre_id: padreId,
           link_skool: padreId ? linkSkool || null : null,
           nota_skool: padreId && linkSkool ? notaSkool || null : null,
+          pagina: padreId ? pagina || null : null,
           ordine: (ultimo?.ordine ?? -1) + 1,
         });
       if (error) throw error;

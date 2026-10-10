@@ -52,11 +52,12 @@ export default function WorkflowPage() {
         azioni={
           <>
             <Tabs value={vista} onValueChange={(v) => setVista(v === "calendario" ? "calendario" : "board")}>
-              <TabsList aria-label="Vista">
-                <TabsTrigger value="board">
+              {/* Su touch il segmented control cresce: le due voci arrivano a 36 px. */}
+              <TabsList aria-label="Vista" className="pointer-coarse:min-h-[42px]">
+                <TabsTrigger value="board" className="pointer-coarse:min-h-9">
                   <Columns3 aria-hidden /> Tabella
                 </TabsTrigger>
-                <TabsTrigger value="calendario">
+                <TabsTrigger value="calendario" className="pointer-coarse:min-h-9">
                   <CalendarDays aria-hidden /> Calendario
                 </TabsTrigger>
               </TabsList>

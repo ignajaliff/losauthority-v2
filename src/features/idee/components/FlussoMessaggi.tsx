@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Palette, RotateCcw, TrendingUp } from "lucide-react";
 import { AuraSfera } from "@/shared/components/brand/AuraSfera";
 import { Button } from "@/shared/components/ui/button";
+import { scorriChatInFondo } from "../scorriChat";
 import type { Idea, Messaggio, Stile } from "../types";
 import { CardIdea } from "./CardIdea";
 import { PensieroAura } from "./PensieroAura";
@@ -67,13 +68,9 @@ export function FlussoMessaggi({
   const ultimoId = messaggi.at(-1)?.id;
   const ultimoStato = messaggi.at(-1)?.stato;
 
-  // Scorriamo SOLO il contenitore della chat: scrollIntoView in Safari trascina anche gli antenati
-  // (griglia con overflow hidden, finestra) e la conversazione finisce fuori vista.
+  // Da md scorre SOLO il contenitore della chat, sul telefono la finestra (vedi scorriChatInFondo).
   useEffect(() => {
-    const fine = fineRef.current;
-    const contenitore = fine?.closest<HTMLElement>("[data-chat-scroll]");
-    if (contenitore) contenitore.scrollTo({ top: contenitore.scrollHeight, behavior: "smooth" });
-    else fine?.scrollIntoView({ behavior: "smooth", block: "end" });
+    scorriChatInFondo(fineRef.current);
   }, [ultimoId, ultimoStato, idee.length, pendente]);
 
   return (

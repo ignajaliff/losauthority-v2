@@ -72,7 +72,7 @@ function LinkVideo({ v }: { v: VideoRicerca }) {
       href={v.url}
       target="_blank"
       rel="noreferrer"
-      className="inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
+      className="inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline pointer-coarse:min-h-9 pointer-coarse:px-2"
       aria-label={`Apri su TikTok il video ${diChi(v)}`}
       title="Apri su TikTok"
     >
@@ -140,7 +140,8 @@ export function TabellaVideoTiktok({ conLingua = true, ...props }: TabellaVideoT
             <p className="text-[13px] leading-snug">
               <DiCosaParla v={v} />
             </p>
-            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+            {/* Sul telefono numeri su una riga e azioni sotto, allineate a destra: prima andavano a capo a caso. */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground max-md:gap-y-1">
               <span className="figure">
                 {formatConteggio(v.visualizzazioni)} views · {dataBreve(v.pubblicato_il)}
                 {conLingua ? (
@@ -150,7 +151,7 @@ export function TabellaVideoTiktok({ conLingua = true, ...props }: TabellaVideoT
                   </>
                 ) : null}
               </span>
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 max-md:-mr-2 max-md:-mb-1 max-md:w-full max-md:justify-end max-md:gap-1">
                 <LinkVideo v={v} />
                 <AzioneWorkflow v={v} {...props} />
               </span>

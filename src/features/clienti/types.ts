@@ -11,7 +11,7 @@ export interface ClienteDettaglio extends Cliente {
 }
 
 /** Compito del piano d'azione (tabella `compiti`, una riga per voce della checklist). */
-export type Compito = Pick<Tables<"compiti">, "id" | "testo" | "stato" | "ordine" | "completato_il" | "created_at" | "padre_id" | "link_skool" | "nota_skool">;
+export type Compito = Pick<Tables<"compiti">, "id" | "testo" | "stato" | "ordine" | "completato_il" | "created_at" | "padre_id" | "link_skool" | "nota_skool" | "origine" | "pagina">;
 export type StatoCompito = "da_fare" | "fatto";
 
 /** Tappa del piano d'azione: compito padre (padre_id null) con i suoi sotto-compiti in ordine. */

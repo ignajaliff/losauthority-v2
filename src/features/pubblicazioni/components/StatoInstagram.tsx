@@ -30,7 +30,12 @@ export function StatoInstagram({ clienteId, stato }: StatoInstagramProps) {
         <p className="inline-flex items-center gap-1.5 font-medium">
           <Instagram className="size-4" aria-hidden />
           {stato.instagram ? (
-            <a href={stato.instagram} target="_blank" rel="noreferrer" className="underline-offset-4 hover:underline">
+            <a
+              href={stato.instagram}
+              target="_blank"
+              rel="noreferrer"
+              className="underline-offset-4 hover:underline pointer-coarse:-my-2 pointer-coarse:py-2"
+            >
               @{handle ?? stato.instagram}
             </a>
           ) : (

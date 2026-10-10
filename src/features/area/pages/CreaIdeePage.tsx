@@ -4,6 +4,7 @@ import { PanelLeftOpen, Plus, TrendingUp } from "lucide-react";
 import { useAuth } from "@/features/auth";
 import { primoNome } from "@/features/scheda";
 import {
+  BARRA_COMPOSER,
   ComposerAura,
   FlussoMessaggi,
   RailSessioni,
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
  * conversazione con le proposte sotto ogni risposta, in basso il composer.
  * Con "/" nel composer (o arrivando da /area/stili con ?stile=) si aggancia
  * uno stile della pagina Stili: Aura scrive le proposte in quel format.
- * In alto a destra «Ricerca TikTok» porta alla subpagina dei video top; da lì
+ * In alto a destra «Ricerca idee social» porta alla subpagina dei video top; da lì
  * «Usa in Crea idee» torna qui con ?ricerca= e la ricerca si aggancia al prossimo messaggio.
  */
 export default function CreaIdeePage() {
@@ -120,10 +121,11 @@ export default function CreaIdeePage() {
   return (
     // Pagina fissa: scorre solo la conversazione. Il main dello shell ha pt-10 + pb-20: con -mt-4 e -mb-16
     // il composer arriva a 1rem dal fondo della finestra e la pagina non scorre.
+    // Sul telefono scorre la pagina e il composer resta incollato in basso (sticky); -mb-16 annulla il pb-16 del main.
     <div
       className={cn(
         // grid-rows minmax(0,1fr): la riga è alta quanto il contenitore anche se la chat è lunga (Safari incluso).
-        "-mt-4 grid gap-6 md:-mb-16 md:h-[calc(100dvh-var(--header-h)-2.5rem)] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden",
+        "-mb-16 grid gap-6 md:-mt-4 md:h-[calc(100dvh-var(--header-h)-2.5rem)] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden",
         railAperto && "lg:grid-cols-[220px_minmax(0,1fr)]",
       )}
     >
@@ -168,7 +170,7 @@ export default function CreaIdeePage() {
             ) : null}
             <select
               aria-label="Sessione"
-              className="h-8 max-w-[180px] min-w-0 flex-1 rounded-sm border bg-card px-2 text-sm sm:flex-none lg:hidden"
+              className="h-8 max-w-[180px] min-w-0 flex-1 rounded-sm border bg-card px-2 text-base pointer-coarse:h-9 sm:flex-none md:text-sm lg:hidden"
               value={sessioneId ?? ""}
               onChange={(e) => setSessioneId(e.target.value || null)}
             >
@@ -179,8 +181,8 @@ export default function CreaIdeePage() {
                 </option>
               ))}
             </select>
-            <Button size="sm" variant="outline" nativeButton={false} render={<Link to={LINK_RICERCA_TIKTOK} />} aria-label="Ricerca TikTok" title="Ricerca TikTok">
-              <TrendingUp aria-hidden /> <span className="hidden sm:inline">Ricerca TikTok</span>
+            <Button size="sm" variant="outline" nativeButton={false} render={<Link to={LINK_RICERCA_TIKTOK} />} aria-label="Ricerca idee social" title="Ricerca idee social">
+              <TrendingUp aria-hidden /> <span className="hidden sm:inline">Ricerca idee social</span>
             </Button>
             <SheetIdeeSalvate idee={salvate.data ?? []} occupato={occupato} onScarta={scarta} onWorkflow={workflow} />
           </div>
@@ -208,7 +210,7 @@ export default function CreaIdeePage() {
           ) : null}
         </div>
 
-        <div className="shrink-0 pt-3">
+        <div className={BARRA_COMPOSER}>
           <ComposerAura
             inAttesa={auraScrive}
             onInvia={manda}

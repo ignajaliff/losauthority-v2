@@ -1,15 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Chiamata, ChiamataAzione, ClienteOpzione } from "../types";
+import { type Chiamata, type ChiamataAzione, type ClienteOpzione, pianoInLavorazione } from "../types";
 import { CHIAVI_CHIAMATE } from "./chiavi";
 
 export { CHIAVI_CHIAMATE };
 
-/** Call del cliente, dalla più recente. */
+/** Ogni quanto rileggere le call mentre Aura scrive un piano d'azione. */
+const POLLING_PIANO_MS = 5000;
+
+/** Call del cliente, dalla più recente. Se Aura sta scrivendo il piano da una di loro, rilegge ogni 5 s. */
 export function useChiamateCliente(clienteId: string) {
   return useQuery({
     queryKey: CHIAVI_CHIAMATE.cliente(clienteId),
     enabled: !!clienteId,
+    refetchInterval: (query) => (query.state.data?.some((c) => pianoInLavorazione(c.piano_stato)) ? POLLING_PIANO_MS : false),
     queryFn: async (): Promise<Chiamata[]> => {
       const { data, error } = await supabase
         .from("chiamate")
@@ -54,23 +58,6 @@ export function useAzioniChiamata(chiamataId: string) {
   });
 }
 
-/** Fase attuale del cliente (per proporre la call di destinazione dei compiti). */
-export function useFaseCliente(clienteId: string) {
-  return useQuery({
-    queryKey: CHIAVI_CHIAMATE.faseCliente(clienteId),
-    enabled: !!clienteId,
-    queryFn: async (): Promise<string | null> => {
-      const { data, error } = await supabase
-        .from("clienti")
-        .select("fase")
-        .eq("id", clienteId)
-        .maybeSingle();
-      if (error) throw error;
-      return data?.fase ?? null;
-    },
-  });
-}
-
 /** Clienti (id + nome) per il select di assegnazione. */
 export function useClientiOpzioni() {
   return useQuery({
@@ -94,6 +81,6 @@ export {
   useAssegnaChiamata,
   useToggleAzioneChiamata,
   useScaricaRiassunto,
-  useGeneraCompiti,
+  useRigeneraPiano,
   descrizioneErrore,
 } from "./useChiamateMutazioni";

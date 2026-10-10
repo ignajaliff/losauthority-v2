@@ -82,12 +82,17 @@ export function FotografiaAura({ clienteId, scheda }: { clienteId: string; sched
         </CardDescription>
       </CardHeader>
       {l ? (
-        <CardContent className="grid gap-5">
+        <CardContent className="grid gap-5 break-words">
           <div className="flex flex-wrap gap-1.5">
             {VALORI.map((k) => {
               const e = etichetta(k, l[k]);
               return e ? (
-                <Badge key={k} variant={k === "nodo_centrale" ? "default" : "outline"}>
+                <Badge
+                  key={k}
+                  variant={k === "nodo_centrale" ? "default" : "outline"}
+                  // Telefono: un'etichetta lunga va a capo invece di uscire dallo schermo.
+                  className="max-md:max-w-full max-md:rounded-md max-md:whitespace-normal"
+                >
                   {e}
                 </Badge>
               ) : null;
@@ -106,7 +111,7 @@ export function FotografiaAura({ clienteId, scheda }: { clienteId: string; sched
                     <p>
                       <span className="text-muted-foreground">I dati dicono:</span> {o.i_dati_dicono ?? "—"}
                     </p>
-                    {o.campi && o.campi.length > 0 ? <p className="mt-1 font-mono text-[11px] text-muted-foreground">{o.campi.join(" · ")}</p> : null}
+                    {o.campi && o.campi.length > 0 ? <p className="mt-1 font-mono text-[11px] break-words text-muted-foreground">{o.campi.join(" · ")}</p> : null}
                   </li>
                 ))}
               </ul>

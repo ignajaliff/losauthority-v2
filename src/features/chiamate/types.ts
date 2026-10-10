@@ -12,33 +12,18 @@ export interface ClienteOpzione {
   nombre: string;
 }
 
-/** Numeri delle call del percorso (board Notion "Compiti per call n°X"). */
-export const CALL_NUMERI = [1, 2, 3, 4] as const;
-export type CallNumero = (typeof CALL_NUMERI)[number];
+/** Stato del piano d'azione che Aura scrive da una call (`chiamate.piano_stato`). */
+export type StatoPiano = "da_generare" | "in_corso" | "pronto" | "errore" | "saltato";
 
-/** Fasi del cliente (colonna `clienti.fase`). */
-const FASE_A_CALL: Record<string, CallNumero> = {
-  onboarding: 1,
-  call_1: 2,
-  call_2: 3,
-  call_3: 4,
-  call_4: 4,
-  completato: 4,
-};
-
-/**
- * Call di destinazione suggerita per "Genera compiti con Aura":
- * la fase attuale del cliente + 1 quando possibile (in `call_1` → compiti per la call 2).
- */
-export function callSuggeritaDaFase(fase: string | null | undefined): CallNumero {
-  return (fase && FASE_A_CALL[fase]) || 1;
-}
+/** Aura sta ancora lavorando: il browser rilegge la call finché non finisce. */
+export const pianoInLavorazione = (stato: string | null | undefined): boolean => stato === "da_generare" || stato === "in_corso";
 
 /** Risposta delle Edge Functions usate dal dominio. */
 export interface RispostaRiassunto {
   riassunto: string;
 }
-export interface RispostaCompiti {
-  scritti: number;
-  totale: number;
+export interface RispostaPiano {
+  stato: "pronto" | "saltato";
+  tappe: number;
+  sotto: number;
 }

@@ -47,15 +47,16 @@ export default function ClientiPage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      {/* Telefono: i due filtri a tutta larghezza, uno sotto l'altro. */}
+      <div className="mb-4 grid gap-3 sm:flex sm:flex-wrap sm:items-end">
         <div className="grid gap-1">
           <Label htmlFor="filtro-testo">Cerca</Label>
-          <Input id="filtro-testo" className="w-64" placeholder="Nome o email" value={testo} onChange={(e) => setTesto(e.target.value)} />
+          <Input id="filtro-testo" className="sm:w-64" placeholder="Nome o email" value={testo} onChange={(e) => setTesto(e.target.value)} />
         </div>
         <div className="grid gap-1">
           <Label htmlFor="filtro-fase">Fase</Label>
           <Select items={VOCI_FASE} value={fase} onValueChange={(v) => setFase(v ?? TUTTE)}>
-            <SelectTrigger id="filtro-fase" className="w-64">
+            <SelectTrigger id="filtro-fase" className="w-full sm:w-64">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

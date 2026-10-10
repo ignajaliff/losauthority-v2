@@ -49,8 +49,9 @@ export default function OffertaStampaPage() {
   const posizionamento = o.posizionamento ? ETICHETTA_POSIZIONAMENTO[o.posizionamento] : null;
   const titolare = utente?.rol === "cliente" ? utente.nombre : null;
 
+  // Sotto sm (solo telefono: la pagina di stampa è più larga) margini e titolo più stretti; grid-cols-1 tiene tutto dentro lo schermo.
   return (
-    <main className="offerta-stampa mx-auto grid max-w-[820px] gap-6 px-5 py-8 text-foreground">
+    <main className="offerta-stampa mx-auto grid max-w-[820px] grid-cols-1 gap-6 px-4 py-6 text-foreground sm:px-5 sm:py-8">
       <div className="no-stampa flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">Nella finestra di stampa scegli "Salva come PDF".</p>
         <div className="flex items-center gap-2">
@@ -63,9 +64,9 @@ export default function OffertaStampaPage() {
         </div>
       </div>
 
-      <article className="grid gap-8 rounded-lg border bg-card p-8 shadow-sm">
+      <article className="grid min-w-0 gap-8 rounded-lg border bg-card p-5 shadow-sm sm:p-8">
         <header className="grid gap-5 border-b pb-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <MarmoLogo />
             <p className="figure text-[11px] text-muted-foreground">
               Offerta · N. {codiceOfferta(numero)} · {formatDate(o.updated_at)}
@@ -73,7 +74,7 @@ export default function OffertaStampaPage() {
           </div>
           <div className="grid gap-2">
             <p className="eyebrow">{o.stato === "completo" ? "Offerta completa" : "Offerta in costruzione"}</p>
-            <h1 className="text-[40px] leading-[1.05]">{o.nome ?? "Offerta in costruzione"}</h1>
+            <h1 className="text-[32px] leading-[1.05] break-words sm:text-[40px]">{o.nome ?? "Offerta in costruzione"}</h1>
             {o.trasformazione ? <p className="font-display text-[22px] leading-snug italic text-foreground/85">«{o.trasformazione}»</p> : null}
           </div>
           <dl className="grid gap-4 sm:grid-cols-4">

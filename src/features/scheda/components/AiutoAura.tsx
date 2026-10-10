@@ -36,13 +36,13 @@ export function AiutoAura({ domandaId }: AiutoAuraProps) {
     <Popover>
       <PopoverTrigger
         render={
-          <Button type="button" variant="ghost" size="xs" aria-label="Chiedi ad Aura un aiuto su questa domanda" />
+          <Button type="button" variant="ghost" size="xs" className="pointer-coarse:h-9" aria-label="Chiedi ad Aura un aiuto su questa domanda" />
         }
       >
         <Sparkles aria-hidden />
         Chiedi ad Aura
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80">
+      <PopoverContent align="end" className="w-[min(20rem,calc(100vw-2rem))]">
         <PopoverHeader>
           <PopoverTitle>Aura</PopoverTitle>
           <PopoverDescription>Un dubbio su questa domanda? Chiedi pure.</PopoverDescription>

@@ -18,9 +18,10 @@ interface FattureClienteProps {
 
 function Totale({ etichetta, valore }: { etichetta: string; valore: number }) {
   return (
-    <div className="rounded-lg border p-3">
+    // Telefono: etichetta e cifra sulla stessa riga, così i tre totali restano compatti.
+    <div className="flex items-baseline justify-between gap-3 rounded-lg border p-3 sm:block">
       <div className="text-xs text-muted-foreground">{etichetta}</div>
-      <div className="mt-1 text-lg font-semibold tabular-nums">{formatCurrency(valore)}</div>
+      <div className="text-lg font-semibold tabular-nums sm:mt-1">{formatCurrency(valore)}</div>
     </div>
   );
 }
@@ -30,7 +31,7 @@ function Totali({ fatture }: { fatture: Fattura[] }) {
   const incassato = sumImporti(fatture.filter((f) => f.pagata).map((f) => f.importo));
   const daIncassare = sumImporti(fatture.filter((f) => !f.pagata).map((f) => f.importo));
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-2 sm:grid-cols-3 sm:gap-3">
       <Totale etichetta="Totale fatturato" valore={totale} />
       <Totale etichetta="Incassato" valore={incassato} />
       <Totale etichetta="Da incassare" valore={daIncassare} />

@@ -361,11 +361,17 @@ export type Database = {
           created_at: string
           fathom_recording_id: string | null
           id: string
+          piano_avviato_il: string | null
+          piano_errore: string | null
+          piano_generato_il: string | null
+          piano_stato: string | null
+          piano_tentativi: number
           registrata_il: string | null
           riassunto: string | null
           riassunto_originale: string | null
           share_url: string | null
           titolo: string | null
+          trascrizione: string | null
           updated_at: string
         }
         Insert: {
@@ -373,11 +379,17 @@ export type Database = {
           created_at?: string
           fathom_recording_id?: string | null
           id?: string
+          piano_avviato_il?: string | null
+          piano_errore?: string | null
+          piano_generato_il?: string | null
+          piano_stato?: string | null
+          piano_tentativi?: number
           registrata_il?: string | null
           riassunto?: string | null
           riassunto_originale?: string | null
           share_url?: string | null
           titolo?: string | null
+          trascrizione?: string | null
           updated_at?: string
         }
         Update: {
@@ -385,11 +397,17 @@ export type Database = {
           created_at?: string
           fathom_recording_id?: string | null
           id?: string
+          piano_avviato_il?: string | null
+          piano_errore?: string | null
+          piano_generato_il?: string | null
+          piano_stato?: string | null
+          piano_tentativi?: number
           registrata_il?: string | null
           riassunto?: string | null
           riassunto_originale?: string | null
           share_url?: string | null
           titolo?: string | null
+          trascrizione?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -586,6 +604,7 @@ export type Database = {
       }
       compiti: {
         Row: {
+          chiamata_id: string | null
           cliente_id: string
           completato_il: string | null
           created_at: string
@@ -594,12 +613,15 @@ export type Database = {
           link_skool: string | null
           nota_skool: string | null
           ordine: number
+          origine: string
           padre_id: string | null
+          pagina: string | null
           stato: string
           testo: string
           updated_at: string
         }
         Insert: {
+          chiamata_id?: string | null
           cliente_id: string
           completato_il?: string | null
           created_at?: string
@@ -608,12 +630,15 @@ export type Database = {
           link_skool?: string | null
           nota_skool?: string | null
           ordine?: number
+          origine?: string
           padre_id?: string | null
+          pagina?: string | null
           stato?: string
           testo: string
           updated_at?: string
         }
         Update: {
+          chiamata_id?: string | null
           cliente_id?: string
           completato_il?: string | null
           created_at?: string
@@ -622,12 +647,21 @@ export type Database = {
           link_skool?: string | null
           nota_skool?: string | null
           ordine?: number
+          origine?: string
           padre_id?: string | null
+          pagina?: string | null
           stato?: string
           testo?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "compiti_chiamata_id_fkey"
+            columns: ["chiamata_id"]
+            isOneToOne: false
+            referencedRelation: "chiamate"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "compiti_cliente_id_fkey"
             columns: ["cliente_id"]
@@ -666,6 +700,7 @@ export type Database = {
           id: string
           nome: string
           social: string[]
+          tipo: string
           updated_at: string
         }
         Insert: {
@@ -675,6 +710,7 @@ export type Database = {
           id?: string
           nome: string
           social?: string[]
+          tipo?: string
           updated_at?: string
         }
         Update: {
@@ -684,6 +720,7 @@ export type Database = {
           id?: string
           nome?: string
           social?: string[]
+          tipo?: string
           updated_at?: string
         }
         Relationships: [
@@ -2224,6 +2261,8 @@ export type Database = {
       impostazioni_app: {
         Row: {
           created_at: string
+          fathom_webhook_id: string | null
+          fathom_webhook_registrato_il: string | null
           id: boolean
           sito_aggiornato_il: string | null
           sito_url: string | null
@@ -2231,6 +2270,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fathom_webhook_id?: string | null
+          fathom_webhook_registrato_il?: string | null
           id?: boolean
           sito_aggiornato_il?: string | null
           sito_url?: string | null
@@ -2238,12 +2279,206 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fathom_webhook_id?: string | null
+          fathom_webhook_registrato_il?: string | null
           id?: boolean
           sito_aggiornato_il?: string | null
           sito_url?: string | null
           updated_at?: string
         }
         Relationships: []
+      }
+      kit_brand: {
+        Row: {
+          created_at: string
+          id: string
+          logo_path: string | null
+          logo_scuro_path: string | null
+          nome_brand: string | null
+          note: string | null
+          payoff: string | null
+          tono_voce: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          logo_path?: string | null
+          logo_scuro_path?: string | null
+          nome_brand?: string | null
+          note?: string | null
+          payoff?: string | null
+          tono_voce?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_path?: string | null
+          logo_scuro_path?: string | null
+          nome_brand?: string | null
+          note?: string | null
+          payoff?: string | null
+          tono_voce?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_brand_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_brand_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "vista_clienti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_brand_colori: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          hex: string
+          id: string
+          nome: string | null
+          ordine: number
+          ruolo: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          hex: string
+          id?: string
+          nome?: string | null
+          ordine?: number
+          ruolo?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          nome?: string | null
+          ordine?: number
+          ruolo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_brand_colori_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_brand_colori_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "vista_clienti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_brand_documenti: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          descrizione: string | null
+          dimensione: number
+          estrazione_stato: string
+          id: string
+          nome: string
+          storage_path: string
+          testo_estratto: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          descrizione?: string | null
+          dimensione: number
+          estrazione_stato?: string
+          id?: string
+          nome: string
+          storage_path: string
+          testo_estratto?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          descrizione?: string | null
+          dimensione?: number
+          estrazione_stato?: string
+          id?: string
+          nome?: string
+          storage_path?: string
+          testo_estratto?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_brand_documenti_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_brand_documenti_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "vista_clienti"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kit_brand_font: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          id: string
+          nome: string
+          ordine: number
+          ruolo: string
+          storage_path: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordine?: number
+          ruolo?: string
+          storage_path?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordine?: number
+          ruolo?: string
+          storage_path?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kit_brand_font_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clienti"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kit_brand_font_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "vista_clienti"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lead: {
         Row: {
@@ -3310,6 +3545,7 @@ export type Database = {
           p_id: string
           p_nome: string
           p_social: string[]
+          p_tipo: string
           p_video_descrizione: string[]
           p_video_url: string[]
         }

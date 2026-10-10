@@ -23,7 +23,7 @@ export function PaginaInArrivo({ titolo, sottotitolo, occhiello = "Il tuo percor
       {indietro ? (
         <Link
           to={indietro.to}
-          className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground pointer-coarse:-my-2 pointer-coarse:py-2"
         >
           <ArrowLeft className="size-3.5" aria-hidden /> {indietro.label}
         </Link>

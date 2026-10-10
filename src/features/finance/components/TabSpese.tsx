@@ -34,7 +34,7 @@ function SezioneSpese({ titolo, sottotitolo, riepilogo, tipo, spese, vuoto, onAg
             <CardTitle>{titolo}</CardTitle>
             <CardDescription>{sottotitolo}</CardDescription>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-sm text-muted-foreground">{riepilogo}</span>
             <Button variant="outline" size="sm" onClick={onAggiungi}>
               <Plus /> Aggiungi

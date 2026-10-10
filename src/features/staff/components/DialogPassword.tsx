@@ -27,7 +27,7 @@ export function DialogPassword({ password, nombre, onChiudi }: DialogPasswordPro
             recuperabile.
           </DialogDescription>
         </DialogHeader>
-        <code className="block select-all rounded-md border bg-muted px-3 py-2 font-mono text-base">
+        <code className="block select-all break-all rounded-md border bg-muted px-3 py-2 font-mono text-base">
           {password}
         </code>
         <DialogFooter showCloseButton>

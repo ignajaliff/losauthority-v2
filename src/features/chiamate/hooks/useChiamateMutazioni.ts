@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ErroreEdge, invocaEdge, messaggioErrore } from "@/shared/utils/invocaEdge";
 import { logDev, MESSAGGIO_ERRORE_GENERICO } from "@/shared/utils/errors";
-import type { CallNumero, RispostaCompiti, RispostaRiassunto } from "../types";
+import type { RispostaPiano, RispostaRiassunto } from "../types";
 import { CHIAVI_CHIAMATE } from "./chiavi";
 
 export { ErroreEdge };
@@ -117,19 +117,25 @@ export function useScaricaRiassunto(clienteId: string | null) {
   });
 }
 
-/** Aura scrive i compiti sulla board Notion (Edge Function `aura-compiti`). */
-export function useGeneraCompiti() {
+/**
+ * Aura (ri)scrive il piano d'azione del cliente da questa call (Edge Function
+ * `aura-compiti` con `rigenera`): sostituisce le tappe scritte da Aura, lascia
+ * quelle del team. In automatico parte da sola; questo è il comando a mano.
+ */
+export function useRigeneraPiano(clienteId: string | null) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (input: { chiamataId: string; callN: CallNumero }) =>
-      invocaEdge<RispostaCompiti>("aura-compiti", { chiamata_id: input.chiamataId, call_n: input.callN }),
+    mutationFn: (input: { chiamataId: string }) =>
+      invocaEdge<RispostaPiano>("aura-compiti", { chiamata_id: input.chiamataId, rigenera: true }),
     onSuccess: (dati) => {
-      toast.success(`Compiti scritti su Notion: ${dati.scritti}`);
-      void queryClient.invalidateQueries({ queryKey: ["clienti"] });
+      toast.success(`Piano scritto da Aura: ${dati.tappe} tappe, ${dati.sotto} sotto-compiti`);
+      if (clienteId) void queryClient.invalidateQueries({ queryKey: ["clienti", "compiti", clienteId] });
     },
     onError: (error) => {
-      toast.error("Compiti non generati", { description: descrizioneErrore(error) });
+      toast.error("Piano non scritto", { description: descrizioneErrore(error) });
       logDev(error);
     },
+    // In ogni caso la call ha uno stato nuovo (pronto o errore con il motivo).
+    onSettled: () => invalidaChiamate(queryClient, clienteId),
   });
 }

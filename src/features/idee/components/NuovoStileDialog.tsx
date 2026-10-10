@@ -21,7 +21,7 @@ interface NuovoStileDialogProps {
 export function NuovoStileDialog({ open, onOpenChange, onInvia }: NuovoStileDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-[680px]">
+      <DialogContent className="sm:max-w-[680px]">
         <DialogHeader>
           <DialogTitle>Nuovo stile</DialogTitle>
           <DialogDescription>
@@ -118,7 +118,8 @@ function NuovoStileForm({ onInvia, onChiudi }: { onInvia: NuovoStileDialogProps[
             <AuraSfera dimensione={20} conNome={false} />
             Aura ci mette circa mezzo minuto.
           </div>
-          <div className="flex gap-2">
+          {/* Sul telefono i due bottoni si dividono la riga. */}
+          <div className="flex gap-2 max-sm:*:flex-1">
             <Button type="button" variant="outline" onClick={onChiudi}>
               Annulla
             </Button>

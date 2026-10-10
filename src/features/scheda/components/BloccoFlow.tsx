@@ -29,7 +29,7 @@ export function BloccoFlow(props: BloccoFlowProps) {
 
   return (
     <div className="grid gap-4">
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4 sm:gap-5">
         <AuraSfera dimensione={56} />
         <div className="min-w-0 flex-1 pt-1">
           <p className="eyebrow">
@@ -44,7 +44,8 @@ export function BloccoFlow(props: BloccoFlowProps) {
         </div>
       </div>
 
-      <Card>
+      {/* Sul telefono il padding della card scende a 16px: più spazio alle domande. */}
+      <Card className="max-sm:[--card-spacing:--spacing(4)]">
         <CardHeader>
           <CardTitle className="font-display text-2xl font-medium">
             <span aria-hidden>{blocco.emoji}</span> {conParole(blocco.titolo, parole)}
@@ -67,7 +68,7 @@ export function BloccoFlow(props: BloccoFlowProps) {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <Button type="button" variant="outline" onClick={props.onIndietro} disabled={avanzando}>
           Indietro
         </Button>

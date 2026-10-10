@@ -30,7 +30,7 @@ function SelectStato({ lead, onCambiaStato }: { lead: LeadCrm; onCambiaStato: Ta
           if (typeof valore === "string" && eStatoLead(valore) && valore !== lead.stato) onCambiaStato(lead.id, valore);
         }}
       >
-        <SelectTrigger size="sm" className="w-40 text-[12.5px]" aria-label={`Stato di ${lead.nome}`}>
+        <SelectTrigger size="sm" className="w-40 text-[12.5px] pointer-coarse:data-[size=sm]:h-10" aria-label={`Stato di ${lead.nome}`}>
           <PallinoStato stato={stato} />
           <SelectValue />
         </SelectTrigger>
@@ -47,6 +47,12 @@ function SelectStato({ lead, onCambiaStato }: { lead: LeadCrm; onCambiaStato: Ta
   );
 }
 
+/** Valore della vendita, solo per i contatti chiusi. */
+function Valore({ lead, className }: { lead: LeadCrm; className?: string }) {
+  if (lead.stato !== "chiuso" || lead.valore == null) return null;
+  return <span className={cn("figure text-[11px] text-muted-foreground", className)}>{formatCurrency(lead.valore)}</span>;
+}
+
 /** Il CRM del cliente: contatto (nome + email e telefono), da dove è arrivato, offerta, stato cambiabile dalla riga (+ valore se chiuso). */
 export function TabellaLeadCrm({ righe, nomiOfferte, testoVuoto, onApri, onCambiaStato }: TabellaLeadCrmProps) {
   return (
@@ -57,7 +63,7 @@ export function TabellaLeadCrm({ righe, nomiOfferte, testoVuoto, onApri, onCambi
             <TableHead>Contatto</TableHead>
             <TableHead className="hidden sm:table-cell">Da dove arriva</TableHead>
             <TableHead className="hidden sm:table-cell">Offerta</TableHead>
-            <TableHead className="w-44">Stato</TableHead>
+            <TableHead className="hidden w-44 sm:table-cell">Stato</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -89,20 +95,22 @@ export function TabellaLeadCrm({ righe, nomiOfferte, testoVuoto, onApri, onCambi
                       {[l.email, l.telefono].filter(Boolean).join(" · ")}
                     </span>
                   ) : null}
-                  {/* Su telefono fonte e offerta vanno sotto il nome: le loro colonne sono nascoste. */}
+                  {/* Su telefono fonte, offerta e stato vanno sotto il nome: le loro colonne sono nascoste. */}
                   {fonte || offerta ? (
                     <span className="mt-0.5 block truncate text-xs text-muted-foreground sm:hidden">
                       {[fonte, offerta].filter(Boolean).join(" · ")}
                     </span>
                   ) : null}
+                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 sm:hidden">
+                    <SelectStato lead={l} onCambiaStato={onCambiaStato} />
+                    <Valore lead={l} />
+                  </div>
                 </TableCell>
                 <TableCell className="hidden text-[12.5px] text-muted-foreground sm:table-cell">{fonte ?? "—"}</TableCell>
                 <TableCell className="hidden max-w-60 truncate text-[12.5px] text-muted-foreground sm:table-cell">{offerta ?? "—"}</TableCell>
-                <TableCell className="py-2.5">
+                <TableCell className="hidden py-2.5 sm:table-cell">
                   <SelectStato lead={l} onCambiaStato={onCambiaStato} />
-                  {l.stato === "chiuso" && l.valore != null ? (
-                    <span className="figure mt-1 block text-[11px] text-muted-foreground">{formatCurrency(l.valore)}</span>
-                  ) : null}
+                  <Valore lead={l} className="mt-1 block" />
                 </TableCell>
               </TableRow>
             );

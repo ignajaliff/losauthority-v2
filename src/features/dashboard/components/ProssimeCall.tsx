@@ -34,10 +34,11 @@ export function ProssimeCall({ clienti, caricamento, errore }: ProssimeCallProps
     >
       {prossime.map((c) => (
         <li key={c.id}>
-          <Link to={`/clienti/${c.id}`} className="flex items-center gap-3 py-2 hover:bg-muted/50">
+          {/* Telefono: nome e fase sulla prima riga, la data sotto. */}
+          <Link to={`/clienti/${c.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 py-2 hover:bg-muted/50 sm:flex-nowrap sm:gap-3">
             <span className="min-w-0 flex-1 truncate font-medium">{c.nombre || c.email || "—"}</span>
             <Badge variant="outline">{ETICHETTE_FASE[c.fase ?? ""] ?? c.fase ?? "—"}</Badge>
-            <span className="text-sm tabular-nums text-muted-foreground">{formatDateTime(c.prossima_call)}</span>
+            <span className="basis-full text-sm tabular-nums text-muted-foreground sm:basis-auto">{formatDateTime(c.prossima_call)}</span>
           </Link>
         </li>
       ))}

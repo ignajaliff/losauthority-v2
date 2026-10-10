@@ -47,7 +47,14 @@ export function SchermataLettura({ errore, inCorso, onRiprova, onTornaAlleRispos
             </Button>
           </div>
           {onScaricaCopia ? (
-            <Button type="button" variant="link" size="sm" className="justify-self-center" onClick={onScaricaCopia}>
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              // Su schermi stretti il testo va a capo invece di uscire (h-auto: con min-h resta alto come prima).
+              className="h-auto min-h-8 justify-self-center whitespace-normal text-center pointer-coarse:h-auto pointer-coarse:min-h-9"
+              onClick={onScaricaCopia}
+            >
               Scarica una copia delle tue risposte (.txt)
             </Button>
           ) : null}
@@ -76,7 +83,7 @@ export function SchermataChiarimenti({ chiarimenti, inviando, onInvia }: Scherma
 
   return (
     <div className="grid gap-5">
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4 sm:gap-5">
         <AuraSfera dimensione={56} />
         <div className="min-w-0 flex-1 pt-1">
           <p className="eyebrow">Ancora {chiarimenti.length === 1 ? "una cosa" : `${chiarimenti.length} cose`}</p>
@@ -85,7 +92,7 @@ export function SchermataChiarimenti({ chiarimenti, inviando, onInvia }: Scherma
           </p>
         </div>
       </div>
-      <div className="grid gap-5 rounded-lg border bg-card p-6">
+      <div className="grid gap-5 rounded-lg border bg-card p-4 sm:p-6">
         {chiarimenti.map((c, i) => (
           <div key={c.id} className="grid gap-2">
             <label htmlFor={`chiarimento-${c.id}`} className="text-sm font-medium leading-snug">
@@ -101,7 +108,7 @@ export function SchermataChiarimenti({ chiarimenti, inviando, onInvia }: Scherma
           </div>
         ))}
         <div className="flex justify-end">
-          <Button type="button" disabled={inviando || !tutteDate} onClick={() => onInvia(chiarimenti.map((c) => ({ id: c.id, risposta: risposte[c.id] ?? "" })))}>
+          <Button type="button" className="max-sm:w-full" disabled={inviando || !tutteDate} onClick={() => onInvia(chiarimenti.map((c) => ({ id: c.id, risposta: risposte[c.id] ?? "" })))}>
             {inviando ? "Un attimo…" : "Invia le risposte"}
           </Button>
         </div>
@@ -123,14 +130,14 @@ export function SchermataRiepilogo({ riepilogo, correzioneIniziale, confermando,
   const [correzione, setCorrezione] = useState(correzioneIniziale);
   return (
     <div className="grid gap-5">
-      <div className="flex items-start gap-5">
+      <div className="flex items-start gap-4 sm:gap-5">
         <AuraSfera dimensione={56} />
         <div className="min-w-0 flex-1 pt-1">
           <p className="eyebrow">Il tuo riepilogo</p>
           <p className="mt-3 font-display text-[clamp(18px,2.4vw,23px)] leading-[1.4] font-normal italic">Ecco cosa ho capito di te. Leggilo con calma.</p>
         </div>
       </div>
-      <div className="grid gap-5 rounded-lg border bg-card p-6">
+      <div className="grid gap-5 rounded-lg border bg-card p-4 sm:p-6">
         <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{riepilogo}</p>
         <div className="grid gap-2 border-t pt-5">
           <label htmlFor="riepilogo-correzione" className="text-sm font-medium">
@@ -138,11 +145,12 @@ export function SchermataRiepilogo({ riepilogo, correzioneIniziale, confermando,
           </label>
           <Textarea id="riepilogo-correzione" rows={3} value={correzione} disabled={confermando} onChange={(e) => setCorrezione(e.target.value)} />
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Button type="button" variant="outline" disabled={confermando} onClick={onCorreggiRisposte}>
+        {/* Sul telefono i due pulsanti si impilano a tutta larghezza, la conferma sopra. */}
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <Button type="button" variant="outline" className="max-sm:w-full" disabled={confermando} onClick={onCorreggiRisposte}>
             Correggi le risposte
           </Button>
-          <Button type="button" size="lg" disabled={confermando} onClick={() => onConferma(correzione)}>
+          <Button type="button" size="lg" className="max-sm:w-full" disabled={confermando} onClick={() => onConferma(correzione)}>
             {confermando ? "Invio…" : "Ho capito bene, confermo"}
           </Button>
         </div>

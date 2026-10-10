@@ -17,7 +17,7 @@ function Pill({ etichetta, conteggio, stato, attivo, onClick }: { etichetta: str
       onClick={onClick}
       aria-pressed={attivo}
       className={cn(
-        "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors",
+        "inline-flex items-center gap-2 rounded-md border px-3 py-1.5 text-sm transition-colors pointer-coarse:py-2",
         attivo ? "border-foreground bg-muted" : "border-border bg-card hover:border-input",
       )}
     >

@@ -23,7 +23,8 @@ interface Trascinamento {
 
 /**
  * Pipeline dei contenuti: una colonna per stato, card trascinabili (HTML5
- * drag & drop, nessuna libreria). Su touch lo stato si cambia dal popup della card.
+ * drag & drop, nessuna libreria). Sotto md le colonne si impilano e ogni card
+ * ha «Sposta in…» (col dito il trascinamento non funziona).
  */
 export function BoardContenuti({ contenuti, onApri, onSposta }: BoardContenutiProps) {
   const [trascinato, setTrascinato] = useState<Trascinamento | null>(null);
@@ -49,8 +50,8 @@ export function BoardContenuti({ contenuti, onApri, onSposta }: BoardContenutiPr
   }
 
   return (
-    <div className="-mx-6 overflow-x-auto px-6 pb-4 md:-mx-8 md:px-8">
-      <div className="flex min-w-max items-start gap-4">
+    <div className="pb-4 md:-mx-8 md:overflow-x-auto md:px-8">
+      <div className="grid gap-3 md:flex md:min-w-max md:items-start md:gap-4">
         {STATO_CONTENUTO_KEYS.map((stato) => {
           const lista = perStato.get(stato) ?? [];
           const bersaglio = sopra === stato && trascinato !== null && trascinato.stato !== stato;
@@ -68,7 +69,7 @@ export function BoardContenuti({ contenuti, onApri, onSposta }: BoardContenutiPr
               }}
               onDrop={(e) => handleDrop(e, stato)}
               className={cn(
-                "flex w-64 shrink-0 flex-col rounded-lg border border-t-2 bg-muted/50 transition-colors",
+                "flex min-w-0 shrink-0 flex-col rounded-lg border border-t-2 bg-muted/50 transition-colors md:w-64",
                 COLORE_STATO_CONTENUTO[stato].bordo,
                 bersaglio && "border-primary bg-sidebar-accent",
               )}
@@ -80,9 +81,9 @@ export function BoardContenuti({ contenuti, onApri, onSposta }: BoardContenutiPr
                 </h3>
                 <span className="figure rounded-full border bg-background px-2 py-0.5 text-xs text-muted-foreground">{lista.length}</span>
               </header>
-              <div className="flex min-h-24 flex-1 flex-col gap-2 px-2 pb-2">
+              <div className="flex flex-1 flex-col gap-2 px-2 pb-2 md:min-h-24">
                 {lista.length === 0 ? (
-                  <p className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
+                  <p className="rounded-lg border border-dashed p-3 text-center text-xs text-muted-foreground md:p-4">
                     {bersaglio ? "Rilascia qui" : "Nessun contenuto"}
                   </p>
                 ) : (
@@ -92,6 +93,9 @@ export function BoardContenuti({ contenuti, onApri, onSposta }: BoardContenutiPr
                       contenuto={c}
                       inTrascinamento={trascinato?.id === c.id}
                       onApri={onApri}
+                      onSposta={(nuovo) => {
+                        if (nuovo !== c.stato) onSposta(c.id, nuovo);
+                      }}
                       onDragStart={(x) => setTrascinato({ id: x.id, stato: x.stato })}
                       onDragEnd={fine}
                     />

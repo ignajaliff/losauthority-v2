@@ -12,8 +12,8 @@ interface Nodo {
 const NODI: Nodo[] = [
   { href: "/area/cervello/avatar", titolo: "Avatar", testo: "Il tuo cliente ideale: chi è, cosa vuole, cosa lo blocca.", icon: UserRound },
   { href: "/area/cervello/offerta", titolo: "Offerta", testo: "Promessa, struttura e prezzo di quello che vendi.", icon: Sparkles },
-  { href: "/area/cervello/concorrenti", titolo: "Concorrenti", testo: "Chi vende la stessa cosa a chi: cosa fanno, cosa dicono, dove sei diverso.", icon: Swords },
-  { href: "/area/cervello/kit-brand", titolo: "Kit Brand", testo: "Colori, font, tono di voce: quello che ti rende riconoscibile.", icon: Shapes },
+  { href: "/area/cervello/concorrenti", titolo: "Competitors", testo: "Chi vende la stessa cosa e chi ti ispira: cosa fanno, cosa dicono, dove sei diverso.", icon: Swords },
+  { href: "/area/cervello/kit-brand", titolo: "Kit Brand", testo: "Logo, colori, font, tono di voce e documenti: quello che ti rende riconoscibile.", icon: Shapes },
 ];
 
 /** Punto d'arrivo delle linee nel viewBox 800×140: il centro di ciascuna delle quattro colonne. */
@@ -25,7 +25,8 @@ function NodoCervello({ nodo, indice }: { nodo: Nodo; indice: number }) {
     <Link
       to={nodo.href}
       style={{ animationDelay: `${650 + indice * 110}ms` }}
-      className="marmo-cervello-nodo group relative flex h-full flex-col gap-4 rounded-2xl border bg-card p-5 shadow-xs transition-[transform,box-shadow,border-color] duration-300 animate-in fade-in slide-in-from-top-2 fill-mode-both hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md"
+      // Sotto md: icona a sinistra e testo a destra (righe più basse, le quattro voci stanno quasi in uno schermo); da md la colonna di sempre.
+      className="marmo-cervello-nodo group relative grid h-full grid-cols-[2.5rem_minmax(0,1fr)] gap-x-4 gap-y-2 rounded-2xl border bg-card p-4 shadow-xs transition-[transform,box-shadow,border-color] duration-300 animate-in fade-in slide-in-from-top-2 fill-mode-both hover:-translate-y-0.5 hover:border-foreground/25 hover:shadow-md md:flex md:flex-col md:gap-4 md:p-5"
     >
       {/* Il punto dove atterra la linea (solo da md, dove le linee si vedono). */}
       <span
@@ -39,7 +40,7 @@ function NodoCervello({ nodo, indice }: { nodo: Nodo; indice: number }) {
         <span className="block font-display text-[22px] leading-tight font-medium">{nodo.titolo}</span>
         <span className="mt-1 block text-[13px] leading-snug text-muted-foreground">{nodo.testo}</span>
       </span>
-      <span className="mt-auto inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+      <span className="col-start-2 mt-auto inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
         Apri <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />
       </span>
     </Link>

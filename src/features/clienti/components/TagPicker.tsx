@@ -24,7 +24,7 @@ export function TagPicker({ tags, selezionati, onChange, nuovoTag, onNuovoTagCha
       {tags.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {tags.map((t) => (
-            <Label key={t.id} className="cursor-pointer rounded-4xl border px-3 py-1.5 font-normal">
+            <Label key={t.id} className="cursor-pointer rounded-4xl border px-3 py-1.5 font-normal pointer-coarse:py-2.5">
               <Checkbox
                 checked={selezionati.includes(t.label)}
                 onCheckedChange={(on) => toggle(t.label, on)}

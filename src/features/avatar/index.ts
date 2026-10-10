@@ -5,6 +5,7 @@ export { CartaGirevole } from "./components/CartaGirevole";
 export { DiagnosiAvatar } from "./components/DiagnosiAvatar";
 export { DossierAvatar, ElencoDossier, SezioneDossier, TestoDossier } from "./components/DossierAvatar";
 export { FlussoAvatar, type MessaggioChat } from "./components/FlussoAvatar";
+export { SceltaVista, type VistaMobile } from "./components/SceltaVista";
 export { chiaviAvatar, useAvatar, useAvatars, useCreaAvatar, useDiagnosiAvatar, useEliminaAvatar, useInviaAvatar, useMessaggiAvatar } from "./hooks/useAvatar";
 export { campiCompilati, codiceAvatar, haDossier } from "./types";
 export type { Avatar, DiagnosiAvatar as Diagnosi, MessaggioAvatar } from "./types";

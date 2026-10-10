@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { eFatto, indiceTappaCorrente, raggruppaTappe, useCambiaStatoCompito, useCompiti } from "@/features/clienti";
 import { Button } from "@/shared/components/ui/button";
@@ -10,9 +10,9 @@ import { PuntoTappa } from "./PuntoTappa";
 /**
  * Il piano d'azione del cliente come linea del tempo: un punto per tappa, la
  * tappa "di oggi" al centro con i suoi sotto-compiti sotto, i vicini sfocati.
- * Niente scroll orizzontale: si naviga con le due frecce (o cliccando un punto)
- * e la riga scivola di uno slot. Quando una tappa si completa il punto diventa
- * verde e la successiva prende il centro.
+ * Niente scroll orizzontale: si naviga con le due frecce (o cliccando un punto,
+ * o con uno swipe sul telefono) e la riga scivola di uno slot. Quando una
+ * tappa si completa il punto diventa verde e la successiva prende il centro.
  */
 export function LineaTempoPiano({ clienteId }: { clienteId: string }) {
   const { data, isLoading, isError } = useCompiti(clienteId);
@@ -21,6 +21,8 @@ export function LineaTempoPiano({ clienteId }: { clienteId: string }) {
   const [scelta, setScelta] = useState<number | null>(null);
   /** Verso dell'ultimo spostamento: il dettaglio entra dal lato verso cui si va. */
   const [direzione, setDirezione] = useState<"avanti" | "indietro">("avanti");
+  /** Dove è iniziato il tocco sul binario: sul telefono si passa di tappa anche col dito (swipe). */
+  const tocco = useRef<{ x: number; y: number } | null>(null);
 
   const tappe = raggruppaTappe(data ?? []);
   // Titoli delle lezioni Skool collegate ai sotto-compiti (prima dei return: è un hook).
@@ -41,8 +43,21 @@ export function LineaTempoPiano({ clienteId }: { clienteId: string }) {
     setScelta(nuovo);
   }
 
+  /** Swipe orizzontale di almeno 40px (e più orizzontale che verticale): tappa dopo o prima. */
+  function fineTocco(e: TouchEvent) {
+    const inizio = tocco.current;
+    const fine = e.changedTouches[0];
+    tocco.current = null;
+    if (!inizio || !fine) return;
+    const dx = fine.clientX - inizio.x;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(fine.clientY - inizio.y)) return;
+    const nuovo = indice + (dx < 0 ? 1 : -1);
+    if (nuovo >= 0 && nuovo < tappe.length) vaiA(nuovo);
+  }
+
+  // min-w-0: un testo lungo dentro la tappa non deve allargare la colonna della pagina.
   return (
-    <section aria-label="Piano d'azione" className="grid gap-4">
+    <section aria-label="Piano d'azione" className="grid min-w-0 gap-4">
       <div className="flex items-end justify-between gap-4">
         <div className="grid gap-1">
           <p className="eyebrow">Piano d'azione</p>
@@ -64,6 +79,14 @@ export function LineaTempoPiano({ clienteId }: { clienteId: string }) {
       <div
         className="@container relative h-36 overflow-hidden [--slot:128px] md:[--slot:176px]"
         style={{ maskImage: "linear-gradient(to right, transparent, black 10%, black 90%, transparent)" }}
+        onTouchStart={(e) => {
+          const t = e.touches[0];
+          tocco.current = t ? { x: t.clientX, y: t.clientY } : null;
+        }}
+        onTouchEnd={fineTocco}
+        onTouchCancel={() => {
+          tocco.current = null;
+        }}
       >
         <div
           // marmo-tappe-riga: con "riduci movimento" attivo lo scorrimento resta (più corto), vedi index.css.

@@ -49,7 +49,7 @@ export function CartaOfferta({ offerta, numero, titolare, inCompilazione, linkPd
     <article aria-label={`Offerta ${offerta.nome ?? "in costruzione"}`} className="overflow-hidden rounded-lg border bg-card shadow-sm">
       <header className="flex items-center justify-between gap-4 border-b px-5 py-3">
         <p className="eyebrow text-[10px] text-foreground">Offerta · La tua proposta</p>
-        <div className="flex items-center gap-3">
+        <div className="flex shrink-0 items-center gap-3">
           {posizionamento ? (
             <Badge key={posizionamento} variant="outline" className="animate-in fade-in fill-mode-both duration-500">
               {posizionamento}
@@ -63,7 +63,7 @@ export function CartaOfferta({ offerta, numero, titolare, inCompilazione, linkPd
         <div>
           <p className="eyebrow text-[10px]">Nome dell'offerta</p>
           {offerta.nome ? (
-            <h3 key={offerta.nome} className="text-[clamp(28px,3vw,40px)] leading-[1.08] animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-500">
+            <h3 key={offerta.nome} className="text-[clamp(28px,3vw,40px)] leading-[1.08] break-words animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-500">
               {offerta.nome}
             </h3>
           ) : (
@@ -120,7 +120,7 @@ export function CartaOfferta({ offerta, numero, titolare, inCompilazione, linkPd
             href={linkPdf}
             target="_blank"
             rel="noopener"
-            className="group inline-flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70"
+            className="group inline-flex shrink-0 items-center gap-1.5 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70 pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
           >
             <FileDown className="size-3.5 transition-transform duration-300 group-hover:translate-y-0.5" aria-hidden />
             Scarica PDF

@@ -4,6 +4,5 @@ export const CHIAVI_CHIAMATE = {
   cliente: (clienteId: string) => ["chiamate", "cliente", clienteId] as const,
   nonAssegnate: ["chiamate", "non-assegnate"] as const,
   azioni: (chiamataId: string) => ["chiamate", "azioni", chiamataId] as const,
-  faseCliente: (clienteId: string) => ["chiamate", "fase-cliente", clienteId] as const,
   clientiOpzioni: ["chiamate", "clienti-opzioni"] as const,
 };

@@ -30,14 +30,14 @@ export function CredenzialiStaff({ credenziali, onAggiungiAltro }: CredenzialiSt
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <pre className="whitespace-pre-wrap rounded-md border bg-muted p-4 font-mono text-xs">{messaggio}</pre>
+        <pre className="whitespace-pre-wrap wrap-anywhere rounded-md border bg-muted p-4 font-mono text-xs">{messaggio}</pre>
         <div className="flex flex-wrap gap-2">
           <BottoneCopia testo={messaggio} etichetta="Copia messaggio" variant="default" />
           <BottoneCopia testo={credenziali.email} etichetta="Solo email" />
           <BottoneCopia testo={credenziali.password} etichetta="Solo password" />
         </div>
       </CardContent>
-      <CardFooter className="gap-2">
+      <CardFooter className="flex-wrap gap-2">
         <Link to="/staff" className="inline-flex">
           <Button variant="outline" size="sm">
             Torna allo staff

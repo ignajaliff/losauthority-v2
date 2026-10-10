@@ -37,9 +37,12 @@ export function PuntoTappa({ tappa, numero, distanza, ultimo, onScegli }: PuntoT
         onClick={onScegli}
         aria-label={`Tappa ${numero}: ${tappa.testo}`}
         aria-current={corrente ? "step" : undefined}
-        className="relative grid size-4 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+        // Sul touch la zona da toccare è 44px, ma i margini negativi la riportano a 16: il disegno non si sposta.
+        className="relative grid size-4 place-items-center rounded-full outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:-m-3.5 pointer-coarse:size-11"
       >
-        {fatta ? <span aria-hidden className="absolute -inset-2 rounded-full bg-status-active/45 blur-md" /> : null}
+        {fatta ? (
+          <span aria-hidden className="absolute top-1/2 left-1/2 size-8 -translate-x-1/2 -translate-y-1/2 rounded-full bg-status-active/45 blur-md" />
+        ) : null}
         <span
           aria-hidden
           className={cn(

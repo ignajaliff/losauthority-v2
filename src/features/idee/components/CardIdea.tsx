@@ -53,7 +53,7 @@ export function CardIdea({ idea, indice = 0, onSalva, onScarta, onWorkflow, occu
           ) : null}
         </div>
         {!scartata && stato !== "usata" ? (
-          <Button size="icon" variant="ghost" className="size-7 text-muted-foreground" aria-label="Scarta idea" disabled={occupato} onClick={() => onScarta(idea)}>
+          <Button size="icon" variant="ghost" className="size-7 text-muted-foreground pointer-coarse:-m-1 pointer-coarse:size-9" aria-label="Scarta idea" disabled={occupato} onClick={() => onScarta(idea)}>
             <X className="size-4" aria-hidden />
           </Button>
         ) : null}
@@ -71,7 +71,7 @@ export function CardIdea({ idea, indice = 0, onSalva, onScarta, onWorkflow, occu
           <button
             type="button"
             onClick={() => setAperta((v) => !v)}
-            className="inline-flex w-fit items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline"
+            className="inline-flex w-fit items-center gap-1 text-xs font-medium text-foreground underline-offset-4 hover:underline pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
           >
             {aperta ? "Riduci" : "Leggi lo script"}
             <ChevronDown className={cn("size-3.5 transition-transform", aperta && "rotate-180")} aria-hidden />

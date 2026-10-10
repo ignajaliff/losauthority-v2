@@ -3,23 +3,21 @@ import { Button, buttonVariants } from "@/shared/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/shared/components/ui/card";
 import { formatDateTime } from "@/shared/utils/formatDate";
 import { useScaricaRiassunto } from "../hooks/useChiamate";
-import type { CallNumero, Chiamata } from "../types";
+import type { Chiamata } from "../types";
 import { TitoloChiamata } from "./TitoloChiamata";
 import { RiassuntoChiamata } from "./RiassuntoChiamata";
 import { AzioniChiamata } from "./AzioniChiamata";
-import { GeneraCompitiDialog } from "./GeneraCompitiDialog";
+import { StatoPianoChiamata } from "./StatoPianoChiamata";
 import { EliminaChiamataDialog } from "./EliminaChiamataDialog";
 
-/** Scheda di una call: titolo, data, registrazione, riassunto, azioni e comandi del team. */
+/** Scheda di una call: titolo, data, registrazione, riassunto, azioni, stato del piano di Aura e comandi del team. */
 export function ChiamataCard({
   chiamata,
   team,
-  callSuggerita,
 }: {
   chiamata: Chiamata;
   /** true per admin/staff: abilita modifica titolo, spunte, Aura ed elimina. */
   team: boolean;
-  callSuggerita: CallNumero;
 }) {
   const scarica = useScaricaRiassunto(chiamata.cliente_id);
 
@@ -71,9 +69,11 @@ export function ChiamataCard({
       </CardContent>
 
       {team && (
-        <CardFooter className="flex-wrap justify-between gap-2">
-          <GeneraCompitiDialog chiamataId={chiamata.id} callSuggerita={callSuggerita} />
-          <EliminaChiamataDialog chiamata={chiamata} />
+        <CardFooter className="flex-col items-stretch gap-3 border-t pt-4">
+          <StatoPianoChiamata chiamata={chiamata} />
+          <div className="flex justify-end">
+            <EliminaChiamataDialog chiamata={chiamata} />
+          </div>
         </CardFooter>
       )}
     </Card>

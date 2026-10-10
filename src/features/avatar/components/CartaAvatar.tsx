@@ -50,33 +50,34 @@ export function CartaAvatar({ avatar, numero, titolare, inCompilazione, onGira, 
     <article aria-label={`Carta d'identità di ${avatar.nome ?? "avatar in compilazione"}`} className="overflow-hidden rounded-lg border bg-card shadow-sm">
       <header className="flex items-center justify-between gap-4 border-b px-5 py-3">
         <p className="eyebrow text-[10px] text-foreground">Carta d'identità · Cliente ideale</p>
-        <p className="figure text-[11px] text-muted-foreground">N. {codiceAvatar(numero)}</p>
+        <p className="figure shrink-0 text-[11px] text-muted-foreground">N. {codiceAvatar(numero)}</p>
       </header>
 
-      {/* La colonna "foto" ha larghezza fissa anche sul telefono: senza, aspect-[3/4] la farebbe alta quanto tutta la carta. */}
-      <div className="grid grid-cols-[minmax(0,104px)_1fr] gap-4 p-5 sm:grid-cols-[minmax(0,150px)_1fr] sm:gap-6 sm:p-6">
+      {/* La colonna "foto" ha larghezza fissa anche sul telefono: senza, aspect-[3/4] la farebbe alta quanto tutta la carta.
+          Sotto sm la colonna di destra si "scioglie" (contents): la foto sta accanto al nome e i campi scendono a tutta larghezza. */}
+      <div className="grid grid-cols-[minmax(0,84px)_minmax(0,1fr)] gap-x-4 gap-y-5 p-5 sm:grid-cols-[minmax(0,150px)_1fr] sm:gap-6 sm:p-6">
         <div className="grid aspect-[3/4] place-items-center self-start rounded-md border bg-muted/40" aria-hidden>
           {iniziale ? (
-            <span key={iniziale} className="font-display text-[68px] leading-none font-medium animate-in fade-in zoom-in-95 fill-mode-both duration-500 sm:text-[104px]">
+            <span key={iniziale} className="font-display text-[56px] leading-none font-medium animate-in fade-in zoom-in-95 fill-mode-both duration-500 sm:text-[104px]">
               {iniziale}
             </span>
           ) : (
-            <span className={cn("font-display text-[52px] leading-none text-muted-foreground/40 sm:text-[72px]", inCompilazione && "animate-pulse")}>?</span>
+            <span className={cn("font-display text-[44px] leading-none text-muted-foreground/40 sm:text-[72px]", inCompilazione && "animate-pulse")}>?</span>
           )}
         </div>
 
-        <div className="grid min-w-0 content-start gap-5">
-          <div>
+        <div className="contents sm:grid sm:min-w-0 sm:content-start sm:gap-5">
+          <div className="min-w-0 self-center sm:self-auto">
             <p className="eyebrow text-[10px]">Nome</p>
             {avatar.nome ? (
-              <h3 key={avatar.nome} className="text-[44px] leading-[1.05] animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-500">
+              <h3 key={avatar.nome} className="text-[36px] leading-[1.05] break-words animate-in fade-in slide-in-from-bottom-1 fill-mode-both duration-500 sm:text-[44px]">
                 {avatar.nome}
               </h3>
             ) : (
-              <p className={cn("font-display text-[30px] leading-tight text-muted-foreground/50", inCompilazione && "animate-pulse")}>In compilazione…</p>
+              <p className={cn("font-display text-[26px] leading-tight text-muted-foreground/50 sm:text-[30px]", inCompilazione && "animate-pulse")}>In compilazione…</p>
             )}
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="col-span-2 grid gap-4 sm:col-span-1 sm:grid-cols-2">
             <Campo etichetta="Età" valore={avatar.eta} inCompilazione={inCompilazione} />
             <Campo etichetta="Genere" valore={avatar.genere} inCompilazione={inCompilazione} />
             <Campo etichetta="Situazione" valore={avatar.situazione} inCompilazione={inCompilazione} />
@@ -85,11 +86,11 @@ export function CartaAvatar({ avatar, numero, titolare, inCompilazione, onGira, 
             <Campo etichetta="Titolare" valore={titolare} inCompilazione={false} />
           </div>
           {avatar.frase ? (
-            <p key={avatar.frase} className="mt-2 font-display text-[21px] leading-snug italic text-foreground/85 animate-in fade-in fill-mode-both duration-700">
+            <p key={avatar.frase} className="col-span-2 font-display text-[21px] leading-snug italic text-foreground/85 animate-in fade-in fill-mode-both duration-700 sm:col-span-1 sm:mt-2">
               «{avatar.frase}»
             </p>
           ) : (
-            <p className={cn("mt-2 font-display text-[19px] italic text-muted-foreground/40", inCompilazione && "animate-pulse")}>«…»</p>
+            <p className={cn("col-span-2 font-display text-[19px] italic text-muted-foreground/40 sm:col-span-1 sm:mt-2", inCompilazione && "animate-pulse")}>«…»</p>
           )}
         </div>
       </div>
@@ -102,7 +103,7 @@ export function CartaAvatar({ avatar, numero, titolare, inCompilazione, onGira, 
           <button
             type="button"
             onClick={onGira}
-            className="group inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70"
+            className="group inline-flex shrink-0 items-center gap-1 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70 pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
           >
             {dossierPronto ? "Gira per il dossier" : "Gira la carta"}
             <ArrowRight className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" aria-hidden />

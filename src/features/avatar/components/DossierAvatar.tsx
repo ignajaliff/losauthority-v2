@@ -45,7 +45,7 @@ export function DossierAvatar({ avatar, numero, onGira }: DossierAvatarProps) {
     <article aria-label={`Dossier di ${avatar.nome ?? "avatar in compilazione"}`} className="overflow-hidden rounded-lg border bg-card shadow-sm">
       <header className="flex items-center justify-between gap-4 border-b px-5 py-3">
         <h3 className="eyebrow font-sans text-[10px] text-foreground">Dossier · Cliente ideale</h3>
-        <p className="figure text-[11px] text-muted-foreground">N. {codiceAvatar(numero)}</p>
+        <p className="figure shrink-0 text-[11px] text-muted-foreground">N. {codiceAvatar(numero)}</p>
       </header>
 
       {!pronto ? (
@@ -114,7 +114,7 @@ export function DossierAvatar({ avatar, numero, onGira }: DossierAvatarProps) {
 
       {onGira ? (
         <footer className="flex items-center justify-end border-t bg-muted/40 px-5 py-2.5">
-          <button type="button" onClick={onGira} className="group inline-flex items-center gap-1 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70">
+          <button type="button" onClick={onGira} className="group inline-flex items-center gap-1 text-[12px] font-medium text-foreground transition-colors hover:text-foreground/70 pointer-coarse:-my-2.5 pointer-coarse:py-2.5">
             <ArrowLeft className="size-3.5 transition-transform duration-300 group-hover:-translate-x-0.5" aria-hidden />
             Torna alla carta
           </button>

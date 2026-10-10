@@ -85,8 +85,8 @@ function Contenuto({ clienteId, nomeCliente, onChiudi }: Omit<ContattiAssistenza
             <TableHeader>
               <TableRow>
                 <TableHead>Contatto</TableHead>
-                <TableHead>Canale</TableHead>
-                <TableHead>Arrivato il</TableHead>
+                <TableHead className="hidden sm:table-cell">Canale</TableHead>
+                <TableHead className="hidden sm:table-cell">Arrivato il</TableHead>
                 <TableHead>Stato</TableHead>
                 <TableHead className="hidden sm:table-cell">Offerta</TableHead>
               </TableRow>
@@ -94,14 +94,18 @@ function Contenuto({ clienteId, nomeCliente, onChiudi }: Omit<ContattiAssistenza
             <TableBody>
               {contatti.map((c, i) => (
                 <TableRow key={i}>
-                  <TableCell className="max-w-56">
+                  <TableCell className="max-w-0 sm:max-w-56">
                     <span className="block truncate font-medium">{c.nome}</span>
                     {c.email || c.telefono ? (
                       <span className="block truncate text-xs text-muted-foreground">{[c.email, c.telefono].filter(Boolean).join(" · ")}</span>
                     ) : null}
+                    {/* Sul telefono canale, data e offerta vanno sotto il contatto: le loro colonne sono nascoste. */}
+                    <span className="block truncate text-xs text-muted-foreground sm:hidden">
+                      {[etichettaFonte(c.canale) ?? c.canale, formatDate(c.arrivato_il), c.offerta].filter(Boolean).join(" · ")}
+                    </span>
                   </TableCell>
-                  <TableCell className="text-[12.5px] text-muted-foreground">{etichettaFonte(c.canale) ?? c.canale}</TableCell>
-                  <TableCell className="text-[12.5px] text-muted-foreground">{formatDate(c.arrivato_il)}</TableCell>
+                  <TableCell className="hidden text-[12.5px] text-muted-foreground sm:table-cell">{etichettaFonte(c.canale) ?? c.canale}</TableCell>
+                  <TableCell className="hidden text-[12.5px] text-muted-foreground sm:table-cell">{formatDate(c.arrivato_il)}</TableCell>
                   <TableCell className="text-[12.5px]">
                     {etichettaStato(c.stato)}
                     {c.valore !== null ? <span className="figure block text-[11px] text-muted-foreground">{formatCurrency(c.valore)}</span> : null}

@@ -23,7 +23,12 @@ export function AvvisoNuovaVersione({ versione, documenti, onApri }: AvvisoNuova
         </p>
         <p className="flex flex-wrap gap-x-3 gap-y-1">
           {documenti.map((d) => (
-            <button key={d.id} type="button" className="underline underline-offset-4 hover:text-foreground" onClick={() => onApri(d)}>
+            <button
+              key={d.id}
+              type="button"
+              className="text-left underline underline-offset-4 hover:text-foreground pointer-coarse:py-2"
+              onClick={() => onApri(d)}
+            >
               {d.titolo} (nuova versione)
             </button>
           ))}

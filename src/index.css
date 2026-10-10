@@ -220,6 +220,10 @@
   html {
     @apply font-sans;
     height: 100%;
+    /* Telefono: niente zoom del testo in orizzontale né riquadro grigio al tocco. */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
   html,
   body {

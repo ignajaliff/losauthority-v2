@@ -44,7 +44,10 @@ export function PianoAzione({ clienteId }: { clienteId: string }) {
                 </span>
               ) : null}
             </CardTitle>
-            <CardDescription>Le tappe del percorso, nell'ordine in cui vanno fatte; dentro ogni tappa i sotto-compiti che il cliente spunta.</CardDescription>
+            <CardDescription>
+              Le tappe del percorso, nell'ordine in cui vanno fatte; dentro ogni tappa i sotto-compiti che il cliente spunta. Le tappe
+              «Aura» le scrive lei dalla call con Wesley (tab Call); il team può correggerle, aggiungerne o toglierne.
+            </CardDescription>
           </div>
           <NuovoCompitoDialog clienteId={clienteId} />
         </div>

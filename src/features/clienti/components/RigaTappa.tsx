@@ -1,4 +1,6 @@
 import { ExternalLink, Trash2 } from "lucide-react";
+import { paginaArea } from "@area/pagine.ts";
+import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { Checkbox } from "@/shared/components/ui/checkbox";
 import { formatDate } from "@/shared/utils/formatDate";
@@ -30,15 +32,15 @@ function RigaSottoCompito({ compito, onCambia, onElimina, disabilitato }: { comp
           <span className="whitespace-pre-wrap">{compito.testo}</span>
           {fatto && compito.completato_il ? <span className="mt-0.5 block text-xs no-underline">Fatto il {formatDate(compito.completato_il)}</span> : null}
         </label>
-        {compito.link_skool ? (
-          <a
-            href={compito.link_skool}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
-          >
-            Lezione Skool collegata{compito.nota_skool ? ` · ${compito.nota_skool}` : ""} <ExternalLink className="size-3" aria-hidden />
-          </a>
+        {compito.pagina || compito.link_skool ? (
+          <div className="mt-1 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+            {compito.pagina ? <span>Fallo qui: {paginaArea(compito.pagina)?.titolo ?? compito.pagina}</span> : null}
+            {compito.link_skool ? (
+              <a href={compito.link_skool} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
+                Lezione Skool collegata{compito.nota_skool ? ` · ${compito.nota_skool}` : ""} <ExternalLink className="size-3" aria-hidden />
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
       <Button variant="ghost" size="icon-sm" aria-label="Elimina sotto-compito" onClick={() => onElimina(compito.id)}>
@@ -59,7 +61,8 @@ export function RigaTappa({ tappa, numero, clienteId, onCambia, onElimina, disab
   const id = `tappa-${tappa.id}`;
   return (
     <li className="py-3">
-      <div className="flex items-start gap-3">
+      {/* Telefono: «Sotto-compito» ed «Elimina» vanno sotto il testo, così la tappa ha tutta la larghezza. */}
+      <div className="flex flex-wrap items-start gap-x-3 gap-y-1 sm:flex-nowrap sm:gap-3">
         <Checkbox
           id={id}
           checked={fatta}
@@ -69,7 +72,14 @@ export function RigaTappa({ tappa, numero, clienteId, onCambia, onElimina, disab
           aria-label={conFigli ? "Stato derivato dai sotto-compiti" : fatta ? "Segna da fare" : "Segna fatta"}
         />
         <label htmlFor={id} className="min-w-0 flex-1">
-          <span className="eyebrow block text-[10px]">Tappa {numero}</span>
+          <span className="eyebrow flex items-center gap-2 text-[10px]">
+            Tappa {numero}
+            {tappa.origine === "aura" ? (
+              <Badge variant="outline" className="h-4 px-1.5 text-[10px] font-normal normal-case tracking-normal">
+                Aura
+              </Badge>
+            ) : null}
+          </span>
           <span className={`block font-medium leading-snug whitespace-pre-wrap ${fatta ? "text-muted-foreground line-through" : ""}`}>{tappa.testo}</span>
           {conFigli ? (
             <span className="mt-0.5 block text-xs text-muted-foreground">
@@ -79,7 +89,7 @@ export function RigaTappa({ tappa, numero, clienteId, onCambia, onElimina, disab
             <span className="mt-0.5 block text-xs text-muted-foreground">Fatta il {formatDate(tappa.completato_il)}</span>
           ) : null}
         </label>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 basis-full items-center gap-1 pl-4 sm:basis-auto sm:pl-0">
           <NuovoCompitoDialog clienteId={clienteId} padre={{ id: tappa.id, testo: tappa.testo }} />
           <Button variant="ghost" size="icon-sm" aria-label="Elimina tappa" onClick={() => onElimina(tappa.id)}>
             <Trash2 aria-hidden />
@@ -87,7 +97,7 @@ export function RigaTappa({ tappa, numero, clienteId, onCambia, onElimina, disab
         </div>
       </div>
       {conFigli ? (
-        <ul className="mt-1 ml-[7px] border-l pl-6">
+        <ul className="mt-1 ml-[7px] border-l pl-4 sm:pl-6">
           {tappa.figli.map((f) => (
             <RigaSottoCompito key={f.id} compito={f} onCambia={onCambia} onElimina={onElimina} disabilitato={disabilitato} />
           ))}

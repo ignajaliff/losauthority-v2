@@ -16,7 +16,7 @@ const FILTRI: { valore: Filtro; etichetta: string }[] = [
   { valore: "pagate", etichetta: "Pagate" },
 ];
 
-/** Tab Fatture: tutte le fatture con il nome del cliente e link alla sua scheda. */
+/** Tab Fatture: tutte le fatture con il nome del cliente e link alla sua scheda. Sul telefono una colonna sola. */
 export function TabFatture() {
   const { data: fatture, isLoading, isError } = useTutteLeFatture();
   const [filtro, setFiltro] = useState<Filtro>("tutte");
@@ -32,7 +32,7 @@ export function TabFatture() {
             <CardTitle>Fatture</CardTitle>
             <CardDescription>Le aggiungi dalla scheda di ogni cliente.</CardDescription>
           </div>
-          <div className="flex gap-1" role="group" aria-label="Filtra fatture">
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Filtra fatture">
             {FILTRI.map((f) => (
               <Button key={f.valore} size="sm" variant={filtro === f.valore ? "secondary" : "ghost"} onClick={() => setFiltro(f.valore)}>
                 {f.etichetta}
@@ -52,7 +52,7 @@ export function TabFatture() {
         ) : null}
         {visibili.length > 0 ? (
           <Table>
-            <TableHeader>
+            <TableHeader className="hidden md:table-header-group">
               <TableRow>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Descrizione</TableHead>
@@ -64,20 +64,42 @@ export function TabFatture() {
             <TableBody>
               {visibili.map((f) => (
                 <TableRow key={f.id}>
-                  <TableCell>
-                    <Link to={`/clienti/${f.cliente_id}?tab=fatture`} className="font-medium underline-offset-4 hover:underline">
-                      {f.cliente_nome || f.cliente_email || "Cliente"}
-                    </Link>
+                  <TableCell className="px-0 whitespace-normal md:px-[18px] md:whitespace-nowrap">
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        to={`/clienti/${f.cliente_id}?tab=fatture`}
+                        className="min-w-0 font-medium wrap-anywhere underline-offset-4 hover:underline pointer-coarse:-my-2.5 pointer-coarse:py-2.5 md:wrap-normal"
+                      >
+                        {f.cliente_nome || f.cliente_email || "Cliente"}
+                      </Link>
+                      <span className="shrink-0 font-medium tabular-nums md:hidden">{formatCurrency(f.importo)}</span>
+                    </div>
+                    {/* Telefono: descrizione, data e stato sotto il cliente. */}
+                    <div className="mt-1 grid gap-1.5 md:hidden">
+                      {f.descrizione ? <p className="text-muted-foreground">{f.descrizione}</p> : null}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                        <span className="text-xs text-muted-foreground">emessa il {formatDate(f.emessa_il)}</span>
+                        <StatoFattura fattura={f} />
+                      </div>
+                    </div>
                   </TableCell>
-                  <TableCell className="whitespace-normal text-muted-foreground">{f.descrizione || "—"}</TableCell>
-                  <TableCell className="text-muted-foreground">{formatDate(f.emessa_il)}</TableCell>
-                  <TableCell className="text-right font-medium tabular-nums">{formatCurrency(f.importo)}</TableCell>
-                  <TableCell className="whitespace-normal">
+                  <TableCell className="hidden whitespace-normal text-muted-foreground md:table-cell">{f.descrizione || "—"}</TableCell>
+                  <TableCell className="hidden text-muted-foreground md:table-cell">{formatDate(f.emessa_il)}</TableCell>
+                  <TableCell className="hidden text-right font-medium tabular-nums md:table-cell">{formatCurrency(f.importo)}</TableCell>
+                  <TableCell className="hidden whitespace-normal md:table-cell">
                     <StatoFattura fattura={f} />
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="bg-muted/40 hover:bg-muted/40">
+              <TableRow className="bg-muted/40 hover:bg-muted/40 md:hidden">
+                <TableCell className="px-3 font-medium">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Totale ({visibili.length})</span>
+                    <span className="font-semibold tabular-nums">{formatCurrency(totale)}</span>
+                  </div>
+                </TableCell>
+              </TableRow>
+              <TableRow className="hidden bg-muted/40 hover:bg-muted/40 md:table-row">
                 <TableCell colSpan={3} className="font-medium">
                   Totale ({visibili.length})
                 </TableCell>

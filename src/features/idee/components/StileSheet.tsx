@@ -58,13 +58,13 @@ function DettaglioStile({ clienteId, stile, onChiudi }: { clienteId: string; sti
 
   return (
     <>
-      <SheetHeader className="border-b px-6 py-[18px]">
+      <SheetHeader className="border-b px-4 py-[18px] pr-12 sm:px-6">
         <SheetTitle className="font-display text-xl font-medium">{stile.titolo}</SheetTitle>
         <SheetDescription>{stile.descrizione ?? "Come si costruisce un video in questo stile nel tuo nicho, secondo Aura."}</SheetDescription>
       </SheetHeader>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="grid min-w-0 gap-5 p-6 *:min-w-0" noValidate>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="grid min-w-0 gap-5 p-4 *:min-w-0 sm:p-6" noValidate>
           <FormField
             control={form.control}
             name="titolo"
@@ -85,7 +85,7 @@ function DettaglioStile({ clienteId, stile, onChiudi }: { clienteId: string; sti
               <FormItem>
                 <FormLabel>Come si fa questo stile</FormLabel>
                 <FormControl>
-                  <Textarea rows={22} className="field-sizing-fixed text-[13.5px] leading-relaxed wrap-anywhere" {...field} />
+                  <Textarea rows={22} className="field-sizing-fixed text-base leading-relaxed wrap-anywhere md:text-[13.5px]" {...field} />
                 </FormControl>
                 <p className="text-xs text-muted-foreground">Sono le istruzioni che Aura segue quando lo richiami con «/». Puoi correggerle con parole tue.</p>
                 <FormMessage />

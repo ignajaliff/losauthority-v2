@@ -9,7 +9,7 @@ interface ConOpzioni {
   opzioni: Opzione[];
 }
 
-/** Scelta singola a "chip" (select). Le etichette lunghe vanno a capo. */
+/** Scelta singola a "chip" (select). Le etichette lunghe vanno a capo (anche sul touch: h-auto sostituisce l'h-9 del Button). */
 export function CampoSelect({ domanda, valore, onChange, parole, opzioni, disabilitato, idErrore }: CampoProps<string> & ConOpzioni) {
   return (
     <div role="radiogroup" aria-labelledby={`${domanda.id}-label`} aria-describedby={idErrore} className="flex flex-wrap gap-2">
@@ -23,7 +23,7 @@ export function CampoSelect({ domanda, valore, onChange, parole, opzioni, disabi
             aria-checked={selezionata}
             variant={selezionata ? "default" : "outline"}
             size="sm"
-            className="h-auto min-h-8 whitespace-normal py-1.5 text-left"
+            className="h-auto min-h-8 whitespace-normal py-1.5 text-left pointer-coarse:h-auto pointer-coarse:min-h-9"
             disabled={disabilitato}
             onClick={() => onChange(opt.value)}
           >
@@ -63,7 +63,7 @@ export function CampoMultiselect({ domanda, valore, onChange, parole, opzioni, d
               aria-pressed={selezionata}
               variant={selezionata ? "default" : "outline"}
               size="sm"
-              className="h-auto min-h-8 whitespace-normal py-1.5 text-left"
+              className="h-auto min-h-8 whitespace-normal py-1.5 text-left pointer-coarse:h-auto pointer-coarse:min-h-9"
               disabled={disabilitato}
               onClick={() => alterna(opt.value)}
             >

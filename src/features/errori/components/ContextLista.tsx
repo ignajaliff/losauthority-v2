@@ -32,7 +32,7 @@ export function ContextLista({ context }: { context: Json | null }) {
       {voci.map(([chiave, valore]) => (
         <div key={chiave} className="contents">
           <dt className="font-medium text-muted-foreground">{chiave}</dt>
-          <dd className="min-w-0 break-words font-mono whitespace-pre-wrap">{testoValore(valore)}</dd>
+          <dd className="min-w-0 break-words font-mono whitespace-pre-wrap max-md:wrap-anywhere">{testoValore(valore)}</dd>
         </div>
       ))}
     </dl>

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CHIAVI_PAGINE } from "@area/pagine.ts";
 import { FASI, STATI_ONBOARDING } from "./fasi";
 
 const FASE_VALORI = FASI.map((f) => f.value);
@@ -44,12 +45,17 @@ const linkSkoolSchema = z
   .max(500, "Massimo 500 caratteri")
   .refine((v) => v === "" || /^https:\/\/(www\.)?skool\.com\//.test(v), "Deve essere un link di skool.com (https://www.skool.com/…)");
 
+/** Nel select: nessuna pagina. */
+export const NESSUNA_PAGINA = "nessuna";
+
 export const compitoSchema = z
   .object({
     testo: z.string().trim().min(1, "Scrivi il compito").max(1000, "Massimo 1000 caratteri"),
     link_skool: linkSkoolSchema,
     /** Mini messaggio accanto al link ("Dal minuto 20:03"); ha senso solo con il link. */
     nota_skool: z.string().trim().max(120, "Massimo 120 caratteri"),
+    /** Pagina dell'area cliente dove si fa il sotto-compito («Fallo qui»), chiave di `@area/pagine` o `nessuna`. */
+    pagina: z.string().refine((v) => v === NESSUNA_PAGINA || CHIAVI_PAGINE.includes(v), "Pagina non valida"),
   })
   .refine((v) => v.nota_skool === "" || v.link_skool !== "", { message: "La nota ha senso solo insieme al link della lezione", path: ["nota_skool"] });
 export type CompitoValues = z.infer<typeof compitoSchema>;

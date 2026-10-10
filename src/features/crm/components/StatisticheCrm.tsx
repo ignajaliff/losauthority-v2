@@ -30,7 +30,7 @@ export function StatisticheCrm({ contatti }: { contatti: LeadCrm[] }) {
           <CardTitle className="mt-1">Quanti ne arrivano, quanti ne chiudi</CardTitle>
         </div>
         <Select value={periodo} items={ETICHETTA_PERIODO_CRM} onValueChange={(v) => v && setPeriodo(v as PeriodoCrm)}>
-          <SelectTrigger size="sm" className="w-44" aria-label="Periodo">
+          <SelectTrigger size="sm" className="w-44 pointer-coarse:data-[size=sm]:h-10" aria-label="Periodo">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -55,7 +55,8 @@ export function StatisticheCrm({ contatti }: { contatti: LeadCrm[] }) {
           <div className="overflow-hidden rounded-lg border">
             <Table>
               <TableHeader>
-                <TableRow>
+                {/* Sul telefono celle più strette (le quattro colonne stanno nella carta) e il valore va sotto il canale. */}
+                <TableRow className="[&>th]:max-sm:px-2.5">
                   <TableHead>Canale</TableHead>
                   <TableHead className="text-right">Arrivati</TableHead>
                   <TableHead className="text-right">Chiusi</TableHead>
@@ -65,8 +66,11 @@ export function StatisticheCrm({ contatti }: { contatti: LeadCrm[] }) {
               </TableHeader>
               <TableBody>
                 {r.perCanale.map(({ canale, numeri }) => (
-                  <TableRow key={canale}>
-                    <TableCell className="text-[13px]">{ETICHETTA_FONTE_LEAD[canale]}</TableCell>
+                  <TableRow key={canale} className="[&>td]:max-sm:px-2.5">
+                    <TableCell className="text-[13px]">
+                      {ETICHETTA_FONTE_LEAD[canale]}
+                      {numeri.valore > 0 ? <span className="figure block text-[11px] text-muted-foreground sm:hidden">{valore(numeri)}</span> : null}
+                    </TableCell>
                     <TableCell className="figure text-right text-[13px]">{numeri.arrivati}</TableCell>
                     <TableCell className="figure text-right text-[13px]">{numeri.chiusi}</TableCell>
                     <TableCell className="figure text-right text-[13px]">{percentuale(numeri)}</TableCell>

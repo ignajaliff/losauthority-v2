@@ -190,7 +190,7 @@ export function NuovaRicerca({ clienteId, prossima, onAvviata, onFallita }: Nuov
                     <Plus aria-hidden /> Aggiungi keyword
                   </Button>
                 </div>
-                <Button type="submit" disabled={avvia.isPending}>
+                <Button type="submit" className="max-sm:w-full" disabled={avvia.isPending}>
                   <Search aria-hidden /> Avvia la ricerca
                 </Button>
               </div>

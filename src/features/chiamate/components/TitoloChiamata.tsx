@@ -44,7 +44,7 @@ export function TitoloChiamata({ chiamata, modificabile }: { chiamata: Chiamata;
           {chiamata.titolo || TITOLO_DI_DEFAULT}
         </h3>
         {modificabile && (
-          <Button type="button" variant="ghost" size="icon-xs" aria-label="Modifica titolo" onClick={apri}>
+          <Button type="button" variant="ghost" size="icon-xs" className="pointer-coarse:size-9" aria-label="Modifica titolo" onClick={apri}>
             <Pencil />
           </Button>
         )}

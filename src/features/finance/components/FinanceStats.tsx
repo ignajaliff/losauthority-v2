@@ -15,20 +15,20 @@ export function StatCard({ etichetta, valore, nota }: StatCardProps) {
     <Card size="sm">
       <CardContent>
         <div className="text-xs font-medium text-muted-foreground">{etichetta}</div>
-        <div className="mt-1 text-2xl font-semibold tabular-nums tracking-tight">{valore}</div>
+        <div className="mt-1 text-lg font-semibold tabular-nums tracking-tight sm:text-2xl">{valore}</div>
         {nota ? <div className="mt-1 text-xs text-muted-foreground">{nota}</div> : null}
       </CardContent>
     </Card>
   );
 }
 
-/** Le quattro card di testa di Finance. */
+/** Le quattro card di testa di Finance (2×2 già sul telefono, 4 in fila da lg). */
 export function FinanceStats() {
   const { data, isLoading, isError } = useFinanceStats();
 
   if (isLoading) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <SkeletonBlocco key={i} altezza="h-24" />
         ))}
@@ -38,7 +38,7 @@ export function FinanceStats() {
   if (isError || !data) return <ErroreCaricamento />;
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
       <StatCard etichetta="Incassato" valore={formatCurrency(data.incassato)} nota="Totale fatture pagate" />
       <StatCard etichetta="Da incassare" valore={formatCurrency(data.daIncassare)} nota="Fatture non ancora pagate" />
       <StatCard etichetta="Spese del mese" valore={formatCurrency(data.speseMese)} nota="Variabili del mese + fisse attive" />

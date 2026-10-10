@@ -19,7 +19,7 @@ import { Input } from "@/shared/components/ui/input";
 import { Textarea } from "@/shared/components/ui/textarea";
 import { useEliminaConcorrente, useSalvaConcorrente } from "../hooks/useConcorrenti";
 import { concorrenteSchema, concorrenteToForm, formToConcorrente, type ConcorrenteFormValues } from "../schema";
-import { MAX_SOCIAL, type Concorrente } from "../types";
+import { MAX_SOCIAL, TIPI_CONCORRENTE, type Concorrente, type TipoConcorrente } from "../types";
 import { CampoVideo } from "./CampoVideo";
 
 interface ConcorrenteDialogProps {
@@ -27,29 +27,31 @@ interface ConcorrenteDialogProps {
   aperto: boolean;
   /** null → nuova referenza. */
   concorrente: Concorrente | null;
+  /** Tipo proposto per una nuova referenza (la sezione da cui si è aperto il popup). */
+  tipoIniziale?: TipoConcorrente;
   onChiudi: () => void;
 }
 
 /** Popup «Nuova referenza» / «Modifica referenza». Il form vive in un figlio così si rimonta a ogni apertura. */
-export function ConcorrenteDialog({ clienteId, aperto, concorrente, onChiudi }: ConcorrenteDialogProps) {
+export function ConcorrenteDialog({ clienteId, aperto, concorrente, tipoIniziale, onChiudi }: ConcorrenteDialogProps) {
   return (
     <Dialog open={aperto} onOpenChange={(open) => (open ? null : onChiudi())}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="sm:max-h-[90vh] sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{concorrente ? "Modifica referenza" : "Nuova referenza"}</DialogTitle>
-          <DialogDescription>Qualcuno che fa quello che fai tu: dove lo trovi, cosa fa e i video che vuoi tenere come esempio.</DialogDescription>
+          <DialogDescription>Un competitor o un profilo che ti ispira: dove lo trovi, cosa fa e i video che vuoi tenere come esempio.</DialogDescription>
         </DialogHeader>
-        <ConcorrenteForm key={concorrente?.id ?? "nuova"} clienteId={clienteId} concorrente={concorrente} onChiudi={onChiudi} />
+        <ConcorrenteForm key={concorrente?.id ?? `nuova-${tipoIniziale ?? ""}`} clienteId={clienteId} concorrente={concorrente} tipoIniziale={tipoIniziale} onChiudi={onChiudi} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function ConcorrenteForm({ clienteId, concorrente, onChiudi }: Omit<ConcorrenteDialogProps, "aperto">) {
+function ConcorrenteForm({ clienteId, concorrente, tipoIniziale, onChiudi }: Omit<ConcorrenteDialogProps, "aperto">) {
   const salva = useSalvaConcorrente(clienteId);
   const elimina = useEliminaConcorrente(clienteId);
   const [confermaElimina, setConfermaElimina] = useState(false);
-  const form = useForm<ConcorrenteFormValues>({ resolver: zodResolver(concorrenteSchema), defaultValues: concorrenteToForm(concorrente) });
+  const form = useForm<ConcorrenteFormValues>({ resolver: zodResolver(concorrenteSchema), defaultValues: concorrenteToForm(concorrente, tipoIniziale) });
   const occupato = salva.isPending || elimina.isPending;
 
   function onSubmit(values: ConcorrenteFormValues) {
@@ -59,6 +61,36 @@ function ConcorrenteForm({ clienteId, concorrente, onChiudi }: Omit<ConcorrenteD
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-5" noValidate>
+        <FormField
+          control={form.control}
+          name="tipo"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Tipo</FormLabel>
+              <div role="radiogroup" aria-label="Tipo di referenza" className="grid gap-2 sm:grid-cols-2">
+                {TIPI_CONCORRENTE.map((t) => {
+                  const scelto = field.value === t.valore;
+                  return (
+                    <button
+                      key={t.valore}
+                      type="button"
+                      role="radio"
+                      aria-checked={scelto}
+                      disabled={occupato}
+                      onClick={() => field.onChange(t.valore)}
+                      className={`grid gap-0.5 rounded-md border p-3 text-left transition-colors ${scelto ? "border-foreground bg-muted/60" : "hover:bg-muted/40"}`}
+                    >
+                      <span className="text-sm font-medium">{t.etichetta}</span>
+                      <span className="text-xs text-muted-foreground">{t.testo}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <FormField
           control={form.control}
           name="nome"
@@ -115,9 +147,10 @@ function ConcorrenteForm({ clienteId, concorrente, onChiudi }: Omit<ConcorrenteD
               <Trash2 aria-hidden /> Elimina
             </Button>
           ) : (
-            <span />
+            <span className="hidden sm:block" />
           )}
-          <div className="flex gap-2">
+          {/* Sul telefono Annulla e Salva affiancati a metà larghezza, sopra «Elimina». */}
+          <div className="grid grid-cols-2 gap-2 sm:flex">
             <Button type="button" variant="outline" disabled={occupato} onClick={onChiudi}>
               Annulla
             </Button>

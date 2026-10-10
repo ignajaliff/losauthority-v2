@@ -25,7 +25,7 @@ export function SincronizzaInstagram({ cliente }: { cliente: ClienteDettaglio })
         <dl className="grid gap-1">
           <div className="flex gap-2">
             <dt className="w-28 shrink-0 text-muted-foreground">Profilo</dt>
-            <dd>
+            <dd className="min-w-0 break-words">
               {cliente.instagram ? (
                 <a href={cliente.instagram} target="_blank" rel="noreferrer" className="underline underline-offset-4">
                   @{handle ?? cliente.instagram}
@@ -42,7 +42,7 @@ export function SincronizzaInstagram({ cliente }: { cliente: ClienteDettaglio })
           {cliente.instagram_sync_errore ? (
             <div className="flex gap-2">
               <dt className="w-28 shrink-0 text-muted-foreground">Ultimo errore</dt>
-              <dd className="text-destructive">{cliente.instagram_sync_errore}</dd>
+              <dd className="min-w-0 break-words text-destructive">{cliente.instagram_sync_errore}</dd>
             </div>
           ) : null}
         </dl>

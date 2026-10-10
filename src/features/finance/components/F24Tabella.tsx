@@ -27,6 +27,7 @@ export function badgeScadenza(scadenza: string | null, oggi = todayIso()): { var
   return { variante: "outline", testo: `Scade il ${formatDate(scadenza)}` };
 }
 
+/** Rata F24: desktop una riga a 5 colonne; telefono una colonna con importo, scadenza e azioni sotto la descrizione. */
 export function F24Tabella({ righe, onModifica, onElimina }: F24TabellaProps) {
   const apri = useApriFile();
   const toggle = useTogglePagatoF24();
@@ -34,7 +35,7 @@ export function F24Tabella({ righe, onModifica, onElimina }: F24TabellaProps) {
 
   return (
     <Table>
-      <TableHeader>
+      <TableHeader className="hidden md:table-header-group">
         <TableRow>
           <TableHead>Descrizione</TableHead>
           <TableHead className="text-right">Importo</TableHead>
@@ -48,44 +49,58 @@ export function F24Tabella({ righe, onModifica, onElimina }: F24TabellaProps) {
           const badge = f.pagato
             ? { variante: "active" as const, testo: `Pagato${f.pagato_il ? ` il ${formatDate(f.pagato_il)}` : ""}` }
             : badgeScadenza(f.scadenza);
+          const importo = f.importo != null ? formatCurrency(f.importo) : <span className="text-muted-foreground">—</span>;
+          const bottoneStato = (
+            <Button variant={f.pagato ? "ghost" : "secondary"} size="sm" disabled={toggle.isPending} onClick={() => toggle.mutate(f)}>
+              {f.pagato ? "Segna da pagare" : "Segna pagato"}
+            </Button>
+          );
+          const azioni = (
+            <>
+              <Button variant="outline" size="sm" disabled={apri.isPending} onClick={() => apri.mutate({ bucket: BUCKET_F24, path: f.pdf_path })}>
+                <ExternalLink /> PDF
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={rileggi.isPending}
+                title="Faccio rileggere il PDF all'AI: compila questa riga e aggiunge le rate mancanti"
+                onClick={() => rileggi.mutate(f.id)}
+              >
+                <RefreshCw className={rileggi.isPending ? "animate-spin" : undefined} /> Rileggi con AI
+              </Button>
+              <Button variant="ghost" size="icon-sm" aria-label="Modifica F24" onClick={() => onModifica(f)}>
+                <Pencil />
+              </Button>
+              <Button variant="ghost" size="icon-sm" aria-label="Elimina F24" onClick={() => onElimina(f)}>
+                <Trash2 />
+              </Button>
+            </>
+          );
           return (
             <TableRow key={f.id} className={f.pagato ? "text-muted-foreground" : undefined}>
-              <TableCell className="whitespace-normal">
+              <TableCell className="px-0 whitespace-normal md:px-[18px]">
                 <div className="font-medium text-foreground">{f.descrizione || "F24"}</div>
                 <div className="text-xs text-muted-foreground">caricato il {formatDate(f.created_at)}</div>
+                {/* Telefono: importo e scadenza, poi tutte le azioni (vanno a capo). */}
+                <div className="mt-2.5 grid gap-2.5 md:hidden">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                    <span className="font-medium tabular-nums">{importo}</span>
+                    <Badge variant={badge.variante}>{badge.testo}</Badge>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1">
+                    {bottoneStato}
+                    {azioni}
+                  </div>
+                </div>
               </TableCell>
-              <TableCell className="text-right font-medium tabular-nums">
-                {f.importo != null ? formatCurrency(f.importo) : <span className="text-muted-foreground">—</span>}
-              </TableCell>
-              <TableCell className="whitespace-normal">
+              <TableCell className="hidden text-right font-medium tabular-nums md:table-cell">{importo}</TableCell>
+              <TableCell className="hidden whitespace-normal md:table-cell">
                 <Badge variant={badge.variante}>{badge.testo}</Badge>
               </TableCell>
-              <TableCell>
-                <Button variant={f.pagato ? "ghost" : "secondary"} size="sm" disabled={toggle.isPending} onClick={() => toggle.mutate(f)}>
-                  {f.pagato ? "Segna da pagare" : "Segna pagato"}
-                </Button>
-              </TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-1">
-                  <Button variant="outline" size="sm" disabled={apri.isPending} onClick={() => apri.mutate({ bucket: BUCKET_F24, path: f.pdf_path })}>
-                    <ExternalLink /> PDF
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    disabled={rileggi.isPending}
-                    title="Faccio rileggere il PDF all'AI: compila questa riga e aggiunge le rate mancanti"
-                    onClick={() => rileggi.mutate(f.id)}
-                  >
-                    <RefreshCw className={rileggi.isPending ? "animate-spin" : undefined} /> Rileggi con AI
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" aria-label="Modifica F24" onClick={() => onModifica(f)}>
-                    <Pencil />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" aria-label="Elimina F24" onClick={() => onElimina(f)}>
-                    <Trash2 />
-                  </Button>
-                </div>
+              <TableCell className="hidden md:table-cell">{bottoneStato}</TableCell>
+              <TableCell className="hidden text-right md:table-cell">
+                <div className="flex justify-end gap-1">{azioni}</div>
               </TableCell>
             </TableRow>
           );

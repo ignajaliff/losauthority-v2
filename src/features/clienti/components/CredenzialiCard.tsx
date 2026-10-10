@@ -28,21 +28,21 @@ export function CredenzialiCard({ credenziali, onCreaAltro }: CredenzialiCardPro
       <CardContent className="grid gap-4">
         <dl className="grid gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
+            <div className="min-w-0">
               <dt className="text-xs text-muted-foreground">Email</dt>
               <dd className="font-mono text-sm break-all">{credenziali.email}</dd>
             </div>
             <CopiaButton testo={credenziali.email} />
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <div>
+            <div className="min-w-0">
               <dt className="text-xs text-muted-foreground">Password</dt>
               <dd className="font-mono text-sm break-all">{credenziali.password}</dd>
             </div>
             <CopiaButton testo={credenziali.password} />
           </div>
         </dl>
-        <pre className="rounded-lg bg-muted p-3 text-xs whitespace-pre-wrap">{messaggio}</pre>
+        <pre className="rounded-lg bg-muted p-3 text-xs break-words whitespace-pre-wrap">{messaggio}</pre>
         <div className="flex flex-wrap gap-2">
           <CopiaButton testo={messaggio} etichetta="Copia messaggio" variant="default" />
           {credenziali.id ? (

@@ -42,6 +42,8 @@ export default defineConfig(({ command, mode }) => {
         "@contratti": path.resolve(__dirname, "./supabase/functions/_shared/contratti"),
         // Definizione dell'onboarding v3 (domande, condizioni, parole): stessa idea.
         "@onboarding": path.resolve(__dirname, "./supabase/functions/_shared/onboarding"),
+        // Pagine dell'area cliente a cui un sotto-compito rimanda («Fallo qui»): la lista la usa anche aura-compiti.
+        "@area": path.resolve(__dirname, "./supabase/functions/_shared/area"),
       },
     },
     build: {

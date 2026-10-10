@@ -41,9 +41,15 @@ export function StoricoRicerche({ clienteId, ricerche, selezionataId, onApri, on
   return (
     <nav aria-label="Ricerche fatte" className="grid gap-2">
       <p className="eyebrow px-1">Le tue ricerche</p>
-      <ul className="flex flex-wrap gap-2">
+      {/* Sul telefono, con più ricerche, una striscia che scorre di lato: impilate spingerebbero i risultati in fondo. */}
+      <ul
+        className={cn(
+          "flex flex-wrap gap-2",
+          ricerche.length > 1 && "max-sm:-mx-4 max-sm:snap-x max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:scroll-px-4 max-sm:px-4 max-sm:pb-1",
+        )}
+      >
         {ricerche.map((r) => (
-          <li key={r.id} className="group relative w-full sm:w-64">
+          <li key={r.id} className={cn("group relative w-full sm:w-64", ricerche.length > 1 && "max-sm:w-[82%] max-sm:shrink-0 max-sm:snap-start")}>
             <button
               type="button"
               onClick={() => onApri(r.id)}

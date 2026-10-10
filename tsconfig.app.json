@@ -28,7 +28,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@contratti/*": ["./supabase/functions/_shared/contratti/*"],
-      "@onboarding/*": ["./supabase/functions/_shared/onboarding/*"]
+      "@onboarding/*": ["./supabase/functions/_shared/onboarding/*"],
+      "@area/*": ["./supabase/functions/_shared/area/*"]
     }
   },
   "include": ["src"]

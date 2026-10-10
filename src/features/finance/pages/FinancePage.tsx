@@ -26,12 +26,13 @@ export default function FinancePage() {
   return (
     <>
       <PageHeader titolo="Finance" sottotitolo="Fatture, F24 e spese: come sta andando." />
-      <div className="grid gap-6">
+      {/* grid-cols-1 (= minmax(0,1fr)): grafico e tabelle non allargano la pagina sul telefono. */}
+      <div className="grid grid-cols-1 gap-6">
         <FinanceStats />
         <FinanceGrafico />
 
         <Tabs value={tab} onValueChange={cambiaTab}>
-          <TabsList>
+          <TabsList className="w-full pointer-coarse:group-data-horizontal/tabs:h-11 sm:w-fit">
             <TabsTrigger value="fatture">Fatture</TabsTrigger>
             <TabsTrigger value="f24">F24</TabsTrigger>
             <TabsTrigger value="spese">Spese</TabsTrigger>

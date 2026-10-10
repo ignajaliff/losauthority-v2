@@ -27,7 +27,8 @@ function BadgeScheda({ scheda }: { scheda: SchedaOnboardingCliente }) {
     );
   }
   return (
-    <Badge variant="expiring">
+    // Sul telefono la frase è più larga dello schermo: va a capo invece di uscire.
+    <Badge variant="expiring" className="max-md:max-w-full max-md:justify-start max-md:rounded-md max-md:text-left max-md:whitespace-normal">
       {ETICHETTA_FASE[scheda.fase]} · ultimo salvataggio {formatDateTime(scheda.aggiornatoIl)}
     </Badge>
   );

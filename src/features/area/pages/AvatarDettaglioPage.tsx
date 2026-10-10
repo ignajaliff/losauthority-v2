@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Trash2 } from "lucide-react";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/features/auth";
-import { CartaGirevole, FlussoAvatar, useAvatar, useAvatars, useEliminaAvatar, useInviaAvatar, useMessaggiAvatar, type MessaggioAvatar } from "@/features/avatar";
+import { CartaGirevole, FlussoAvatar, SceltaVista, useAvatar, useAvatars, useEliminaAvatar, useInviaAvatar, useMessaggiAvatar, type MessaggioAvatar, type VistaMobile } from "@/features/avatar";
 import { ComposerAura } from "@/features/idee";
 import {
   AlertDialog,
@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/shared/components/ui/badge";
 import { Button } from "@/shared/components/ui/button";
 import { ErroreCaricamento, SkeletonBlocco, StatoVuoto } from "@/shared/components/layout/StatoCaricamento";
+import { cn } from "@/lib/utils";
 
 /**
  * /area/cervello/avatar/:id → a sinistra la conversazione con Aura, a destra la
@@ -31,6 +32,8 @@ export default function AvatarDettaglioPage() {
   /** Testo da rimettere nel composer se l'invio fallisce: non si perde quello che il cliente ha scritto. */
   const [daRipristinare, setDaRipristinare] = useState<string | undefined>(undefined);
   const [confermaElimina, setConfermaElimina] = useState(false);
+  /** Sul telefono si vede una cosa per volta; null = la sceglie lo stato (in costruzione → chat, completa → carta). */
+  const [sceltaVista, setSceltaVista] = useState<VistaMobile | null>(null);
 
   const messaggi = useMessaggiAvatar(id);
   const lista = messaggi.data ?? [];
@@ -60,6 +63,7 @@ export default function AvatarDettaglioPage() {
   }
 
   const completo = a.stato === "completo";
+  const vista: VistaMobile = sceltaVista ?? (completo ? "carta" : "chat");
   const titolare = `${utente.nombre}${a.settore ? ` · ${a.settore}` : ""}`;
 
   function manda(testo: string) {
@@ -83,7 +87,7 @@ export default function AvatarDettaglioPage() {
   return (
     <div className="grid gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link to="/area/cervello/avatar" className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+        <Link to="/area/cervello/avatar" className="inline-flex items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground pointer-coarse:min-h-9">
           <ArrowLeft className="size-3.5" aria-hidden /> Avatar
         </Link>
         <div className="flex items-center gap-2">
@@ -96,20 +100,30 @@ export default function AvatarDettaglioPage() {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(400px,480px)] lg:items-start">
-        <section aria-label="Conversazione con Aura" className="order-2 flex min-h-[460px] flex-col rounded-2xl border bg-card/70 lg:order-1 lg:h-[calc(100dvh-var(--header-h)-9rem)]">
-          <header className="border-b px-5 py-4">
+      <SceltaVista vista={vista} onCambia={setSceltaVista} />
+
+      {/* grid-cols-1 + min-w-0: senza, la riga MRZ della carta allarga la colonna oltre lo schermo. */}
+      <div className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(400px,480px)] lg:items-start">
+        <section
+          aria-label="Conversazione con Aura"
+          className={cn(
+            // Telefono: alta quanto lo schermo libero, così il campo per scrivere resta sempre a vista.
+            "order-2 min-h-[360px] min-w-0 flex-col rounded-2xl border bg-card/70 h-[calc(100dvh-var(--header-h)-13.25rem)] md:h-auto md:min-h-[460px] lg:order-1 lg:h-[calc(100dvh-var(--header-h)-9rem)]",
+            vista === "chat" ? "flex" : "hidden md:flex",
+          )}
+        >
+          <header className="border-b px-4 py-3.5 md:px-5 md:py-4">
             <p className="eyebrow">Conversazione con Aura</p>
             <h2 className="text-[22px] leading-tight">{a.nome ? `Definiamo ${a.nome}` : "Definiamo il tuo cliente ideale"}</h2>
           </header>
-          <div data-chat-scroll className="min-h-0 flex-1 overflow-y-auto p-5 [scrollbar-width:thin]" aria-live="polite">
+          <div data-chat-scroll className="min-h-0 flex-1 overflow-y-auto p-4 [scrollbar-width:thin] md:p-5" aria-live="polite">
             {messaggi.isLoading ? <SkeletonBlocco altezza="h-40" /> : null}
             {messaggi.isError ? <ErroreCaricamento /> : null}
             {messaggi.data ? (
               <FlussoAvatar messaggi={lista} pendente={pendenteVisibile === null ? null : pendenteVisibile.testo} occupato={invia.isPending} onRiprova={riprova} />
             ) : null}
           </div>
-          <div className="shrink-0 p-3">
+          <div className="shrink-0 p-2 md:p-3">
             <ComposerAura
               inAttesa={auraScrive}
               onInvia={manda}
@@ -120,7 +134,7 @@ export default function AvatarDettaglioPage() {
           </div>
         </section>
 
-        <aside className="order-1 lg:order-2 lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]">
+        <aside className={cn("order-1 min-w-0 lg:order-2", vista === "carta" ? "block" : "hidden md:block", "lg:sticky lg:top-[calc(var(--header-h)+1.5rem)]")}>
           <CartaGirevole avatar={a} numero={numero} titolare={titolare} inCompilazione={!completo} />
         </aside>
       </div>

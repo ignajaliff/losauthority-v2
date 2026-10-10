@@ -50,12 +50,15 @@ export function AccettazioneCrm({ clienteId, versione, documenti, rinnovo, onApr
               <button
                 type="button"
                 onClick={() => onApri(d)}
-                className="inline-flex items-center gap-2 text-sm font-medium underline-offset-4 hover:underline"
+                className="inline-flex items-start gap-2 text-left text-sm font-medium underline-offset-4 hover:underline pointer-coarse:py-2 md:items-center"
               >
-                <FileText className="size-4 text-muted-foreground" aria-hidden />
-                {d.titolo}
-                <span className="text-xs font-normal text-muted-foreground">· versione {d.versione}</span>
-                {d.bozza ? <Badge variant="expiring">Bozza</Badge> : null}
+                <FileText className="mt-0.5 size-4 shrink-0 text-muted-foreground md:mt-0" aria-hidden />
+                {/* Sul telefono il titolo va a capo come testo, con versione e bozza in coda. */}
+                <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+                  <span>{d.titolo}</span>
+                  <span className="text-xs font-normal whitespace-nowrap text-muted-foreground">· versione {d.versione}</span>
+                  {d.bozza ? <Badge variant="expiring">Bozza</Badge> : null}
+                </span>
               </button>
             </li>
           ))}

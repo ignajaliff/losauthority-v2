@@ -7,9 +7,7 @@ import {
   useAssegnaChiamata,
   useChiamateCliente,
   useChiamateNonAssegnate,
-  useFaseCliente,
 } from "../hooks/useChiamate";
-import { callSuggeritaDaFase } from "../types";
 import { ChiamataCard } from "./ChiamataCard";
 
 /** Call arrivate da Fathom senza cliente: il team le può agganciare a questo cliente. */
@@ -52,8 +50,6 @@ export function ChiamateCliente({ clienteId }: { clienteId: string }) {
   const { utente } = useAuth();
   const team = esTeam(utente?.rol ?? null);
   const { data: chiamate, isLoading, isError } = useChiamateCliente(clienteId);
-  const { data: fase } = useFaseCliente(clienteId);
-  const callSuggerita = callSuggeritaDaFase(fase);
 
   if (isLoading) return <SkeletonBlocco altezza="h-64" />;
   if (isError) return <ErroreCaricamento messaggio="Non è stato possibile caricare le call." />;
@@ -67,9 +63,7 @@ export function ChiamateCliente({ clienteId }: { clienteId: string }) {
           testo="Le call registrate su Fathom con l'email del cliente compaiono qui da sole."
         />
       ) : (
-        chiamate.map((c) => (
-          <ChiamataCard key={c.id} chiamata={c} team={team} callSuggerita={callSuggerita} />
-        ))
+        chiamate.map((c) => <ChiamataCard key={c.id} chiamata={c} team={team} />)
       )}
     </div>
   );

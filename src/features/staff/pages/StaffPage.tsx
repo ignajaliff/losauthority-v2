@@ -34,7 +34,7 @@ export default function StaffPage() {
           <button
             type="button"
             onClick={() => navigate("/staff/nuovo")}
-            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/80"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/80 pointer-coarse:h-9"
           >
             <Plus className="size-4" aria-hidden />
             Nuovo staff

@@ -50,61 +50,89 @@ export function FattureTabella({ fatture, soloLettura }: FattureTabellaProps) {
     elimina.mutate(daEliminare, { onSuccess: () => setDaEliminare(null) });
   }
 
+  const pulsantePdf = (f: Fattura) =>
+    f.pdf_path ? (
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={apri.isPending}
+        onClick={() => apri.mutate({ bucket: BUCKET_FATTURE, path: f.pdf_path as string })}
+      >
+        <ExternalLink /> Apri
+      </Button>
+    ) : null;
+
+  const azioni = (f: Fattura) => (
+    <>
+      <Button variant={f.pagata ? "ghost" : "secondary"} size="sm" disabled={toggle.isPending} onClick={() => toggle.mutate(f)}>
+        {f.pagata ? "Segna da pagare" : "Segna pagata"}
+      </Button>
+      <Button variant="ghost" size="icon-sm" aria-label="Elimina fattura" onClick={() => setDaEliminare(f)}>
+        <Trash2 />
+      </Button>
+    </>
+  );
+
   return (
     <>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Descrizione</TableHead>
-            <TableHead className="text-right">Importo</TableHead>
-            <TableHead>Emessa il</TableHead>
-            <TableHead>Stato</TableHead>
-            <TableHead>PDF</TableHead>
-            {soloLettura ? null : <TableHead className="text-right">Azioni</TableHead>}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {fatture.map((f) => (
-            <TableRow key={f.id}>
-              <TableCell className="whitespace-normal">
+      {/* Telefono: una scheda per fattura con le stesse informazioni e azioni delle colonne. */}
+      <ul className="divide-y md:hidden">
+        {fatture.map((f) => (
+          <li key={f.id} className="grid gap-2 py-3 first:pt-0 last:pb-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 break-words">
                 <div className="font-medium">{f.descrizione || "Fattura"}</div>
                 {f.note ? <div className="text-xs text-muted-foreground">{f.note}</div> : null}
-              </TableCell>
-              <TableCell className="text-right font-medium tabular-nums">{formatCurrency(f.importo)}</TableCell>
-              <TableCell className="text-muted-foreground">{formatDate(f.emessa_il)}</TableCell>
-              <TableCell className="whitespace-normal">
-                <StatoFattura fattura={f} />
-              </TableCell>
-              <TableCell>
-                {f.pdf_path ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={apri.isPending}
-                    onClick={() => apri.mutate({ bucket: BUCKET_FATTURE, path: f.pdf_path as string })}
-                  >
-                    <ExternalLink /> Apri
-                  </Button>
-                ) : (
-                  <span className="text-xs text-muted-foreground">—</span>
-                )}
-              </TableCell>
-              {soloLettura ? null : (
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1.5">
-                    <Button variant={f.pagata ? "ghost" : "secondary"} size="sm" disabled={toggle.isPending} onClick={() => toggle.mutate(f)}>
-                      {f.pagata ? "Segna da pagare" : "Segna pagata"}
-                    </Button>
-                    <Button variant="ghost" size="icon-sm" aria-label="Elimina fattura" onClick={() => setDaEliminare(f)}>
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </TableCell>
-              )}
+              </div>
+              <span className="shrink-0 font-medium tabular-nums">{formatCurrency(f.importo)}</span>
+            </div>
+            <span className="text-xs text-muted-foreground">Emessa il {formatDate(f.emessa_il)}</span>
+            <StatoFattura fattura={f} />
+            {f.pdf_path || !soloLettura ? (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                {pulsantePdf(f)}
+                {soloLettura ? null : azioni(f)}
+              </div>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Descrizione</TableHead>
+              <TableHead className="text-right">Importo</TableHead>
+              <TableHead>Emessa il</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead>PDF</TableHead>
+              {soloLettura ? null : <TableHead className="text-right">Azioni</TableHead>}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {fatture.map((f) => (
+              <TableRow key={f.id}>
+                <TableCell className="whitespace-normal">
+                  <div className="font-medium">{f.descrizione || "Fattura"}</div>
+                  {f.note ? <div className="text-xs text-muted-foreground">{f.note}</div> : null}
+                </TableCell>
+                <TableCell className="text-right font-medium tabular-nums">{formatCurrency(f.importo)}</TableCell>
+                <TableCell className="text-muted-foreground">{formatDate(f.emessa_il)}</TableCell>
+                <TableCell className="whitespace-normal">
+                  <StatoFattura fattura={f} />
+                </TableCell>
+                <TableCell>{pulsantePdf(f) ?? <span className="text-xs text-muted-foreground">—</span>}</TableCell>
+                {soloLettura ? null : (
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1.5">{azioni(f)}</div>
+                  </TableCell>
+                )}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       <ConfermaEliminazione
         open={daEliminare !== null}

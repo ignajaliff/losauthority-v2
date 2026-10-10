@@ -1,4 +1,6 @@
-import { ExternalLink, GraduationCap } from "lucide-react";
+import { ArrowUpRight, ExternalLink, GraduationCap } from "lucide-react";
+import { Link } from "react-router-dom";
+import { paginaArea } from "@area/pagine.ts";
 import { avanzamento, eFatto, type Compito, type StatoCompito, type Tappa } from "@/features/clienti";
 import { Badge } from "@/shared/components/ui/badge";
 import { Checkbox } from "@/shared/components/ui/checkbox";
@@ -25,16 +27,36 @@ function LezioneDelCompito({ url, nota, lezione }: { url: string; nota: string |
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-md bg-muted/60 py-1 pr-2 pl-1.5 text-xs text-foreground transition-colors hover:bg-muted"
+      className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-md bg-muted/60 py-1 pr-2 pl-1.5 text-xs text-foreground transition-colors hover:bg-muted pointer-coarse:min-h-9"
     >
       <GraduationCap className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
-      <span className="truncate">
+      {/* Sul telefono il titolo va a capo invece di troncarsi (una riga nowrap allargherebbe tutta la pagina). */}
+      <span className="truncate max-sm:whitespace-normal">
         <span className="text-muted-foreground">Ti aiuta la lezione </span>
         <span className="font-medium">{lezione ? `«${lezione.titolo}»` : "su Skool"}</span>
         {nota ? <span className="text-muted-foreground"> · {nota}</span> : null}
       </span>
       <ExternalLink className="size-3 shrink-0 text-muted-foreground" aria-hidden />
     </a>
+  );
+}
+
+/** «Fallo qui: Offerta»: la pagina dell'area dove si fa il sotto-compito. */
+function PaginaDelCompito({ chiave }: { chiave: string }) {
+  const pagina = paginaArea(chiave);
+  if (!pagina) return null;
+  return (
+    <Link
+      to={pagina.percorso}
+      className="mt-1.5 inline-flex max-w-full items-center gap-1.5 rounded-md border border-foreground/15 py-1 pr-2 pl-1.5 text-xs text-foreground transition-colors hover:bg-muted pointer-coarse:min-h-9"
+    >
+      <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      {/* Sul telefono il titolo va a capo invece di troncarsi (una riga nowrap allargherebbe tutta la pagina). */}
+      <span className="truncate max-sm:whitespace-normal">
+        <span className="text-muted-foreground">Fallo qui: </span>
+        <span className="font-medium">{pagina.titolo}</span>
+      </span>
+    </Link>
   );
 }
 
@@ -62,7 +84,12 @@ function RigaSpunta({
           <span className="whitespace-pre-wrap">{etichetta}</span>
           {fatto && compito.completato_il ? <span className="mt-0.5 block text-xs no-underline">Fatto il {formatDate(compito.completato_il)}</span> : null}
         </label>
-        {compito.link_skool ? <LezioneDelCompito url={compito.link_skool} nota={compito.nota_skool} lezione={lezioni.get(compito.link_skool)} /> : null}
+        {compito.pagina || compito.link_skool ? (
+          <div className="flex flex-wrap gap-x-2">
+            {compito.pagina ? <PaginaDelCompito chiave={compito.pagina} /> : null}
+            {compito.link_skool ? <LezioneDelCompito url={compito.link_skool} nota={compito.nota_skool} lezione={lezioni.get(compito.link_skool)} /> : null}
+          </div>
+        ) : null}
       </div>
     </li>
   );
@@ -78,7 +105,7 @@ export function DettaglioTappa({ tappa, numero, totale, direzione, lezioni, occu
   return (
     <article
       // marmo-tappe-scheda: movimento minimo anche con "riduci movimento" attivo (index.css); entra dal lato verso cui si va.
-      className={`marmo-tappe-scheda grid gap-5 rounded-2xl border bg-card p-6 shadow-xs animate-in fade-in fill-mode-both duration-400 ease-out ${
+      className={`marmo-tappe-scheda grid min-w-0 gap-5 rounded-2xl border bg-card p-5 shadow-xs sm:p-6 animate-in fade-in fill-mode-both duration-400 ease-out ${
         direzione === "avanti" ? "slide-in-from-right-6 motion-reduce:slide-in-from-right-2" : "slide-in-from-left-6 motion-reduce:slide-in-from-left-2"
       }`}
     >
@@ -105,7 +132,7 @@ export function DettaglioTappa({ tappa, numero, totale, direzione, lezioni, occu
         <Progress value={percento} aria-label={`Avanzamento della tappa: ${percento}%`} />
       </div>
 
-      <ul className="divide-y">
+      <ul className="min-w-0 divide-y">
         {tappa.figli.length > 0 ? (
           tappa.figli.map((f) => <RigaSpunta key={f.id} compito={f} etichetta={f.testo} lezioni={lezioni} occupato={occupato} onSpunta={onSpunta} />)
         ) : (

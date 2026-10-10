@@ -23,7 +23,7 @@ export default function AvatarPage() {
   const avatars = lista.data ?? [];
   return (
     <div className="grid gap-7">
-      <Link to="/area/cervello" className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+      <Link to="/area/cervello" className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground pointer-coarse:-my-2 pointer-coarse:min-h-9 pointer-coarse:py-2">
         <ArrowLeft className="size-3.5" aria-hidden /> Cervello del tuo branding
       </Link>
       <PageHeader

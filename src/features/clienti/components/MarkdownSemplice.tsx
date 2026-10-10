@@ -53,7 +53,7 @@ function parse(md: string): Blocco[] {
 
 export function MarkdownSemplice({ testo }: { testo: string }) {
   return (
-    <div className="grid gap-3 text-sm leading-relaxed">
+    <div className="grid gap-3 text-sm leading-relaxed break-words">
       {parse(testo).map((b, i) => {
         if (b.tipo === "h") {
           const classe = b.livello === 1 ? "text-lg font-semibold" : b.livello === 2 ? "text-base font-semibold" : "text-sm font-semibold";

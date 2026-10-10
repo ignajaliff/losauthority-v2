@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { RotateCcw } from "lucide-react";
-import { PensieroAura } from "@/features/idee";
+import { PensieroAura, scorriChatInFondo } from "@/features/idee";
 import { AuraSfera } from "@/shared/components/brand/AuraSfera";
 import { Button } from "@/shared/components/ui/button";
 import { FASI_COACH, leggiCapitolo, type LezioneCoach, type MessaggioCoach } from "../types";
@@ -29,10 +29,9 @@ export function FlussoCoach({ messaggi, lezioni, pendente, occupato, onRiprova }
   const ultimoId = messaggi.at(-1)?.id;
   const ultimoStato = messaggi.at(-1)?.stato;
 
-  // Scorre solo il contenitore della chat (vedi FlussoMessaggi: scrollIntoView in Safari trascina anche gli antenati).
+  // Da md scorre solo il contenitore della chat, sul telefono la finestra (vedi scorriChatInFondo).
   useEffect(() => {
-    const contenitore = fineRef.current?.closest<HTMLElement>("[data-chat-scroll]");
-    if (contenitore) contenitore.scrollTo({ top: contenitore.scrollHeight, behavior: "smooth" });
+    scorriChatInFondo(fineRef.current);
   }, [ultimoId, ultimoStato, lezioni.length, pendente]);
 
   /** Le lezioni consigliate in una risposta, ciascuna con il capitolo salvato allo stesso indice (se c'è). */

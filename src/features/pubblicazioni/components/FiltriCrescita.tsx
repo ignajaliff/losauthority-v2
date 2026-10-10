@@ -24,12 +24,13 @@ interface MeseSelectProps {
 /** «Da [mese]» o «a [mese]»: etichetta visibile corta, nome accessibile completo. */
 function MeseSelect({ etichetta, descrizione, valore, mesi, etichette, onScelta }: MeseSelectProps) {
   return (
-    <div className="flex items-center gap-2 whitespace-nowrap">
+    // Sul telefono etichetta e menu diventano celle della griglia del genitore (contents): i due menu si allineano a tutta larghezza.
+    <div className="contents sm:flex sm:items-center sm:gap-2 sm:whitespace-nowrap">
       <span className="text-muted-foreground" aria-hidden>
         {etichetta}
       </span>
       <Select value={valore} items={etichette} onValueChange={(v) => v && onScelta(v)}>
-        <SelectTrigger size="sm" className="w-40 capitalize" aria-label={descrizione}>
+        <SelectTrigger size="sm" className="w-full capitalize pointer-coarse:data-[size=sm]:h-10 sm:w-40" aria-label={descrizione}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -61,7 +62,7 @@ export function FiltriCrescita({ scelte, onScelte, mesi, da, a, onPeriodo }: Fil
         {SERIE.map((s) => (
           <label
             key={s}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+            className="inline-flex cursor-pointer items-center gap-2 rounded-md border bg-card px-3 py-1.5 text-sm has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring pointer-coarse:py-2"
           >
             <Checkbox checked={scelte.includes(s)} onCheckedChange={(v) => alterna(s, v === true)} />
             <span className="size-2.5 rounded-full" style={{ backgroundColor: COLORE_SERIE[s] }} aria-hidden />
@@ -70,7 +71,7 @@ export function FiltriCrescita({ scelte, onScelte, mesi, da, a, onPeriodo }: Fil
         ))}
       </fieldset>
 
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+      <div className="grid w-full grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2 text-sm sm:flex sm:w-auto sm:flex-wrap">
         <MeseSelect
           etichetta="Da"
           descrizione="Dal mese"

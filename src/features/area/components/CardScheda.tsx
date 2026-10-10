@@ -16,7 +16,10 @@ const AZIONE_STATO: Record<StatoScheda, string> = {
   inviato: "Rivedi",
 };
 
-/** La scheda onboarding come card cliccabile (Marmo): icona, occhiello, titolo, stato. */
+/**
+ * La scheda onboarding come card cliccabile (Marmo): icona, occhiello, titolo, stato.
+ * Sotto sm stato e azione scendono in una riga a tutta larghezza: il testo resta accanto all'icona.
+ */
 export function CardScheda({ clienteId }: { clienteId: string }) {
   const { data, isLoading, isError } = useStatoScheda(clienteId);
   const q = SCHEDA_ONBOARDING;
@@ -28,7 +31,7 @@ export function CardScheda({ clienteId }: { clienteId: string }) {
     <section aria-label="La tua scheda">
       <Link
         to={`/area/${q.slug}`}
-        className="flex flex-wrap items-center gap-[18px] rounded-2xl border bg-card px-6 py-[22px] transition-[border-color,box-shadow] hover:border-input hover:shadow-sm"
+        className="flex flex-wrap items-center gap-[18px] rounded-2xl border bg-card px-5 py-5 transition-[border-color,box-shadow] hover:border-input hover:shadow-sm sm:px-6 sm:py-[22px]"
       >
         <span
           aria-hidden
@@ -41,7 +44,7 @@ export function CardScheda({ clienteId }: { clienteId: string }) {
           <span className="mt-0.5 mb-1 block font-display text-[22px] leading-tight font-medium text-foreground">{q.titolo}</span>
           <span className="block text-[13.5px] leading-relaxed text-muted-foreground">{q.sottotitolo}</span>
         </span>
-        <span className="flex shrink-0 flex-col items-end gap-2.5">
+        <span className="flex shrink-0 flex-col items-end gap-2.5 max-sm:w-full max-sm:flex-row max-sm:items-center max-sm:justify-between">
           <Badge variant={TONO_STATO[data.stato]} dot={data.stato === "inviato"}>
             {ETICHETTA_STATO_SCHEDA[data.stato]}
           </Badge>

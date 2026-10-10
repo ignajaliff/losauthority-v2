@@ -75,7 +75,7 @@ export function CampoFasce({ domanda, valore, onChange, parole, opzioni, disabil
       {opzioni.map((opt) => (
         <div key={opt.value} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-input px-3 py-2">
           <span className="text-sm">{conParole(opt.label, parole)}</span>
-          <div role="radiogroup" aria-label={conParole(opt.label, parole)} className="flex gap-1.5">
+          <div role="radiogroup" aria-label={conParole(opt.label, parole)} className="flex flex-wrap gap-1.5">
             {FASCE_ORE.map((f) => {
               const sel = valore[opt.value] === f.value;
               return (
@@ -86,7 +86,7 @@ export function CampoFasce({ domanda, valore, onChange, parole, opzioni, disabil
                   aria-checked={sel}
                   variant={sel ? "default" : "outline"}
                   size="xs"
-                  className="tabular-nums"
+                  className="tabular-nums pointer-coarse:h-9 pointer-coarse:min-w-9"
                   disabled={disabilitato}
                   onClick={() => onChange({ ...valore, [opt.value]: sel ? "" : f.value })}
                 >

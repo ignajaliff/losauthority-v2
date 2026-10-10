@@ -19,7 +19,7 @@ const COLORE_DIREZIONE = {
 /** Contatore della dashboard (Marmo): occhiello + cifra in mono. */
 export function StatCard({ etichetta, valore, caricamento, nota, direzione = "piatta" }: StatCardProps) {
   return (
-    <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card px-6 py-5">
+    <div className="flex min-w-0 flex-col gap-3 rounded-lg border bg-card px-4 py-4 sm:px-6 sm:py-5">
       <span className="eyebrow text-[11px] tracking-[0.12em]">{etichetta}</span>
       {caricamento ? (
         <Skeleton className="h-8 w-16" />

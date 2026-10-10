@@ -15,7 +15,7 @@ export function CardConcorrente({ concorrente: c, onModifica }: CardConcorrenteP
     <Card className="h-full">
       <CardHeader className="justify-items-center gap-3 text-center">
         <Monogramma nome={c.nome} dimensione="xl" className="rounded-full" />
-        <CardTitle className="font-display text-2xl leading-tight font-medium">{c.nome}</CardTitle>
+        <CardTitle className="font-display text-2xl leading-tight font-medium wrap-anywhere">{c.nome}</CardTitle>
         {c.social.length > 0 ? (
           <ul className="flex flex-wrap justify-center gap-2">
             {c.social.map((url) => {
@@ -43,7 +43,7 @@ export function CardConcorrente({ concorrente: c, onModifica }: CardConcorrenteP
         <section className="grid gap-1.5">
           <h3 className="eyebrow text-[10px]">Cosa fa</h3>
           {c.cosa_fa ? (
-            <p className="text-sm leading-relaxed whitespace-pre-line">{c.cosa_fa}</p>
+            <p className="text-sm leading-relaxed whitespace-pre-line wrap-anywhere">{c.cosa_fa}</p>
           ) : (
             <p className="text-sm text-muted-foreground">Non hai ancora scritto cosa fa.</p>
           )}
@@ -61,14 +61,14 @@ export function CardConcorrente({ concorrente: c, onModifica }: CardConcorrenteP
                     href={v.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex w-fit items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline"
+                    className="inline-flex w-fit items-center gap-1.5 text-sm font-medium underline-offset-4 hover:underline pointer-coarse:min-h-9"
                   >
                     <Icona className="size-3.5 text-muted-foreground" aria-hidden />
                     Video {i + 1} · {etichetta}
                     <ExternalLink className="size-3 text-muted-foreground" aria-hidden />
                   </a>
                   {v.descrizione ? (
-                    <p className="text-[13px] leading-relaxed whitespace-pre-line text-muted-foreground">{v.descrizione}</p>
+                    <p className="text-[13px] leading-relaxed whitespace-pre-line text-muted-foreground wrap-anywhere">{v.descrizione}</p>
                   ) : (
                     <p className="text-[13px] text-muted-foreground/70">Senza descrizione.</p>
                   )}

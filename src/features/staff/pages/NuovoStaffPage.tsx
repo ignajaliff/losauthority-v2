@@ -14,7 +14,7 @@ export default function NuovoStaffPage() {
 
   return (
     <div className="mx-auto grid max-w-lg gap-4">
-      <Link to="/staff" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
+      <Link to="/staff" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground pointer-coarse:min-h-9">
         <ArrowLeft className="size-4" aria-hidden />
         Staff
       </Link>

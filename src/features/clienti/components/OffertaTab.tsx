@@ -5,6 +5,7 @@ import { ErroreCaricamento, SkeletonBlocco, StatoVuoto } from "@/shared/componen
 import { formatDate } from "@/shared/utils/formatDate";
 import { cn } from "@/lib/utils";
 import type { ClienteDettaglio } from "../types";
+import { STRISCIA_MOBILE, VOCE_STRISCIA_MOBILE } from "./striscia";
 
 /**
  * Tab "Offerta" della scheda cliente: le offerte che il cliente ha costruito
@@ -28,7 +29,8 @@ export function OffertaTab({ cliente }: { cliente: ClienteDettaglio }) {
 
   return (
     <div className="grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
-      <nav aria-label="Offerte del cliente" className="grid gap-2">
+      {/* Telefono, con più voci: una striscia che scorre di lato, così la carta scelta resta subito sotto. */}
+      <nav aria-label="Offerte del cliente" className={cn("grid gap-2", offerte.length > 1 && STRISCIA_MOBILE)}>
         {offerte.map((o, i) => {
           const attiva = scelta?.id === o.id;
           return (
@@ -39,6 +41,7 @@ export function OffertaTab({ cliente }: { cliente: ClienteDettaglio }) {
               aria-current={attiva ? "true" : undefined}
               className={cn(
                 "grid gap-1 rounded-lg border p-3 text-left transition-colors",
+                offerte.length > 1 && VOCE_STRISCIA_MOBILE,
                 attiva ? "border-foreground/40 bg-card shadow-xs" : "border-border bg-card/60 hover:bg-card",
               )}
             >

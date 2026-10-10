@@ -228,10 +228,10 @@ function FlowCompilazione({ utente, iniziale, onInviata }: FlowCompilazioneProps
     <div className="grid gap-4">
       <div ref={inizioRef} />
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <Link to="/area" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+        <Link to="/area" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground pointer-coarse:-my-2 pointer-coarse:py-2">
           <ArrowLeft className="size-4" aria-hidden /> La tua area
         </Link>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span className="text-xs text-muted-foreground">
             {scheda.occhiello} · {scheda.titolo}
           </span>

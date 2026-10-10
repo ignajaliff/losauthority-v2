@@ -15,9 +15,14 @@ import {
 } from "@/shared/components/ui/dialog";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/shared/components/ui/form";
 import { Input } from "@/shared/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/components/ui/select";
 import { Textarea } from "@/shared/components/ui/textarea";
+import { PAGINE_AREA } from "@area/pagine.ts";
 import { useAggiungiCompito } from "../hooks/useCompiti";
-import { compitoSchema, type CompitoValues } from "../schema";
+import { compitoSchema, type CompitoValues, NESSUNA_PAGINA } from "../schema";
+
+/** Voci del select «Fallo qui»: nessuna pagina + le pagine dell'area cliente. */
+const ETICHETTE_PAGINE: Record<string, string> = Object.fromEntries([[NESSUNA_PAGINA, "Nessuna"], ...PAGINE_AREA.map((p) => [p.chiave, p.titolo])]);
 
 interface NuovoCompitoDialogProps {
   clienteId: string;
@@ -32,7 +37,7 @@ export function NuovoCompitoDialog({ clienteId, padre }: NuovoCompitoDialogProps
   const { utente } = useAuth();
   const [aperto, setAperto] = useState(false);
   const aggiungi = useAggiungiCompito(clienteId);
-  const vuoto: CompitoValues = { testo: "", link_skool: "", nota_skool: "" };
+  const vuoto: CompitoValues = { testo: "", link_skool: "", nota_skool: "", pagina: NESSUNA_PAGINA };
   const form = useForm<CompitoValues>({ resolver: zodResolver(compitoSchema), defaultValues: vuoto });
 
   function onOpenChange(open: boolean) {
@@ -50,6 +55,7 @@ export function NuovoCompitoDialog({ clienteId, padre }: NuovoCompitoDialogProps
         padreId: padre?.id ?? null,
         linkSkool: padre ? values.link_skool || null : null,
         notaSkool: padre ? values.nota_skool || null : null,
+        pagina: padre && values.pagina !== NESSUNA_PAGINA ? values.pagina : null,
       },
       { onSuccess: () => setAperto(false) },
     );
@@ -95,6 +101,34 @@ export function NuovoCompitoDialog({ clienteId, padre }: NuovoCompitoDialogProps
                 </FormItem>
               )}
             />
+            {padre ? (
+              <FormField
+                control={form.control}
+                name="pagina"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Si fa in questa pagina dell'area (facoltativo)</FormLabel>
+                    <FormControl>
+                      <Select items={ETICHETTE_PAGINE} value={field.value} onValueChange={(v) => field.onChange(v ?? NESSUNA_PAGINA)} disabled={aggiungi.isPending}>
+                        <SelectTrigger className="w-full" aria-label="Pagina dell'area cliente">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NESSUNA_PAGINA}>Nessuna</SelectItem>
+                          {PAGINE_AREA.map((p) => (
+                            <SelectItem key={p.chiave} value={p.chiave}>
+                              {p.titolo}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormDescription>Il cliente vedrà «Fallo qui: Offerta» con il link diretto alla pagina.</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            ) : null}
             {padre ? (
               <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
                 <FormField

@@ -34,7 +34,7 @@ function RigaPiattaforma({ p, piattaforma, onRileva }: { p: Pubblicazione; piatt
 
   return (
     <div className="grid gap-2 rounded-lg border bg-muted/40 p-3">
-      <div className="flex items-center justify-between gap-2">
+      <div className="flex items-center justify-between gap-2 max-sm:flex-wrap max-sm:gap-y-0.5">
         <span className="inline-flex items-center gap-1.5 text-sm font-medium">
           <IconaPiattaforma piattaforma={piattaforma} className="size-4" />
           {ETICHETTA_PIATTAFORMA[piattaforma]}
@@ -43,12 +43,13 @@ function RigaPiattaforma({ p, piattaforma, onRileva }: { p: Pubblicazione; piatt
           {ultima ? `Rilevato ${formatMomento(ultima.rilevata_il)}${ultima.origine === "instagram" ? " · automatico" : ""}` : "Nessun dato"}
         </span>
       </div>
-      <dl className="grid grid-cols-3 gap-2">
+      {/* Sul telefono le colonne seguono la larghezza delle etichette: «Visualizzazioni» non finisce sopra «Mi piace». */}
+      <dl className="grid grid-cols-[repeat(3,auto)] justify-between gap-2 sm:grid-cols-3 sm:justify-normal">
         {CAMPI_METRICA.map((c) => {
           const delta = ultima ? formatDelta(ultima[c], precedente?.[c]) : null;
           return (
             <div key={c} className="min-w-0">
-              <dt className="eyebrow text-[10px]">{ETICHETTA_CAMPO_METRICA[c]}</dt>
+              <dt className="eyebrow text-[10px] max-sm:tracking-[0.1em]">{ETICHETTA_CAMPO_METRICA[c]}</dt>
               <dd className="figure text-lg leading-tight">{formatConteggio(ultima?.[c])}</dd>
               {delta ? (
                 <dd className={cn("text-[11px]", delta.startsWith("+") ? "text-status-active" : "text-muted-foreground")}>
@@ -75,7 +76,12 @@ function Provenienza({ p }: { p: Pubblicazione }) {
     <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
       <span>{data}</span>
       {eInstagram(p) && p.url ? (
-        <a href={p.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 underline-offset-4 hover:underline">
+        <a
+          href={p.url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-1 underline-offset-4 hover:underline pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
+        >
           Apri su Instagram <ExternalLink className="size-3" aria-hidden />
         </a>
       ) : null}
@@ -124,7 +130,7 @@ export function CardPubblicazione({ pubblicazione: p, onModifica, onRileva, onEl
             type="button"
             onClick={() => setStoricoAperto((v) => !v)}
             aria-expanded={storicoAperto}
-            className="flex items-center justify-between text-sm font-medium"
+            className="flex items-center justify-between text-sm font-medium pointer-coarse:-my-2 pointer-coarse:min-h-10"
           >
             Storico rilevazioni · {p.metriche.length}
             <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", storicoAperto && "rotate-180")} aria-hidden />

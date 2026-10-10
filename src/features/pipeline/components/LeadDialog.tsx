@@ -44,7 +44,7 @@ export function LeadDialog({ open, onOpenChange, lead }: LeadDialogProps) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="w-full gap-0 overflow-y-auto sm:max-w-[440px]">
-        <SheetHeader className="border-b px-6 py-[18px]">
+        <SheetHeader className="border-b px-4 py-[18px] pr-12 sm:px-6">
           <SheetTitle className="font-display text-xl font-medium">{lead ? "Modifica lead" : "Nuovo lead"}</SheetTitle>
           <SheetDescription>
             {lead ? "Aggiorna i dati e la prossima azione." : "Aggiungi un contatto alla pipeline."}
@@ -84,7 +84,7 @@ function LeadForm({ lead, onChiudi }: { lead: Lead | null; onChiudi: () => void 
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-6" noValidate>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4 p-4 sm:p-6" noValidate>
         <FormField
           control={form.control}
           name="nome"
@@ -217,7 +217,7 @@ function LeadForm({ lead, onChiudi }: { lead: Lead | null; onChiudi: () => void 
           )}
         />
 
-        <SheetFooter className="flex-row items-center justify-between p-0 pt-2">
+        <SheetFooter className="flex-row flex-wrap items-center justify-between p-0 pt-2">
           {lead ? (
             <Button
               type="button"

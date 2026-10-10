@@ -5,6 +5,7 @@ import { Button } from "@/shared/components/ui/button";
 import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
 import { Monogramma } from "@/shared/components/brand/Monogramma";
 import { ContenutoPagina } from "@/shared/components/layout/ContenutoPagina";
+import { MenuMobile } from "@/shared/components/layout/MenuMobile";
 import { cn } from "@/lib/utils";
 
 interface VocePercorso {
@@ -26,15 +27,14 @@ const VOCI_PERCORSO: VocePercorso[] = [
 
 const HREF_CERVELLO = "/area/cervello";
 
-function VoceNav({ voce, compatta = false }: { voce: VocePercorso; compatta?: boolean }) {
+function VoceNav({ voce }: { voce: VocePercorso }) {
   const Icon = voce.icon;
   return (
     <NavLink
       to={voce.href}
       className={({ isActive }) =>
         cn(
-          "flex shrink-0 items-center gap-3 rounded-md text-sm transition-colors",
-          compatta ? "px-3 py-2" : "px-3 py-2.5",
+          "flex shrink-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
           isActive
             ? "bg-sidebar-accent font-semibold text-sidebar-foreground [&_svg]:opacity-100"
             : "font-medium text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground [&_svg]:opacity-70",
@@ -48,23 +48,7 @@ function VoceNav({ voce, compatta = false }: { voce: VocePercorso; compatta?: bo
 }
 
 /** La voce "Cervello del tuo branding": più importante delle altre, quindi una card con il cervello e il titolo in serif (attiva anche nelle sottopagine). */
-function VoceCervello({ compatta = false }: { compatta?: boolean }) {
-  if (compatta) {
-    return (
-      <NavLink
-        to={HREF_CERVELLO}
-        className={({ isActive }) =>
-          cn(
-            "flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
-            isActive ? "border-foreground bg-foreground text-background" : "border-border text-foreground hover:bg-sidebar-accent/70",
-          )
-        }
-      >
-        <Brain className="size-4" strokeWidth={1.5} aria-hidden />
-        Cervello
-      </NavLink>
-    );
-  }
+function VoceCervello() {
   return (
     <NavLink
       to={HREF_CERVELLO}
@@ -88,31 +72,45 @@ function VoceCervello({ compatta = false }: { compatta?: boolean }) {
   );
 }
 
-function SidebarPercorso() {
+function NavPercorso() {
+  return (
+    <nav aria-label="Il tuo percorso" className="flex flex-1 flex-col gap-0.5 px-3.5 pt-4 pb-4">
+      {VOCI_PERCORSO.map((v) => (
+        <VoceNav key={v.href} voce={v} />
+      ))}
+      <div className="pt-5">
+        <VoceCervello />
+      </div>
+    </nav>
+  );
+}
+
+function UtentePercorso() {
   const { utente } = useAuth();
   return (
+    <div className="flex min-w-0 items-center gap-[11px] px-2.5 py-2">
+      <Monogramma nome={utente?.nombre || utente?.email} inverso />
+      <span className="min-w-0">
+        <span className="block truncate text-[13px] font-semibold text-sidebar-foreground">{utente?.nombre || "Cliente"}</span>
+        <span className="block max-w-[150px] truncate text-[11px] text-muted-foreground">{utente?.email}</span>
+      </span>
+    </div>
+  );
+}
+
+const logoArea = (
+  <Link to="/area/dashboard" aria-label="La tua area" className="text-foreground">
+    <MarmoLogo altezza={20} />
+  </Link>
+);
+
+function SidebarPercorso() {
+  return (
     <aside className="sticky top-0 hidden h-screen w-(--sidebar-w) shrink-0 flex-col border-r border-sidebar-border bg-sidebar md:flex">
-      <div className="flex h-(--header-h) items-center border-b border-border-faint px-5">
-        <Link to="/area/dashboard" aria-label="La tua area" className="text-foreground">
-          <MarmoLogo altezza={20} />
-        </Link>
-      </div>
-      <nav aria-label="Il tuo percorso" className="flex flex-1 flex-col gap-0.5 px-3.5 pt-4">
-        {VOCI_PERCORSO.map((v) => (
-          <VoceNav key={v.href} voce={v} />
-        ))}
-        <div className="pt-5">
-          <VoceCervello />
-        </div>
-      </nav>
+      <div className="flex h-(--header-h) items-center border-b border-border-faint px-5">{logoArea}</div>
+      <NavPercorso />
       <div className="border-t border-border-faint p-3.5">
-        <div className="flex min-w-0 items-center gap-[11px] px-2.5 py-2">
-          <Monogramma nome={utente?.nombre || utente?.email} inverso />
-          <span className="min-w-0">
-            <span className="block truncate text-[13px] font-semibold text-sidebar-foreground">{utente?.nombre || "Cliente"}</span>
-            <span className="block max-w-[150px] truncate text-[11px] text-muted-foreground">{utente?.email}</span>
-          </span>
-        </div>
+        <UtentePercorso />
       </div>
     </aside>
   );
@@ -124,6 +122,7 @@ interface ClientShellProps {
 }
 
 /**
+ * Sotto md la sidebar diventa il pannello ☰ (`MenuMobile`): voci, Cervello, utente ed «Esci».
  * Shell dell'area cliente (Marmo). Durante l'onboarding: solo logo + "Esci" e
  * colonna centrale da 820px. Con `conNav`: sidebar a sinistra (Dashboard, Stili,
  * Crea idee, Workflow, Pubblicazioni, Wesley Coach) e, in evidenza, la card
@@ -140,13 +139,13 @@ export function ClientShell({ conNav = false }: ClientShellProps) {
   if (!conNav) {
     return (
       <div className="flex min-h-screen flex-col bg-background">
-        <header className="flex items-center justify-between gap-4 border-b bg-card px-6 py-4">
+        <header className="flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-6 sm:py-4">
           <Link to="/area" aria-label="La tua area" className="text-foreground">
             <MarmoLogo altezza={22} />
           </Link>
           {esci}
         </header>
-        <main className="mx-auto w-full max-w-[820px] flex-1 px-6 pt-11 pb-20">
+        <main className="mx-auto w-full max-w-[820px] min-w-0 flex-1 px-4 pt-7 pb-16 sm:px-6 sm:pt-11 sm:pb-20">
           <ContenutoPagina />
         </main>
       </div>
@@ -157,22 +156,26 @@ export function ClientShell({ conNav = false }: ClientShellProps) {
     <div className="flex min-h-screen bg-background">
       <SidebarPercorso />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-(--header-h) shrink-0 items-center justify-between gap-3 border-b bg-card/85 px-4 backdrop-blur-md md:justify-end md:px-8">
-          <Link to="/area/dashboard" aria-label="La tua area" className="text-foreground md:hidden">
-            <MarmoLogo altezza={20} />
-          </Link>
-          {esci}
+        <header className="sticky top-0 z-20 flex h-(--header-h) shrink-0 items-center justify-between gap-3 border-b bg-card/85 px-4 backdrop-blur-md md:justify-end md:px-8">
+          <div className="flex min-w-0 items-center gap-1 md:hidden">
+            <MenuMobile
+              testata={logoArea}
+              piede={
+                <div className="grid gap-2">
+                  <UtentePercorso />
+                  <Button variant="outline" className="w-full" onClick={() => void signOut()}>
+                    Esci
+                  </Button>
+                </div>
+              }
+            >
+              <NavPercorso />
+            </MenuMobile>
+            {logoArea}
+          </div>
+          <div className="hidden md:block">{esci}</div>
         </header>
-        <nav
-          aria-label="Il tuo percorso (mobile)"
-          className="flex items-center gap-1 overflow-x-auto border-b bg-card px-3 py-2 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {VOCI_PERCORSO.map((v) => (
-            <VoceNav key={v.href} voce={v} compatta />
-          ))}
-          <VoceCervello compatta />
-        </nav>
-        <main className="mx-auto w-full max-w-[1280px] flex-1 px-6 pt-10 pb-20 md:px-8">
+        <main className="mx-auto w-full max-w-[1280px] min-w-0 flex-1 px-4 pt-6 pb-16 sm:px-6 md:px-8 md:pt-10 md:pb-20">
           <ContenutoPagina />
         </main>
       </div>

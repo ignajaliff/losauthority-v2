@@ -21,7 +21,7 @@ export function NoteCliente({ cliente }: { cliente: ClienteDettaglio }) {
       </CardHeader>
       <CardContent>
         {cliente.note ? (
-          <p className="whitespace-pre-wrap text-sm">{cliente.note}</p>
+          <p className="whitespace-pre-wrap break-words text-sm">{cliente.note}</p>
         ) : (
           <p className="text-sm text-muted-foreground">Nessuna nota. Aggiungila da Impostazioni → Dati cliente.</p>
         )}

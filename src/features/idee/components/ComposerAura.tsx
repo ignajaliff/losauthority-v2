@@ -26,6 +26,18 @@ interface ComposerAuraProps {
 
 const PLACEHOLDER_IDEE = "Racconta l'idea, incolla un link di riferimento…";
 
+/**
+ * Il contenitore del composer nelle pagine chat (Crea idee, Wesley Coach). Da md la pagina ha altezza
+ * fissa e il composer sta in fondo da solo; sul telefono scorre la pagina e il composer resta incollato
+ * al fondo dello schermo, con lo sfondo che sfuma sopra i messaggi che gli passano dietro.
+ */
+export const BARRA_COMPOSER =
+  "sticky bottom-0 z-10 shrink-0 bg-linear-to-t from-background from-70% to-transparent pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:static md:z-auto md:bg-none md:pb-0";
+
+/** La X delle chip: sul touch l'area di tocco arriva a 36px senza cambiare l'altezza della chip. */
+const X_CHIP =
+  "rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground pointer-coarse:-my-[11px] pointer-coarse:-mr-1 pointer-coarse:p-[11px]";
+
 const MAX = 4000;
 
 /** "/" all'inizio, senza a capo → il testo dopo la barra è la ricerca tra gli stili. */
@@ -133,7 +145,7 @@ export function ComposerAura({
                 aria-label="Togli la ricerca TikTok"
                 disabled={inAttesa}
                 onClick={() => onTogliRicerca?.()}
-                className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className={X_CHIP}
               >
                 <X className="size-3.5" aria-hidden />
               </button>
@@ -151,7 +163,7 @@ export function ComposerAura({
                 aria-label="Togli lo stile"
                 disabled={inAttesa}
                 onClick={() => onStileChange?.(null)}
-                className="rounded-full p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className={X_CHIP}
               >
                 <X className="size-3.5" aria-hidden />
               </button>
@@ -180,13 +192,14 @@ export function ComposerAura({
           aria-expanded={menuAperto || undefined}
           aria-controls={menuAperto ? "menu-stili" : undefined}
           placeholder={testoGuida}
-          className="field-sizing-content max-h-40 min-h-10 flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground/70 disabled:opacity-60"
+          className="field-sizing-content max-h-40 min-h-10 min-w-0 flex-1 resize-none bg-transparent py-2 text-base leading-relaxed outline-none placeholder:text-muted-foreground/70 disabled:opacity-60 md:text-[15px]"
         />
         <Button size="icon" aria-label="Invia ad Aura" disabled={inAttesa || menuAperto || testo.trim().length < 3} onClick={invia} className="rounded-full">
           <ArrowUp aria-hidden />
         </Button>
       </div>
-      <p className="px-1 pt-1 text-[11px] text-muted-foreground">
+      {/* Scorciatoie da tastiera: sul telefono touch non servono e rubano una riga al composer. */}
+      <p className="px-1 pt-1 text-[11px] text-muted-foreground max-md:pointer-coarse:hidden">
         Invio per mandare · Shift+Invio per andare a capo{onStileChange ? " · / per usare un tuo stile" : ""}
       </p>
     </div>

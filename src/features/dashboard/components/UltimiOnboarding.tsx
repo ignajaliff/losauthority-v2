@@ -32,12 +32,13 @@ export function UltimiOnboarding({ onboarding, caricamento, errore }: UltimiOnbo
     >
       {righe.map((o) => (
         <li key={o.id}>
-          <Link to={`/clienti/${o.id}?tab=onboarding`} className="flex items-center gap-3 py-2 hover:bg-muted/50">
+          {/* Telefono: nome e stato sulla prima riga, la data sotto. */}
+          <Link to={`/clienti/${o.id}?tab=onboarding`} className="flex flex-wrap items-center gap-x-3 gap-y-0.5 py-2 hover:bg-muted/50 sm:flex-nowrap sm:gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">{o.nombre || o.email || "—"}</p>
               <p className="truncate text-xs text-muted-foreground">{o.email}</p>
             </div>
-            <span className="text-sm tabular-nums text-muted-foreground">{formatDate(o.data)}</span>
+            <span className="order-last basis-full text-sm tabular-nums text-muted-foreground sm:order-none sm:basis-auto">{formatDate(o.data)}</span>
             <Badge variant={varianteStato(o.stato_onboarding)}>
               {ETICHETTE_STATO_ONBOARDING[o.stato_onboarding] ?? o.stato_onboarding}
             </Badge>

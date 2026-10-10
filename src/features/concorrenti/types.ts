@@ -5,6 +5,13 @@ export type VideoConcorrente = Tables<"concorrenti_video">;
 /** Una referenza del cliente con i suoi video, in ordine. */
 export type Concorrente = Tables<"concorrenti"> & { video: VideoConcorrente[] };
 
+/** Tipo di referenza (CHECK della colonna `concorrenti.tipo`). */
+export const TIPI_CONCORRENTE = [
+  { valore: "competitor", etichetta: "Competitor", plurale: "Competitor", testo: "Chi fa quello che fai tu e parla ai tuoi stessi clienti." },
+  { valore: "ispirazione", etichetta: "Ispirazione", plurale: "Ispirazioni", testo: "Profili da cui prendere spunto, anche fuori dal tuo settore." },
+] as const;
+export type TipoConcorrente = (typeof TIPI_CONCORRENTE)[number]["valore"];
+
 /** Massimo di link social per referenza (stesso CHECK della tabella). */
 export const MAX_SOCIAL = 3;
 /** Massimo di video per referenza (stesso limite del trigger). */

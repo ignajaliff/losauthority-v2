@@ -43,7 +43,10 @@ export default function NuovoClientePage() {
 
   return (
     <div className="mx-auto max-w-xl">
-      <Link to="/clienti" className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/clienti"
+        className="mb-3 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground pointer-coarse:-mt-2 pointer-coarse:mb-1 pointer-coarse:py-2"
+      >
         <ArrowLeft className="size-4" aria-hidden /> Clienti
       </Link>
       <PageHeader titolo="Nuovo cliente" sottotitolo="Crei l'account: il cliente riceverà email e password per accedere e completare l'onboarding." />

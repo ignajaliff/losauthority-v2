@@ -42,7 +42,7 @@ export function CollegaInstagram({ clienteId }: { clienteId: string }) {
             onChange={(e) => setValore(e.target.value)}
             autoComplete="off"
           />
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-xs text-muted-foreground">
               {collega.isPending ? "Leggo il profilo: ci vuole circa un minuto, lascia aperta la pagina." : "Il profilo deve essere pubblico."}
             </p>

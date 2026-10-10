@@ -36,10 +36,17 @@ function Pill({ label, dati, attivo, onClick }: { label: string; dati: Riepilogo
   );
 }
 
-/** Imbuto: una pillola per stage con conteggio e valore; cliccandola si filtra la tabella. */
+/**
+ * Imbuto: una pillola per stage con conteggio e valore; cliccandola si filtra la tabella.
+ * Sul telefono è una riga che scorre di lato (a filo schermo) invece di tre righe di pillole.
+ */
 export function FunnelPills({ totale, perStage, attivo, onChange }: FunnelPillsProps) {
   return (
-    <div className="flex flex-wrap gap-2" role="group" aria-label="Filtra per stage">
+    <div
+      className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] md:mx-0 md:flex-wrap md:overflow-visible md:px-0 md:pb-0 [&::-webkit-scrollbar]:hidden"
+      role="group"
+      aria-label="Filtra per stage"
+    >
       <Pill label="Tutti" dati={totale} attivo={attivo === "tutti"} onClick={() => onChange("tutti")} />
       {LEAD_STAGES.map((s) => (
         <Pill

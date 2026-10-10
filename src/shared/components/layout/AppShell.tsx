@@ -19,6 +19,7 @@ import { Button } from "@/shared/components/ui/button";
 import { MarmoLogo } from "@/shared/components/brand/MarmoLogo";
 import { Monogramma } from "@/shared/components/brand/Monogramma";
 import { ContenutoPagina } from "@/shared/components/layout/ContenutoPagina";
+import { MenuMobile } from "@/shared/components/layout/MenuMobile";
 import { useRegistraSito } from "@/shared/hooks/useRegistraSito";
 import { cn } from "@/lib/utils";
 
@@ -66,15 +67,14 @@ function titoloPer(pathname: string): string {
   return TITOLI.find(([prefix]) => pathname.startsWith(prefix))?.[1] ?? "Gestionale";
 }
 
-function VoceSidebar({ voce, compatta = false }: { voce: VoceNav; compatta?: boolean }) {
+function VoceSidebar({ voce }: { voce: VoceNav }) {
   const Icon = voce.icon;
   return (
     <NavLink
       to={voce.href}
       className={({ isActive }) =>
         cn(
-          "flex shrink-0 items-center gap-3 rounded-md text-sm transition-colors",
-          compatta ? "px-3 py-2" : "px-3 py-2.5",
+          "flex shrink-0 items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
           isActive
             ? "bg-sidebar-accent font-semibold text-sidebar-foreground [&_svg]:opacity-100"
             : "font-medium text-muted-foreground hover:bg-sidebar-accent/70 hover:text-sidebar-foreground [&_svg]:opacity-70",
@@ -87,7 +87,37 @@ function VoceSidebar({ voce, compatta = false }: { voce: VoceNav; compatta?: boo
   );
 }
 
-/** Shell del gestionale (Marmo Console): sidebar 256px + topbar 64px + contenuto. */
+function NavGestionale({ principali, secondarie }: { principali: VoceNav[]; secondarie: VoceNav[] }) {
+  return (
+    <nav aria-label="Principale" className="flex flex-1 flex-col gap-0.5 px-3.5 pt-4 pb-4">
+      <p className="eyebrow px-2.5 pt-2 pb-1.5 text-[10px]">Gestionale</p>
+      {principali.map((v) => (
+        <VoceSidebar key={v.href} voce={v} />
+      ))}
+      <p className="eyebrow px-2.5 pt-5 pb-1.5 text-[10px]">Sistema</p>
+      {secondarie.map((v) => (
+        <VoceSidebar key={v.href} voce={v} />
+      ))}
+    </nav>
+  );
+}
+
+function UtenteSidebar({ nome, ruolo, email }: { nome: string | undefined; ruolo: string; email: string | undefined }) {
+  return (
+    <div className="flex min-w-0 items-center gap-[11px] px-2.5 py-2">
+      <Monogramma nome={nome} inverso />
+      <span className="min-w-0">
+        <span className="block truncate text-[13px] font-semibold text-sidebar-foreground">{ruolo}</span>
+        <span className="block max-w-[150px] truncate text-[11px] text-muted-foreground">{email}</span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Shell del gestionale (Marmo Console): sidebar 256px + topbar 64px + contenuto.
+ * Sotto md la sidebar diventa il pannello ☰ (`MenuMobile`) e le azioni della topbar restano icone.
+ */
 export function AppShell() {
   const { utente, signOut } = useAuth();
   const navigate = useNavigate();
@@ -101,6 +131,7 @@ export function AppShell() {
   const filtra = (v: VoceNav) => (!v.soloFinance || puoFinance) && (!v.soloAdmin || eAdmin);
   const principali = VOCI_PRINCIPALI.filter(filtra);
   const secondarie = VOCI_SECONDARIE.filter(filtra);
+  const utenteCard = <UtenteSidebar nome={utente?.nombre || utente?.email} ruolo={rol ? etichettaRuolo(rol) : "Utente"} email={utente?.email} />;
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -109,55 +140,42 @@ export function AppShell() {
           <MarmoLogo altezza={20} />
         </div>
 
-        <nav aria-label="Principale" className="flex flex-1 flex-col gap-0.5 px-3.5 pt-4">
-          <p className="eyebrow px-2.5 pt-2 pb-1.5 text-[10px]">Gestionale</p>
-          {principali.map((v) => (
-            <VoceSidebar key={v.href} voce={v} />
-          ))}
-          <p className="eyebrow px-2.5 pt-5 pb-1.5 text-[10px]">Sistema</p>
-          {secondarie.map((v) => (
-            <VoceSidebar key={v.href} voce={v} />
-          ))}
-        </nav>
+        <NavGestionale principali={principali} secondarie={secondarie} />
 
-        <div className="border-t border-border-faint p-3.5">
-          <div className="flex min-w-0 items-center gap-[11px] px-2.5 py-2">
-            <Monogramma nome={utente?.nombre || utente?.email} inverso />
-            <span className="min-w-0">
-              <span className="block truncate text-[13px] font-semibold text-sidebar-foreground">
-                {rol ? etichettaRuolo(rol) : "Utente"}
-              </span>
-              <span className="block max-w-[150px] truncate text-[11px] text-muted-foreground">{utente?.email}</span>
-            </span>
-          </div>
-        </div>
+        <div className="border-t border-border-faint p-3.5">{utenteCard}</div>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-(--header-h) shrink-0 items-center justify-between gap-3 border-b bg-card/85 px-4 backdrop-blur-md md:px-8">
-          <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-[-0.01em]">{titoloPer(pathname)}</h1>
-          <div className="flex shrink-0 items-center gap-3">
+        <header className="sticky top-0 z-20 flex h-(--header-h) shrink-0 items-center justify-between gap-2 border-b bg-card/85 px-4 backdrop-blur-md md:gap-3 md:px-8">
+          <div className="flex min-w-0 items-center gap-1">
+            <MenuMobile
+              testata={<MarmoLogo altezza={20} />}
+              piede={
+                <div className="grid gap-2">
+                  {utenteCard}
+                  <Button variant="outline" className="w-full" onClick={() => void signOut()}>
+                    <LogOut aria-hidden /> Esci
+                  </Button>
+                </div>
+              }
+            >
+              <NavGestionale principali={principali} secondarie={secondarie} />
+            </MenuMobile>
+            <h1 className="min-w-0 truncate font-sans text-[17px] font-semibold tracking-[-0.01em]">{titoloPer(pathname)}</h1>
+          </div>
+          <div className="flex shrink-0 items-center gap-2 md:gap-3">
             <NuovoLeadRapido />
-            <Button size="sm" onClick={() => navigate("/clienti/nuovo")}>
+            <Button size="sm" onClick={() => navigate("/clienti/nuovo")} aria-label="Nuovo cliente" title="Nuovo cliente">
               <Plus aria-hidden />
-              Nuovo cliente
+              <span className="hidden sm:inline">Nuovo cliente</span>
             </Button>
-            <Button size="icon" variant="outline" className="text-muted-foreground" aria-label="Esci" title="Esci" onClick={() => void signOut()}>
+            <Button size="icon" variant="outline" className="hidden text-muted-foreground md:inline-flex" aria-label="Esci" title="Esci" onClick={() => void signOut()}>
               <LogOut aria-hidden />
             </Button>
           </div>
         </header>
 
-        <nav
-          aria-label="Principale (mobile)"
-          className="flex gap-1 overflow-x-auto border-b bg-card px-3 py-2 md:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          {[...principali, ...secondarie].map((v) => (
-            <VoceSidebar key={v.href} voce={v} compatta />
-          ))}
-        </nav>
-
-        <main className="flex-1 p-4 md:p-8">
+        <main className="min-w-0 flex-1 px-4 pt-5 pb-16 md:p-8">
           <ContenutoPagina />
         </main>
       </div>

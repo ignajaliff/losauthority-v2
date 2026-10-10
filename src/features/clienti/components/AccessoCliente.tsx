@@ -29,7 +29,7 @@ export function AccessoCliente({ cliente }: { cliente: ClienteDettaglio }) {
           {reset.data ? (
             <>
               <span className="text-sm text-muted-foreground">Nuova password:</span>
-              <span className="font-mono text-sm">{reset.data}</span>
+              <span className="font-mono text-sm break-all">{reset.data}</span>
               <CopiaButton testo={reset.data} />
             </>
           ) : (

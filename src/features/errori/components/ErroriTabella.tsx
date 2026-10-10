@@ -10,6 +10,7 @@ import { ContextLista } from "./ContextLista";
 function ErroreRiga({ errore }: { errore: ErroreLog }) {
   const [aperto, setAperto] = useState(false);
   const haContext = errore.context !== null;
+  const scope = <Badge variant="secondary" className="max-w-full">{errore.scope}</Badge>;
 
   return (
     <Fragment>
@@ -26,30 +27,43 @@ function ErroreRiga({ errore }: { errore: ErroreLog }) {
             {aperto ? <ChevronDown aria-hidden /> : <ChevronRight aria-hidden />}
           </Button>
         </TableCell>
-        <TableCell className="align-top font-mono text-xs text-muted-foreground">{formatDateTime(errore.created_at)}</TableCell>
-        <TableCell className="align-top">
-          <Badge variant="secondary">{errore.scope}</Badge>
+        <TableCell className="pr-4 pl-2 align-top font-mono text-xs text-muted-foreground max-md:whitespace-normal md:px-[18px]">
+          {/* Telefono: quando + scope in alto, messaggio sotto (una colonna sola accanto alla freccia). */}
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 md:block">
+            <span>{formatDateTime(errore.created_at)}</span>
+            <span className="min-w-0 md:hidden">{scope}</span>
+          </div>
+          <p className="mt-1.5 font-sans text-sm text-foreground wrap-anywhere md:hidden">{errore.message}</p>
         </TableCell>
-        <TableCell className="max-w-xl align-top break-words whitespace-normal">{errore.message}</TableCell>
+        <TableCell className="hidden align-top md:table-cell">{scope}</TableCell>
+        <TableCell className="hidden max-w-xl align-top break-words whitespace-normal md:table-cell">{errore.message}</TableCell>
       </TableRow>
       {aperto ? (
-        <TableRow className="bg-muted/30 hover:bg-muted/30">
-          <TableCell />
-          <TableCell colSpan={3} className="whitespace-normal py-3">
-            <ContextLista context={errore.context} />
-          </TableCell>
-        </TableRow>
+        <>
+          <TableRow className="hidden bg-muted/30 hover:bg-muted/30 md:table-row">
+            <TableCell />
+            <TableCell colSpan={3} className="whitespace-normal py-3">
+              <ContextLista context={errore.context} />
+            </TableCell>
+          </TableRow>
+          {/* Telefono: due colonne visibili, quindi un colSpan diverso. */}
+          <TableRow className="bg-muted/30 hover:bg-muted/30 md:hidden">
+            <TableCell colSpan={2} className="px-4 py-3 whitespace-normal">
+              <ContextLista context={errore.context} />
+            </TableCell>
+          </TableRow>
+        </>
       ) : null}
     </Fragment>
   );
 }
 
-/** Tabella degli errori: data/ora, scope, messaggio e dettagli espandibili. */
+/** Tabella degli errori: data/ora, scope, messaggio e dettagli espandibili. Sul telefono messaggio sotto la data. */
 export function ErroriTabella({ errori }: { errori: ErroreLog[] }) {
   return (
     <div className="overflow-hidden rounded-lg border bg-card">
       <Table>
-        <TableHeader>
+        <TableHeader className="hidden md:table-header-group">
           <TableRow>
             <TableHead className="w-8" />
             <TableHead>Quando</TableHead>

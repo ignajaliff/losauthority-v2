@@ -21,11 +21,11 @@ export function SheetIdeeSalvate({ idee, occupato, onScarta, onWorkflow }: Sheet
         <span className="figure ml-1 rounded-full bg-muted px-1.5 text-[11px]">{idee.length}</span>
       </SheetTrigger>
       <SheetContent className="w-full gap-0 overflow-x-hidden overflow-y-auto sm:max-w-[560px]">
-        <SheetHeader className="border-b px-6 py-[18px]">
+        <SheetHeader className="border-b px-4 py-[18px] pr-12 sm:px-6">
           <SheetTitle className="font-display text-xl font-medium">Idee salvate</SheetTitle>
           <SheetDescription>Le proposte che hai confermato. Da qui le porti nel Workflow quando decidi di girarle.</SheetDescription>
         </SheetHeader>
-        <div className="grid gap-3 p-6">
+        <div className="grid gap-3 p-4 sm:p-6">
           {idee.length === 0 ? (
             <StatoVuoto titolo="Nessuna idea salvata" testo="Quando una proposta di Aura ti convince, premi «Salva»." />
           ) : (

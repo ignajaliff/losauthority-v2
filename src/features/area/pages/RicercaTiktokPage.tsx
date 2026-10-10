@@ -66,7 +66,10 @@ export default function RicercaTiktokPage() {
 
   return (
     <div className="grid gap-7">
-      <Link to="/area/crea-idee" className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground">
+      <Link
+        to="/area/crea-idee"
+        className="inline-flex w-fit items-center gap-1.5 text-[13px] text-muted-foreground transition-colors hover:text-foreground pointer-coarse:-my-2.5 pointer-coarse:py-2.5"
+      >
         <ArrowLeft className="size-3.5" aria-hidden /> Crea idee
       </Link>
       <PageHeader

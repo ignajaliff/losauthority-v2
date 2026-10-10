@@ -24,7 +24,7 @@ export function CardCorso({ gruppo }: { gruppo: GruppoCorso }) {
                     href={l.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-medium hover:underline"
+                    className="inline-flex items-center gap-1 font-medium hover:underline pointer-coarse:-my-2 pointer-coarse:py-2"
                   >
                     {l.titolo}
                     <ExternalLink className="size-3 text-muted-foreground" aria-hidden />

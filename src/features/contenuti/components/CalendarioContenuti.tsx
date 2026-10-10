@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/shared/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Contenuto } from "../types";
+import { AgendaContenuti, RigaAgenda } from "./AgendaContenuti";
 import { PuntoStato } from "./PuntoStato";
 
 interface CalendarioContenutiProps {
@@ -41,7 +42,7 @@ function ChipContenuto({ c, onApri }: { c: Contenuto; onApri: (c: Contenuto) => 
   );
 }
 
-/** Vista mensile: i contenuti nel giorno previsto; trascinali per ripianificare. */
+/** Vista mensile: i contenuti nel giorno previsto; trascinali per ripianificare. Sotto md: elenco dei giorni con la data da cambiare. */
 export function CalendarioContenuti({ contenuti, onApri, onRipianifica }: CalendarioContenutiProps) {
   const [mese, setMese] = useState(() => startOfMonth(new Date()));
   const [sopra, setSopra] = useState<string | null>(null);
@@ -99,7 +100,9 @@ export function CalendarioContenuti({ contenuti, onApri, onRipianifica }: Calend
           </div>
         </header>
 
-        <div className="-mx-6 overflow-x-auto px-6 md:mx-0 md:px-0">
+        <AgendaContenuti mese={mese} perGiorno={perGiorno} onApri={onApri} onRipianifica={onRipianifica} />
+
+        <div className="hidden md:block md:overflow-x-auto">
           <div className="grid min-w-[720px] grid-cols-7 overflow-hidden rounded-lg border bg-border gap-px">
             {giorni.slice(0, 7).map((g) => (
               <div key={g.toISOString()} className="eyebrow bg-muted px-2 py-1.5 text-center text-[10px]">
@@ -154,7 +157,19 @@ export function CalendarioContenuti({ contenuti, onApri, onRipianifica }: Calend
         {senzaData.length === 0 ? (
           <p className="text-xs text-muted-foreground">Tutti i contenuti hanno una data. Trascina qui per toglierla.</p>
         ) : (
-          senzaData.map((c) => <ChipContenuto key={c.id} c={c} onApri={onApri} />)
+          <>
+            {/* Sul telefono, al posto del trascinamento, la data si sceglie dalla riga. */}
+            <div className="contents md:hidden">
+              {senzaData.map((c) => (
+                <RigaAgenda key={c.id} c={c} onApri={onApri} onRipianifica={onRipianifica} />
+              ))}
+            </div>
+            <div className="hidden md:contents">
+              {senzaData.map((c) => (
+                <ChipContenuto key={c.id} c={c} onApri={onApri} />
+              ))}
+            </div>
+          </>
         )}
       </aside>
     </div>

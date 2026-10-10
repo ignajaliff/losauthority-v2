@@ -22,7 +22,7 @@ function RigaChiamata({ chiamata, clienti }: { chiamata: Chiamata; clienti: Clie
           if (v) assegna.mutate({ id: chiamata.id, clienteId: v });
         }}
       >
-        <SelectTrigger size="sm" className="min-w-44" aria-label={etichetta}>
+        <SelectTrigger size="sm" className="min-w-44 pointer-coarse:data-[size=sm]:h-9 max-sm:w-full" aria-label={etichetta}>
           <SelectValue placeholder={assegna.isPending ? "Assegno…" : "Assegna a…"} />
         </SelectTrigger>
         <SelectContent>

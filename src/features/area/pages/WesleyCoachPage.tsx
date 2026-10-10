@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/features/auth";
 import { CoachVuoto, FlussoCoach, useInviaAlCoach, useLezioniCoach, useMessaggiCoach, type MessaggioCoach } from "@/features/coach";
-import { ComposerAura } from "@/features/idee";
+import { BARRA_COMPOSER, ComposerAura } from "@/features/idee";
 import { primoNome } from "@/features/scheda";
 import { ErroreCaricamento, SkeletonBlocco } from "@/shared/components/layout/StatoCaricamento";
 
@@ -52,7 +52,8 @@ export default function WesleyCoachPage() {
 
   return (
     // Pagina fissa come Crea idee: scorre solo la conversazione, il composer resta a 1rem dal fondo.
-    <div className="-mt-4 grid gap-6 md:-mb-16 md:h-[calc(100dvh-var(--header-h)-2.5rem)] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden">
+    // Sul telefono scorre la pagina e il composer resta incollato in basso (BARRA_COMPOSER).
+    <div className="-mb-16 grid gap-6 md:-mt-4 md:h-[calc(100dvh-var(--header-h)-2.5rem)] md:grid-rows-[minmax(0,1fr)] md:overflow-hidden">
       <section className="flex min-h-0 min-w-0 flex-col" aria-label="Wesley Coach">
         <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -79,7 +80,7 @@ export default function WesleyCoachPage() {
           ) : null}
         </div>
 
-        <div className="shrink-0 pt-3">
+        <div className={BARRA_COMPOSER}>
           <ComposerAura
             inAttesa={auraScrive}
             onInvia={manda}
